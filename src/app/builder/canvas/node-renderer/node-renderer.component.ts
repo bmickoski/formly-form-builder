@@ -84,8 +84,11 @@ export class NodeRendererComponent {
     if (!container || !isContainerNode(container)) return false;
     const rootId = this.store.rootId();
 
-    // Palette inserts are handled only by explicit "Drop inside ..." targets.
-    if (drag.data.kind === 'palette') return false;
+    // Root accepts palette drops so users can choose exact insertion index.
+    // Non-root palette inserts are handled by explicit "Drop inside ..." targets.
+    if (drag.data.kind === 'palette') {
+      return container.id === rootId;
+    }
 
     // Keep the root list for reordering root children only.
     if (container.id === rootId) {
