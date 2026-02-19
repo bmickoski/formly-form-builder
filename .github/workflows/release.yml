@@ -30,7 +30,7 @@ jobs:
         run: |
           npm run typecheck
           npm run lint
-          npm test -- --watch=false --browsers=ChromeHeadless
+          npm run test:ci
           npm run build
 
       - name: Package dist

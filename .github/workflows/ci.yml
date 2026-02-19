@@ -51,7 +51,7 @@ jobs:
         run: npm run format:check
 
       - name: Test
-        run: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
+        run: npm run test:ci
         env:
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
 

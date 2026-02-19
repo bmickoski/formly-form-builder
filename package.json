@@ -13,7 +13,8 @@
     "docs": "compodoc -p tsconfig.app.json -d docs/compodoc --disableGraph",
     "docs:serve": "compodoc -s -d docs/compodoc",
     "prepare": "husky",
-    "build:pages": "ng build --configuration production --base-href /formly-form-builder/"
+    "build:pages": "ng build --configuration production --base-href /formly-form-builder/",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage"
   },
   "dependencies": {
     "@angular/animations": "^21.1.5",
