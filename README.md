@@ -70,3 +70,5 @@ npm run docs
 - docs/adr/: architecture decision records.
 - docs/MAINTAINERS.md: ownership and review model.
 - docs/RELEASE.md: release and hotfix process.
+- SECURITY.md: security reporting policy.
+- CODE_OF_CONDUCT.md: expected contributor behavior.
