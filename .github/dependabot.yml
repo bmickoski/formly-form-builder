@@ -12,6 +12,14 @@ updates:
       - security
     commit-message:
       prefix: 'chore(deps)'
+    groups:
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+      formly:
+        patterns:
+          - '@ngx-formly/*'
 
   - package-ecosystem: github-actions
     directory: '/'
