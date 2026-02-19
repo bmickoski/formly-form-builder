@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-node-${{ matrix.node }}
           path: coverage/**
@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload docs artifact
         if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compodoc-site
           path: docs/compodoc/**
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload build artifact
         if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-browser
           path: dist/formly-form-builder/**
