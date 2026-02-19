@@ -61,6 +61,7 @@ export interface ContainerNode extends BuilderNodeBase {
 export type BuilderNode = FieldNode | ContainerNode;
 
 export interface BuilderDocument {
+  version: number;
   rootId: string;
   renderer?: PreviewRenderer;
   nodes: Record<string, BuilderNode>;

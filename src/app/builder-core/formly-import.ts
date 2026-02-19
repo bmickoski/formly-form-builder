@@ -173,7 +173,7 @@ export function formlyToBuilder(
   renderer: BuilderDocument['renderer'] = 'material',
 ): BuilderDocument {
   const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
-  const doc: BuilderDocument = { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer };
+  const doc: BuilderDocument = { version: 1, rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer };
 
   for (const f of fields ?? []) importOne(doc, ROOT_ID, f);
   return doc;

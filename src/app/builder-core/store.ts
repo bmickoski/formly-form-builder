@@ -20,7 +20,7 @@ function uid(prefix = 'n'): string {
 
 function createRoot(): BuilderDocument {
   const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
-  return { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer: 'material' };
+  return { version: 1, rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer: 'material' };
 }
 
 @Injectable({ providedIn: 'root' })

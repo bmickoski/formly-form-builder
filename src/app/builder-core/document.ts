@@ -1,6 +1,7 @@
 import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, PreviewRenderer } from './model';
 
 const DEFAULT_ROOT_ID = 'root';
+export const BUILDER_DOC_VERSION = 1;
 
 type ParseResult = { ok: true; doc: BuilderDocument; warnings: string[] } | { ok: false; error: string };
 
@@ -15,6 +16,36 @@ function toRenderer(v: unknown): PreviewRenderer {
 function toStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return [];
   return v.filter((x): x is string => typeof x === 'string');
+}
+
+function toVersion(v: unknown): number | null {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return null;
+  return Math.trunc(v);
+}
+
+function migrateRawDocument(
+  rawDoc: Record<string, unknown>,
+  fromVersion: number,
+): { doc: Record<string, unknown>; warnings: string[] } {
+  const warnings: string[] = [];
+  const next = { ...rawDoc };
+  let cur = fromVersion;
+
+  while (cur < BUILDER_DOC_VERSION) {
+    switch (cur) {
+      default:
+        // No-op migration placeholder. Keep this switch as we introduce new versions.
+        cur = BUILDER_DOC_VERSION;
+        break;
+    }
+  }
+
+  if (fromVersion !== BUILDER_DOC_VERSION) {
+    warnings.push(`Migrated builder document from version ${fromVersion} to ${BUILDER_DOC_VERSION}.`);
+  }
+
+  next['version'] = BUILDER_DOC_VERSION;
+  return { doc: next, warnings };
 }
 
 function normalizeFieldNode(raw: Record<string, unknown>, id: string, parentId: string | null): FieldNode {
@@ -83,12 +114,25 @@ export function parseBuilderDocument(json: string): ParseResult {
 
 export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
   if (!isObject(rawDoc)) return { ok: false, error: 'Invalid document: expected object' };
-  if (!isObject(rawDoc['nodes'])) return { ok: false, error: 'Invalid document: nodes must be an object map' };
+  let working = { ...rawDoc };
 
-  const rawNodes = rawDoc['nodes'] as Record<string, unknown>;
-  const requestedRootId = typeof rawDoc['rootId'] === 'string' ? rawDoc['rootId'] : DEFAULT_ROOT_ID;
+  const rawVersion = toVersion(working['version']);
+  const sourceVersion = rawVersion ?? 0;
+  if (sourceVersion > BUILDER_DOC_VERSION) {
+    return {
+      ok: false,
+      error: `Unsupported builder document version ${sourceVersion}. Max supported is ${BUILDER_DOC_VERSION}.`,
+    };
+  }
+  const migration = migrateRawDocument(working, sourceVersion);
+  working = migration.doc;
+
+  if (!isObject(working['nodes'])) return { ok: false, error: 'Invalid document: nodes must be an object map' };
+
+  const rawNodes = working['nodes'] as Record<string, unknown>;
+  const requestedRootId = typeof working['rootId'] === 'string' ? working['rootId'] : DEFAULT_ROOT_ID;
   const rootId = rawNodes[requestedRootId] ? requestedRootId : DEFAULT_ROOT_ID;
-  const warnings: string[] = [];
+  const warnings: string[] = [...migration.warnings];
 
   if (rootId !== requestedRootId) {
     warnings.push(`Root "${requestedRootId}" missing, fell back to "${DEFAULT_ROOT_ID}".`);
@@ -107,9 +151,10 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
       warnings: ['Root node missing; created empty root panel.'],
       doc: {
         rootId: DEFAULT_ROOT_ID,
+        version: BUILDER_DOC_VERSION,
         nodes: { [DEFAULT_ROOT_ID]: root },
         selectedId: null,
-        renderer: toRenderer(rawDoc['renderer']),
+        renderer: toRenderer(working['renderer']),
       },
     };
   }
@@ -151,8 +196,8 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
     return { ok: false, error: 'Invalid document: root must be a container node' };
 
   const selectedId =
-    typeof rawDoc['selectedId'] === 'string' && outNodes[rawDoc['selectedId']] ? rawDoc['selectedId'] : null;
-  if (rawDoc['selectedId'] && selectedId == null) {
+    typeof working['selectedId'] === 'string' && outNodes[working['selectedId']] ? working['selectedId'] : null;
+  if (working['selectedId'] && selectedId == null) {
     warnings.push('Selected node was invalid and has been cleared.');
   }
 
@@ -160,10 +205,11 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
     ok: true,
     warnings,
     doc: {
+      version: BUILDER_DOC_VERSION,
       rootId: resolvedRootId,
       nodes: outNodes,
       selectedId,
-      renderer: toRenderer(rawDoc['renderer']),
+      renderer: toRenderer(working['renderer']),
     },
   };
 }

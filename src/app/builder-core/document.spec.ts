@@ -15,6 +15,7 @@ describe('document parsing and migration', () => {
 
     expect(out.ok).toBeTrue();
     if (!out.ok) return;
+    expect(out.doc.version).toBe(1);
     expect(out.doc.rootId).toBe('root');
     expect(out.doc.nodes['root']).toBeDefined();
     expect(out.doc.renderer).toBe('bootstrap');
@@ -34,9 +35,38 @@ describe('document parsing and migration', () => {
 
     expect(out.ok).toBeTrue();
     if (!out.ok) return;
+    expect(out.doc.version).toBe(1);
     expect(out.doc.selectedId).toBeNull();
     const col = out.doc.nodes['c1'];
     expect(col.type).toBe('col');
     if (col.type === 'col') expect(col.props.colSpan).toBe(12);
+  });
+
+  it('rejects unsupported future document version', () => {
+    const out = parseBuilderDocumentObject({
+      version: 999,
+      rootId: 'root',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
+      },
+    });
+
+    expect(out.ok).toBeFalse();
+    if (out.ok) return;
+    expect(out.error).toContain('Unsupported builder document version');
+  });
+
+  it('migrates missing version to current', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
+      },
+    });
+
+    expect(out.ok).toBeTrue();
+    if (!out.ok) return;
+    expect(out.doc.version).toBe(1);
+    expect(out.warnings.some((w) => w.includes('Migrated builder document'))).toBeTrue();
   });
 });
