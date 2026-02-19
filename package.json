@@ -1,0 +1,68 @@
+{
+  "name": "formly-form-builder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "ng serve --port 4201",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "eslint \"src/**/*.{ts,html}\" --max-warnings=0",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}\"",
+    "docs": "compodoc -p tsconfig.app.json -d docs/compodoc --disableGraph",
+    "docs:serve": "compodoc -s -d docs/compodoc",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@angular/animations": "^21.1.0",
+    "@angular/cdk": "^21.1.0",
+    "@angular/common": "^21.1.0",
+    "@angular/compiler": "^21.1.0",
+    "@angular/core": "^21.1.0",
+    "@angular/forms": "^21.1.0",
+    "@angular/material": "^21.1.0",
+    "@angular/platform-browser": "^21.1.0",
+    "@angular/platform-browser-dynamic": "^21.1.0",
+    "@angular/router": "^21.1.0",
+    "@ngx-formly/core": "^7.1.0",
+    "@ngx-formly/material": "^7.1.0",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.6.2",
+    "zone.js": "^0.15.0",
+    "@ngx-formly/bootstrap": "^7.1.0",
+    "bootstrap": "^5.3.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@compodoc/compodoc": "^1.1.31",
+    "@angular-devkit/build-angular": "^21.1.0",
+    "@angular/cli": "^21.1.0",
+    "@angular/compiler-cli": "^21.1.0",
+    "@eslint/js": "^9.22.0",
+    "@types/jasmine": "^5.1.4",
+    "angular-eslint": "^21.0.0",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "husky": "^9.1.7",
+    "jasmine-core": "^5.1.2",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-coverage": "^2.2.1",
+    "karma-jasmine": "^5.1.0",
+    "karma-jasmine-html-reporter": "^2.1.0",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.26.1",
+    "typescript": "~5.9.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}": [
+      "prettier --write"
+    ],
+    "src/**/*.{ts,html}": [
+      "eslint --fix"
+    ]
+  }
+}

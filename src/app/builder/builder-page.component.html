@@ -1,0 +1,81 @@
+<div class="fb-app">
+  <div class="fb-topbar">
+    <button mat-raised-button color="primary" (click)="openPreview()">
+      <mat-icon>visibility</mat-icon>
+      Preview
+    </button>
+
+    <button mat-button (click)="openExport()">
+      <mat-icon>download</mat-icon>
+      Export Formly JSON
+    </button>
+
+    <button mat-button (click)="openExportBuilder()">
+      <mat-icon>dataset</mat-icon>
+      Export Builder JSON
+    </button>
+
+    <button mat-button (click)="openImport()">
+      <mat-icon>upload</mat-icon>
+      Import Builder JSON
+    </button>
+
+    <button mat-button (click)="openImportFormly()">
+  <mat-icon>transform</mat-icon>
+  Import Formly JSON
+</button>
+
+    <mat-form-field appearance="outline" style="width: 220px; margin-left: 8px;">
+      <mat-label>Starter layout</mat-label>
+      <mat-select [(value)]="presetToApply">
+        @for (preset of store.presets; track preset.id) {
+          <mat-option [value]="preset.id">{{ preset.title }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-button (click)="applyPreset()">
+      <mat-icon>auto_awesome</mat-icon>
+      Apply Layout
+    </button>
+
+    <button mat-button (click)="store.undo()" [disabled]="!store.canUndo()">
+      <mat-icon>undo</mat-icon>
+      Undo
+    </button>
+
+    <button mat-button (click)="store.redo()" [disabled]="!store.canRedo()">
+      <mat-icon>redo</mat-icon>
+      Redo
+    </button>
+
+<mat-form-field appearance="outline" style="width: 170px; margin-left: 8px;">
+  <mat-label>Preview UI</mat-label>
+  <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
+    <mat-option value="material">Material</mat-option>
+    <mat-option value="bootstrap">Bootstrap</mat-option>
+  </mat-select>
+</mat-form-field>
+
+    <span class="fb-toolbar-spacer"></span>
+
+    <button mat-button color="warn" (click)="clear()">
+      <mat-icon>delete</mat-icon>
+      Clear
+    </button>
+  </div>
+
+  <div class="fb-workspace" cdkDropListGroup>
+    <div class="fb-panel">
+      <app-builder-palette />
+    </div>
+
+    <div class="fb-canvas">
+      <app-builder-canvas />
+    </div>
+
+    <div class="fb-panel right">
+      <app-builder-inspector />
+    </div>
+  </div>
+</div>

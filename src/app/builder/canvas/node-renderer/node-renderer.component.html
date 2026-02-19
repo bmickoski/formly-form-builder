@@ -1,0 +1,83 @@
+@let n = node();
+
+@if (!n) {
+  <div class="fb-empty">Missing node: {{ nodeId }}</div>
+} @else {
+  @if (nodeId !== store.rootId()) {
+    <div
+      class="fb-node"
+      [attr.data-node-id]="nodeId"
+      [class.selected]="selected()"
+      cdkDrag
+      [cdkDragData]="{ kind: 'node', nodeId: nodeId }"
+      (click)="store.select(nodeId)"
+    >
+      <div class="fb-node-meta">
+        <div class="fb-node-title">{{ titleFor(n) }}</div>
+        <div class="fb-node-sub">{{ subtitleFor(n) }}</div>
+      </div>
+
+      <mat-icon>{{ isContainer() ? 'view_week' : 'tune' }}</mat-icon>
+
+      <ng-template cdkDragPlaceholder>
+        <div class="fb-drag-placeholder"></div>
+      </ng-template>
+    </div>
+
+  }
+
+  @if (isContainer() && (isRoot() || n.type !== 'row')) {
+    <div
+      class="fb-node-drop-target"
+      [class.root]="isRoot()"
+      cdkDropList
+      [id]="appendDropListId()"
+      [cdkDropListData]="[]"
+      [cdkDropListConnectedTo]="connectedDropLists()"
+      [cdkDropListEnterPredicate]="canEnterAppend"
+      [cdkDropListSortingDisabled]="true"
+      (cdkDropListDropped)="onAppendDrop($event)"
+    >
+      @if (isRoot()) {
+        Drop on canvas root
+      } @else if (n.type === 'col') {
+        Drop inside column
+      } @else {
+        Drop inside {{ n.type }}
+      }
+    </div>
+  }
+
+  @if (isContainer() && !isRoot() && n.type === 'row') {
+    <div class="fb-row-hint">Row accepts columns only.</div>
+  }
+
+  @if (isContainer()) {
+    <div class="fb-container-children" [class.root]="isRoot()" [class.col]="n.type === 'col'">
+      <div
+        class="fb-dropzone"
+        [class.root]="isRoot()"
+        [class.row]="isRowNode()"
+        [class.col]="n.type === 'col'"
+        cdkDropList
+        [id]="dropListId()"
+        [cdkDropListData]="children()"
+        [cdkDropListConnectedTo]="connectedDropLists()"
+        [cdkDropListEnterPredicate]="canEnter"
+        (cdkDropListDropped)="onDrop($event)"
+      >
+        @if (isRoot() && children().length === 0) {
+          <div class="fb-empty fb-empty-dropzone">
+            <div style="font-weight:600; margin-bottom:6px;">Drop fields here</div>
+            <div class="fb-hint">Drag from the left palette to start building.</div>
+          </div>
+        }
+        @for (cid of children(); track cid) {
+          <div class="fb-child-slot" [class.row-slot]="isRowNode()" [style.flex-basis]="childFlexBasis(cid)" [style.max-width]="childFlexBasis(cid)">
+            <app-node-renderer [nodeId]="cid" />
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

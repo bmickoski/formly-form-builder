@@ -1,0 +1,99 @@
+import { FormlyFieldConfig } from '@ngx-formly/core';
+import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, isFieldNode } from './model';
+
+function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
+  switch (fieldKind) {
+    case 'input': return 'input';
+    case 'textarea': return 'textarea';
+    case 'checkbox': return 'checkbox';
+    case 'radio': return 'radio';
+    case 'select': return 'select';
+    case 'date': return 'input';
+    case 'number': return 'input';
+    default: return 'input';
+  }
+}
+
+function fieldProps(node: FieldNode): Record<string, any> {
+  const p = node.props;
+  const props: any = {
+    label: p.label ?? '',
+    description: p.description,
+    placeholder: p.placeholder,
+    disabled: !!p.disabled,
+    required: !!node.validators.required,
+  };
+
+  if (node.fieldKind === 'select' || node.fieldKind === 'radio') {
+    props.options = (p.options ?? []).map((o) => ({ label: o.label, value: o.value }));
+  }
+  if (node.fieldKind === 'date') props.type = 'date';
+  if (node.fieldKind === 'number') props.type = 'number';
+  if (node.validators.min != null) props.min = node.validators.min;
+  if (node.validators.max != null) props.max = node.validators.max;
+  if (node.validators.minLength != null) props.minLength = node.validators.minLength;
+  if (node.validators.maxLength != null) props.maxLength = node.validators.maxLength;
+  if (node.validators.pattern) props.pattern = node.validators.pattern;
+  if (node.validators.email) props.type = 'email';
+
+  return props;
+}
+
+function rowClass(renderer: BuilderDocument['renderer']): string {
+  return renderer === 'bootstrap' ? 'row' : 'fb-row';
+}
+
+function colClass(renderer: BuilderDocument['renderer'], span: number): string {
+  if (renderer === 'bootstrap') return `col-${span}`;
+  return `fb-col fb-col-${span}`;
+}
+
+function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<string>): FormlyFieldConfig[] {
+  if (visited.has(node.id)) return [];
+  visited.add(node.id);
+
+  if (isFieldNode(node)) {
+    const field: FormlyFieldConfig = {
+      key: node.props.key ?? node.id,
+      type: toFormlyType(node.fieldKind),
+      props: fieldProps(node),
+      hide: !!node.props.hidden,
+      defaultValue: node.props.defaultValue,
+    };
+
+    return [field];
+  }
+
+  const cn = node as ContainerNode;
+  const childrenFields = cn.children.flatMap((id) => {
+    const child = doc.nodes[id];
+    return child ? nodeToFormly(doc, child, visited) : [];
+  });
+
+  if (cn.type === 'panel') {
+    return [{
+      wrappers: ['panel'],
+      props: { label: cn.props.title ?? cn.props.label ?? 'Panel', description: cn.props.description },
+      fieldGroup: childrenFields,
+    }];
+  }
+
+  if (cn.type === 'row') return [{ fieldGroup: childrenFields, className: rowClass(doc.renderer) }];
+
+  if (cn.type === 'col') {
+    const span = Math.max(1, Math.min(12, cn.props.colSpan ?? 12));
+    return [{ fieldGroup: childrenFields, className: colClass(doc.renderer, span) }];
+  }
+
+  return childrenFields;
+}
+
+export function builderToFormly(doc: BuilderDocument): FormlyFieldConfig[] {
+  const root = doc.nodes[doc.rootId];
+  if (!root || !('children' in root)) return [];
+  const visited = new Set<string>([doc.rootId]);
+  return root.children.flatMap((id) => {
+    const node = doc.nodes[id];
+    return node ? nodeToFormly(doc, node, visited) : [];
+  });
+}

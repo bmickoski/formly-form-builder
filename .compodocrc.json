@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/@compodoc/compodoc/src/config/schema.json",
+  "name": "Formly Form Builder",
+  "output": "docs/compodoc",
+  "disablePrivateOrInternalSupport": true,
+  "disableGraph": true
+}
