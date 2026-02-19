@@ -25,7 +25,7 @@
     </div>
   }
 
-  @if (isContainer() && (isRoot() || n.type !== 'row')) {
+  @if (isContainer() && !isRoot() && n.type !== 'row') {
     <div
       class="fb-node-drop-target"
       [class.root]="isRoot()"
@@ -37,9 +37,7 @@
       [cdkDropListSortingDisabled]="true"
       (cdkDropListDropped)="onAppendDrop($event)"
     >
-      @if (isRoot()) {
-        Drop on canvas root
-      } @else if (n.type === 'col') {
+      @if (n.type === 'col') {
         Drop inside column
       } @else {
         Drop inside {{ n.type }}
@@ -68,7 +66,7 @@
         @if (isRoot() && children().length === 0) {
           <div class="fb-empty fb-empty-dropzone">
             <div style="font-weight: 600; margin-bottom: 6px">Drop fields here</div>
-            <div class="fb-hint">Drag from the left palette to start building.</div>
+            <div class="fb-hint">Drop on this canvas root area to start building.</div>
           </div>
         }
         @for (cid of children(); track cid) {
