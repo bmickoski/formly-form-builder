@@ -3,6 +3,7 @@
 Apply these settings in GitHub to enforce production-grade collaboration.
 
 ## Branch protection (`master`)
+
 1. Open repository `Settings -> Branches`.
 2. Add rule for `master`.
 3. Enable:
@@ -16,11 +17,14 @@ Apply these settings in GitHub to enforce production-grade collaboration.
    - Do not allow deletions
 
 ## Required status checks
+
 Use the CI checks from `.github/workflows/ci.yml`:
+
 - `quality (20)`
 - `quality (22)`
 
 ## Optional hardening
+
 - Enforce linear history.
 - Enable auto-delete branch after merge.
 - Enable Dependabot updates and security alerts.

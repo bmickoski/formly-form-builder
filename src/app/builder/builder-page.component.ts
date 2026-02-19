@@ -42,23 +42,37 @@ export class BuilderPageComponent {
 
   openPreview(): void {
     const renderer = this.store.renderer();
-    this.dialog.open(
-      renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent,
-      { width: '900px', maxWidth: '95vw', data: { renderer } },
-    );
+    this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { renderer },
+    });
   }
 
   openExport(): void {
     const formlyJson = JSON.stringify(builderToFormly(this.store.doc()), null, 2);
-    this.dialog.open(JsonDialogComponent, { width: '900px', maxWidth: '95vw', data: { mode: 'exportFormly', json: formlyJson } });
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportFormly', json: formlyJson },
+    });
   }
 
   openExportBuilder(): void {
-    this.dialog.open(JsonDialogComponent, { width: '900px', maxWidth: '95vw', data: { mode: 'exportBuilder', json: this.store.exportDocument() } });
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportBuilder', json: this.store.exportDocument() },
+    });
   }
 
   openImport(): void {
-    this.dialog.open(JsonDialogComponent, { width: '900px', maxWidth: '95vw', data: { mode: 'import', json: this.store.exportDocument() } })
+    this.dialog
+      .open(JsonDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data: { mode: 'import', json: this.store.exportDocument() },
+      })
       .afterClosed()
       .subscribe((res) => {
         if (!res?.json) return;

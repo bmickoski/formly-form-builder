@@ -15,7 +15,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class JsonDialogComponent {
   private readonly ref = inject(MatDialogRef<JsonDialogComponent>);
-  readonly data = inject(MAT_DIALOG_DATA) as { mode: 'exportFormly' | 'exportBuilder' | 'import' | 'importFormly'; json: string };
+  readonly data = inject(MAT_DIALOG_DATA) as {
+    mode: 'exportFormly' | 'exportBuilder' | 'import' | 'importFormly';
+    json: string;
+  };
 
   readonly json = signal(this.data.json ?? '');
 

@@ -2,9 +2,7 @@ import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, PreviewRenderer
 
 const DEFAULT_ROOT_ID = 'root';
 
-type ParseResult =
-  | { ok: true; doc: BuilderDocument; warnings: string[] }
-  | { ok: false; error: string };
+type ParseResult = { ok: true; doc: BuilderDocument; warnings: string[] } | { ok: false; error: string };
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v);
@@ -44,7 +42,12 @@ function normalizeFieldNode(raw: Record<string, unknown>, id: string, parentId: 
   };
 }
 
-function normalizeContainerNode(raw: Record<string, unknown>, id: string, type: ContainerNode['type'], parentId: string | null): ContainerNode {
+function normalizeContainerNode(
+  raw: Record<string, unknown>,
+  id: string,
+  type: ContainerNode['type'],
+  parentId: string | null,
+): ContainerNode {
   const props = isObject(raw['props']) ? raw['props'] : {};
   const out: ContainerNode = {
     id,
@@ -65,7 +68,8 @@ function normalizeContainerNode(raw: Record<string, unknown>, id: string, type: 
 
 function normalizeNode(raw: Record<string, unknown>, id: string, parentId: string | null): BuilderNode | null {
   if (raw['type'] === 'field') return normalizeFieldNode(raw, id, parentId);
-  if (raw['type'] === 'panel' || raw['type'] === 'row' || raw['type'] === 'col') return normalizeContainerNode(raw, id, raw['type'], parentId);
+  if (raw['type'] === 'panel' || raw['type'] === 'row' || raw['type'] === 'col')
+    return normalizeContainerNode(raw, id, raw['type'], parentId);
   return null;
 }
 
@@ -91,7 +95,13 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
   }
 
   if (!rawNodes[rootId]) {
-    const root: ContainerNode = { id: DEFAULT_ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
+    const root: ContainerNode = {
+      id: DEFAULT_ROOT_ID,
+      type: 'panel',
+      parentId: null,
+      children: [],
+      props: { title: 'Form' },
+    };
     return {
       ok: true,
       warnings: ['Root node missing; created empty root panel.'],
@@ -137,9 +147,11 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
   if (!resolvedRootId) return { ok: false, error: 'Invalid document: root node is not usable' };
 
   const rootNode = outNodes[resolvedRootId];
-  if (!rootNode || rootNode.type === 'field') return { ok: false, error: 'Invalid document: root must be a container node' };
+  if (!rootNode || rootNode.type === 'field')
+    return { ok: false, error: 'Invalid document: root must be a container node' };
 
-  const selectedId = typeof rawDoc['selectedId'] === 'string' && outNodes[rawDoc['selectedId']] ? rawDoc['selectedId'] : null;
+  const selectedId =
+    typeof rawDoc['selectedId'] === 'string' && outNodes[rawDoc['selectedId']] ? rawDoc['selectedId'] : null;
   if (rawDoc['selectedId'] && selectedId == null) {
     warnings.push('Selected node was invalid and has been cleared.');
   }

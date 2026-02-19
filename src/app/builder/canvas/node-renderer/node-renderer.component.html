@@ -23,7 +23,6 @@
         <div class="fb-drag-placeholder"></div>
       </ng-template>
     </div>
-
   }
 
   @if (isContainer() && (isRoot() || n.type !== 'row')) {
@@ -68,12 +67,17 @@
       >
         @if (isRoot() && children().length === 0) {
           <div class="fb-empty fb-empty-dropzone">
-            <div style="font-weight:600; margin-bottom:6px;">Drop fields here</div>
+            <div style="font-weight: 600; margin-bottom: 6px">Drop fields here</div>
             <div class="fb-hint">Drag from the left palette to start building.</div>
           </div>
         }
         @for (cid of children(); track cid) {
-          <div class="fb-child-slot" [class.row-slot]="isRowNode()" [style.flex-basis]="childFlexBasis(cid)" [style.max-width]="childFlexBasis(cid)">
+          <div
+            class="fb-child-slot"
+            [class.row-slot]="isRowNode()"
+            [style.flex-basis]="childFlexBasis(cid)"
+            [style.max-width]="childFlexBasis(cid)"
+          >
             <app-node-renderer [nodeId]="cid" />
           </div>
         }

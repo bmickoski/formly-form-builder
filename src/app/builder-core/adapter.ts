@@ -3,14 +3,22 @@ import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, isFieldNode } f
 
 function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
   switch (fieldKind) {
-    case 'input': return 'input';
-    case 'textarea': return 'textarea';
-    case 'checkbox': return 'checkbox';
-    case 'radio': return 'radio';
-    case 'select': return 'select';
-    case 'date': return 'input';
-    case 'number': return 'input';
-    default: return 'input';
+    case 'input':
+      return 'input';
+    case 'textarea':
+      return 'textarea';
+    case 'checkbox':
+      return 'checkbox';
+    case 'radio':
+      return 'radio';
+    case 'select':
+      return 'select';
+    case 'date':
+      return 'input';
+    case 'number':
+      return 'input';
+    default:
+      return 'input';
   }
 }
 
@@ -71,11 +79,13 @@ function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<stri
   });
 
   if (cn.type === 'panel') {
-    return [{
-      wrappers: ['panel'],
-      props: { label: cn.props.title ?? cn.props.label ?? 'Panel', description: cn.props.description },
-      fieldGroup: childrenFields,
-    }];
+    return [
+      {
+        wrappers: ['panel'],
+        props: { label: cn.props.title ?? cn.props.label ?? 'Panel', description: cn.props.description },
+        fieldGroup: childrenFields,
+      },
+    ];
   }
 
   if (cn.type === 'row') return [{ fieldGroup: childrenFields, className: rowClass(doc.renderer) }];

@@ -1,7 +1,7 @@
 name: Bug report
 description: Report a defect or regression
-title: "[Bug] "
-labels: ["bug"]
+title: '[Bug] '
+labels: ['bug']
 body:
   - type: textarea
     id: description
@@ -33,4 +33,4 @@ body:
     id: environment
     attributes:
       label: Environment
-      placeholder: "OS, browser, Node version, branch/commit"
+      placeholder: 'OS, browser, Node version, branch/commit'

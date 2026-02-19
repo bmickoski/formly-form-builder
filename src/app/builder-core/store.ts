@@ -1,5 +1,13 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { BuilderDocument, BuilderNode, ContainerNode, DropLocation, FieldNode, isContainerNode, isFieldNode } from './model';
+import {
+  BuilderDocument,
+  BuilderNode,
+  ContainerNode,
+  DropLocation,
+  FieldNode,
+  isContainerNode,
+  isFieldNode,
+} from './model';
 import { PALETTE, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 
@@ -42,7 +50,7 @@ export class BuilderStore {
 
   readonly selectedNode = computed(() => {
     const id = this._doc().selectedId;
-    return id ? this._doc().nodes[id] ?? null : null;
+    return id ? (this._doc().nodes[id] ?? null) : null;
   });
 
   readonly paletteByCategory = computed(() => {
@@ -324,7 +332,10 @@ export class BuilderStore {
     this._doc.set(next);
   }
 
-  private createNodeFromPalette(item: PaletteItem, parentId: string): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
+  private createNodeFromPalette(
+    item: PaletteItem,
+    parentId: string,
+  ): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
     const id = uid(item.nodeType === 'field' ? 'f' : 'c');
     const extraNodes: BuilderNode[] = [];
 
@@ -388,7 +399,13 @@ export class BuilderStore {
     const panel = this.addContainerNode(doc, 'panel', doc.rootId, { title: 'Contact Details' });
     this.addFieldNode(doc, 'input', panel.id, { label: 'First name', placeholder: 'Enter first name' });
     this.addFieldNode(doc, 'input', panel.id, { label: 'Last name', placeholder: 'Enter last name' });
-    this.addFieldNode(doc, 'input', panel.id, { label: 'Email', placeholder: 'name@company.com' }, { required: true, email: true });
+    this.addFieldNode(
+      doc,
+      'input',
+      panel.id,
+      { label: 'Email', placeholder: 'name@company.com' },
+      { required: true, email: true },
+    );
     this.addFieldNode(doc, 'textarea', panel.id, { label: 'Notes', placeholder: 'Additional notes' });
   }
 
@@ -417,7 +434,13 @@ export class BuilderStore {
         { label: 'Phone', value: 'phone' },
       ],
     });
-    this.addFieldNode(doc, 'textarea', right.id, { label: 'Summary', placeholder: 'Describe the request' }, { required: true });
+    this.addFieldNode(
+      doc,
+      'textarea',
+      right.id,
+      { label: 'Summary', placeholder: 'Describe the request' },
+      { required: true },
+    );
   }
 
   private buildAdvancedPreset(doc: BuilderDocument): void {
@@ -430,8 +453,20 @@ export class BuilderStore {
     const nestedLeft = this.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
     const nestedRight = this.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
 
-    this.addFieldNode(doc, 'input', nestedLeft.id, { label: 'Username', placeholder: 'j.doe' }, { required: true, minLength: 3 });
-    this.addFieldNode(doc, 'input', nestedLeft.id, { label: 'Email', placeholder: 'j.doe@company.com' }, { required: true, email: true });
+    this.addFieldNode(
+      doc,
+      'input',
+      nestedLeft.id,
+      { label: 'Username', placeholder: 'j.doe' },
+      { required: true, minLength: 3 },
+    );
+    this.addFieldNode(
+      doc,
+      'input',
+      nestedLeft.id,
+      { label: 'Email', placeholder: 'j.doe@company.com' },
+      { required: true, email: true },
+    );
     this.addFieldNode(doc, 'number', nestedRight.id, { label: 'Age', placeholder: '18' }, { min: 18, max: 120 });
     this.addFieldNode(doc, 'date', nestedRight.id, { label: 'Start date' });
 
@@ -448,7 +483,10 @@ export class BuilderStore {
 
     const bottomPanel = this.addContainerNode(doc, 'panel', panel.id, { title: 'Additional Details' });
     this.addFieldNode(doc, 'textarea', bottomPanel.id, { label: 'Biography', placeholder: 'Short profile summary' });
-    this.addFieldNode(doc, 'textarea', bottomPanel.id, { label: 'Internal notes', placeholder: 'Visible to administrators' });
+    this.addFieldNode(doc, 'textarea', bottomPanel.id, {
+      label: 'Internal notes',
+      placeholder: 'Visible to administrators',
+    });
   }
 
   private addContainerNode(

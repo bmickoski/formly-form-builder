@@ -21,11 +21,11 @@
     </button>
 
     <button mat-button (click)="openImportFormly()">
-  <mat-icon>transform</mat-icon>
-  Import Formly JSON
-</button>
+      <mat-icon>transform</mat-icon>
+      Import Formly JSON
+    </button>
 
-    <mat-form-field appearance="outline" style="width: 220px; margin-left: 8px;">
+    <mat-form-field appearance="outline" style="width: 220px; margin-left: 8px">
       <mat-label>Starter layout</mat-label>
       <mat-select [(value)]="presetToApply">
         @for (preset of store.presets; track preset.id) {
@@ -49,13 +49,13 @@
       Redo
     </button>
 
-<mat-form-field appearance="outline" style="width: 170px; margin-left: 8px;">
-  <mat-label>Preview UI</mat-label>
-  <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
-    <mat-option value="material">Material</mat-option>
-    <mat-option value="bootstrap">Bootstrap</mat-option>
-  </mat-select>
-</mat-form-field>
+    <mat-form-field appearance="outline" style="width: 170px; margin-left: 8px">
+      <mat-label>Preview UI</mat-label>
+      <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
+        <mat-option value="material">Material</mat-option>
+        <mat-option value="bootstrap">Bootstrap</mat-option>
+      </mat-select>
+    </mat-form-field>
 
     <span class="fb-toolbar-spacer"></span>
 

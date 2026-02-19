@@ -1,5 +1,5 @@
 <div class="fb-section">
-  <div style="font-weight:700; margin-bottom:6px;">Inspector</div>
+  <div style="font-weight: 700; margin-bottom: 6px">Inspector</div>
 
   @if (!node()) {
     <div class="fb-hint">Select an element on the canvas to edit its settings.</div>
@@ -8,7 +8,7 @@
     @let f = fieldNode();
     @let c = containerNode();
 
-    <div class="fb-hint" style="margin-bottom: 12px;">
+    <div class="fb-hint" style="margin-bottom: 12px">
       Editing: <strong>{{ isField() ? 'Field' : 'Layout' }}</strong>
     </div>
 
@@ -41,41 +41,61 @@
       <input matInput [ngModel]="n.props?.description" (ngModelChange)="setProp('description', $event)" />
     </mat-form-field>
 
-    <mat-slide-toggle [ngModel]="!!n.props?.hidden" (ngModelChange)="setProp('hidden', $event)">Hidden</mat-slide-toggle>
-    <mat-slide-toggle [ngModel]="!!n.props?.disabled" (ngModelChange)="setProp('disabled', $event)">Disabled</mat-slide-toggle>
+    <mat-slide-toggle [ngModel]="!!n.props?.hidden" (ngModelChange)="setProp('hidden', $event)"
+      >Hidden</mat-slide-toggle
+    >
+    <mat-slide-toggle [ngModel]="!!n.props?.disabled" (ngModelChange)="setProp('disabled', $event)"
+      >Disabled</mat-slide-toggle
+    >
 
-    <mat-divider style="margin: 12px 0;"></mat-divider>
+    <mat-divider style="margin: 12px 0"></mat-divider>
 
     @if (isField()) {
-      <div style="font-weight:600; margin-bottom: 6px;">Validation</div>
+      <div style="font-weight: 600; margin-bottom: 6px">Validation</div>
 
       <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)">
         Required
       </mat-slide-toggle>
 
-      <div style="display:grid; gap: 10px; margin-top: 10px;">
+      <div style="display: grid; gap: 10px; margin-top: 10px">
         <mat-form-field appearance="outline" class="fb-field">
           <mat-label>Min length</mat-label>
-          <input matInput type="number" [ngModel]="f?.validators?.minLength"
-                 (ngModelChange)="setVal('minLength', $event === '' ? null : +$event)" />
+          <input
+            matInput
+            type="number"
+            [ngModel]="f?.validators?.minLength"
+            (ngModelChange)="setVal('minLength', $event === '' ? null : +$event)"
+          />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="fb-field">
           <mat-label>Max length</mat-label>
-          <input matInput type="number" [ngModel]="f?.validators?.maxLength"
-                 (ngModelChange)="setVal('maxLength', $event === '' ? null : +$event)" />
+          <input
+            matInput
+            type="number"
+            [ngModel]="f?.validators?.maxLength"
+            (ngModelChange)="setVal('maxLength', $event === '' ? null : +$event)"
+          />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="fb-field">
           <mat-label>Min</mat-label>
-          <input matInput type="number" [ngModel]="f?.validators?.min"
-                 (ngModelChange)="setVal('min', $event === '' ? null : +$event)" />
+          <input
+            matInput
+            type="number"
+            [ngModel]="f?.validators?.min"
+            (ngModelChange)="setVal('min', $event === '' ? null : +$event)"
+          />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="fb-field">
           <mat-label>Max</mat-label>
-          <input matInput type="number" [ngModel]="f?.validators?.max"
-                 (ngModelChange)="setVal('max', $event === '' ? null : +$event)" />
+          <input
+            matInput
+            type="number"
+            [ngModel]="f?.validators?.max"
+            (ngModelChange)="setVal('max', $event === '' ? null : +$event)"
+          />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="fb-field">
@@ -84,22 +104,22 @@
         </mat-form-field>
       </div>
 
-      <mat-divider style="margin: 12px 0;"></mat-divider>
+      <mat-divider style="margin: 12px 0"></mat-divider>
 
-      <div style="font-weight:600; margin-bottom: 6px;">Field extras</div>
+      <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
       <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)">
         Searchable (select only)
       </mat-slide-toggle>
 
       @if (isChoiceField()) {
-        <mat-divider style="margin: 12px 0;"></mat-divider>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-weight:600;">Options</div>
+        <mat-divider style="margin: 12px 0"></mat-divider>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
+          <div style="font-weight: 600">Options</div>
           <button mat-stroked-button type="button" (click)="addOption()">Add option</button>
         </div>
 
         @for (opt of options(); track $index) {
-          <div style="border:1px solid #ececf5; border-radius:10px; padding:10px; margin-bottom:8px;">
+          <div style="border: 1px solid #ececf5; border-radius: 10px; padding: 10px; margin-bottom: 8px">
             <mat-form-field appearance="outline" class="fb-field">
               <mat-label>Label</mat-label>
               <input matInput [ngModel]="opt.label" (ngModelChange)="updateOption($index, { label: $event })" />
@@ -110,7 +130,7 @@
               <input matInput [ngModel]="opt.value" (ngModelChange)="updateOption($index, { value: $event })" />
             </mat-form-field>
 
-            <div style="display:flex; gap:8px;">
+            <div style="display: flex; gap: 8px">
               <button mat-button type="button" (click)="moveOption($index, -1)">Up</button>
               <button mat-button type="button" (click)="moveOption($index, 1)">Down</button>
               <button mat-button color="warn" type="button" (click)="removeOption($index)">Remove</button>
@@ -121,29 +141,29 @@
     }
 
     @if (isCol()) {
-      <mat-divider style="margin: 12px 0;"></mat-divider>
-      <div style="font-weight:600; margin-bottom: 6px;">Column</div>
+      <mat-divider style="margin: 12px 0"></mat-divider>
+      <div style="font-weight: 600; margin-bottom: 6px">Column</div>
       <mat-form-field appearance="outline" class="fb-field">
         <mat-label>Span (1-12)</mat-label>
         <input matInput type="number" [ngModel]="c?.props?.colSpan" (ngModelChange)="setProp('colSpan', +$event)" />
       </mat-form-field>
 
-      <div style="display:flex; gap:8px; margin-top:6px;">
+      <div style="display: flex; gap: 8px; margin-top: 6px">
         <button mat-stroked-button type="button" (click)="splitSelectedColumn(2)">Split x2</button>
         <button mat-stroked-button type="button" (click)="splitSelectedColumn(3)">Split x3</button>
       </div>
     }
 
     @if (isRow()) {
-      <mat-divider style="margin: 12px 0;"></mat-divider>
-      <div style="font-weight:600; margin-bottom: 6px;">Row</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <mat-divider style="margin: 12px 0"></mat-divider>
+      <div style="font-weight: 600; margin-bottom: 6px">Row</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
         <button mat-stroked-button type="button" (click)="addColumnToSelectedRow()">Add column</button>
         <button mat-stroked-button type="button" (click)="rebalanceSelectedRow()">Rebalance columns</button>
       </div>
     }
 
-    <mat-divider style="margin: 12px 0;"></mat-divider>
+    <mat-divider style="margin: 12px 0"></mat-divider>
     <button mat-button color="warn" (click)="store.removeSelected()">Delete selected</button>
   }
 </div>

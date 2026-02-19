@@ -2,9 +2,11 @@
   {{
     data.mode === 'exportFormly'
       ? 'Export Formly JSON'
-      : (data.mode === 'exportBuilder'
-          ? 'Export Builder JSON'
-          : (data.mode === 'importFormly' ? 'Import Formly JSON' : 'Import Builder JSON'))
+      : data.mode === 'exportBuilder'
+        ? 'Export Builder JSON'
+        : data.mode === 'importFormly'
+          ? 'Import Formly JSON'
+          : 'Import Builder JSON'
   }}
 </h2>
 
@@ -23,7 +25,11 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="copy()" *ngIf="data.mode === 'exportFormly' || data.mode === 'exportBuilder'">Copy</button>
+  <button mat-button (click)="copy()" *ngIf="data.mode === 'exportFormly' || data.mode === 'exportBuilder'">
+    Copy
+  </button>
   <button mat-button (click)="close()">Close</button>
-  <button mat-raised-button color="primary" (click)="done()">{{ data.mode === 'import' || data.mode === 'importFormly' ? 'Import' : 'Done' }}</button>
+  <button mat-raised-button color="primary" (click)="done()">
+    {{ data.mode === 'import' || data.mode === 'importFormly' ? 'Import' : 'Done' }}
+  </button>
 </mat-dialog-actions>

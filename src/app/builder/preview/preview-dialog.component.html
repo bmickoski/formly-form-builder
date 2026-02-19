@@ -1,22 +1,26 @@
-<h2 mat-dialog-title>Preview <span class="fb-hint">({{ isBootstrap ? 'Bootstrap' : 'Material' }})</span></h2>
+<h2 mat-dialog-title>
+  Preview <span class="fb-hint">({{ isBootstrap ? 'Bootstrap' : 'Material' }})</span>
+</h2>
 
 <mat-dialog-content class="fb-form">
   <form [formGroup]="form" (ngSubmit)="submit()">
     <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
 
-    <div style="display:flex; gap: 8px; margin-top: 16px;">
+    <div style="display: flex; gap: 8px; margin-top: 16px">
       @if (isBootstrap) {
         <button class="btn btn-primary" type="submit">Submit</button>
-        <button class="btn btn-outline-secondary" type="button" (click)="form.reset(); model = {};">Reset</button>
+        <button class="btn btn-outline-secondary" type="button" (click)="form.reset(); model = {}">Reset</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Submit</button>
-        <button mat-button type="button" (click)="form.reset(); model = {};">Reset</button>
+        <button mat-button type="button" (click)="form.reset(); model = {}">Reset</button>
       }
     </div>
 
-    <div style="margin-top: 14px;">
+    <div style="margin-top: 14px">
       <div class="fb-hint">Model</div>
-      <pre style="background:#fafafe; border:1px solid #eee; padding:10px; border-radius:10px; overflow:auto;">{{ model | json }}</pre>
+      <pre style="background: #fafafe; border: 1px solid #eee; padding: 10px; border-radius: 10px; overflow: auto">{{
+        model | json
+      }}</pre>
     </div>
   </form>
 </mat-dialog-content>

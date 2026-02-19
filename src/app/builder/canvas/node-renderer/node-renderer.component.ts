@@ -193,5 +193,4 @@ export class NodeRendererComponent {
     if (dropListId.startsWith('drop_')) return dropListId.replace(/^drop_/, '');
     return null;
   }
-
 }

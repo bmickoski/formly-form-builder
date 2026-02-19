@@ -16,10 +16,7 @@ import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, ReactiveFormsModule, FormlyModule, FormlyMaterialModule, JsonPipe],
   providers: [
-    provideFormlyCore([
-      ...withFormlyMaterial(),
-      { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
-    ]),
+    provideFormlyCore([...withFormlyMaterial(), { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] }]),
   ],
   templateUrl: './preview-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

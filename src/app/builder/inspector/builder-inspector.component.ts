@@ -74,7 +74,10 @@ export class BuilderInspectorComponent {
   addOption(): void {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return;
-    const next = [...(f.props.options ?? []), { label: `Option ${(f.props.options?.length ?? 0) + 1}`, value: `option_${(f.props.options?.length ?? 0) + 1}` }];
+    const next = [
+      ...(f.props.options ?? []),
+      { label: `Option ${(f.props.options?.length ?? 0) + 1}`, value: `option_${(f.props.options?.length ?? 0) + 1}` },
+    ];
     this.store.updateNodeProps(f.id, { options: next });
   }
 

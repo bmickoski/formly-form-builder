@@ -16,7 +16,7 @@ function getColSpan(className?: string): number | null {
 }
 
 function fieldPropsOf(f: FormlyFieldConfig): Record<string, any> {
-  return ((f.props ?? f.templateOptions ?? {}) as Record<string, any>);
+  return (f.props ?? f.templateOptions ?? {}) as Record<string, any>;
 }
 
 function fieldKindFromType(f: FormlyFieldConfig): FieldNode['fieldKind'] {
@@ -122,7 +122,10 @@ function importOne(doc: BuilderDocument, parentId: string, f: FormlyFieldConfig)
     return;
   }
 
-  if (Array.isArray(f.fieldGroup) && /\b(?:fb-col|col-(?:xs-|sm-|md-|lg-|xl-|xxl-)?\d{1,2}|col-\d{1,2})\b/.test(f.className ?? '')) {
+  if (
+    Array.isArray(f.fieldGroup) &&
+    /\b(?:fb-col|col-(?:xs-|sm-|md-|lg-|xl-|xxl-)?\d{1,2}|col-\d{1,2})\b/.test(f.className ?? '')
+  ) {
     const col = createContainer('col', parentId);
     const span = getColSpan(f.className ?? undefined);
     if (span != null) col.props.colSpan = span;
@@ -134,7 +137,7 @@ function importOne(doc: BuilderDocument, parentId: string, f: FormlyFieldConfig)
     return;
   }
 
-  if (Array.isArray(f.fieldGroup) && f.fieldGroup.length > 0 && (!f.type && !f.key)) {
+  if (Array.isArray(f.fieldGroup) && f.fieldGroup.length > 0 && !f.type && !f.key) {
     const row = createContainer('row', parentId);
     doc.nodes[row.id] = row;
     doc.nodes[parentId].children.push(row.id);
@@ -165,10 +168,13 @@ function importOne(doc: BuilderDocument, parentId: string, f: FormlyFieldConfig)
   doc.nodes[parentId].children.push(field.id);
 }
 
-export function formlyToBuilder(fields: FormlyFieldConfig[], renderer: BuilderDocument['renderer'] = 'material'): BuilderDocument {
+export function formlyToBuilder(
+  fields: FormlyFieldConfig[],
+  renderer: BuilderDocument['renderer'] = 'material',
+): BuilderDocument {
   const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
   const doc: BuilderDocument = { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer };
 
-  for (const f of (fields ?? [])) importOne(doc, ROOT_ID, f);
+  for (const f of fields ?? []) importOne(doc, ROOT_ID, f);
   return doc;
 }
