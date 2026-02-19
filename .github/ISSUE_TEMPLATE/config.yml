@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions / support
+    url: https://github.com/bmickoski/formly-form-builder/discussions
+    about: Ask usage or design questions in Discussions

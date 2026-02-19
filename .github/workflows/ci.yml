@@ -5,9 +5,16 @@ on:
     branches: [main, master]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   quality:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
 
     steps:
       - name: Checkout
@@ -16,8 +23,16 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
+
+      - name: Cache Angular build cache
+        uses: actions/cache@v4
+        with:
+          path: .angular/cache
+          key: ${{ runner.os }}-angular-${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-angular-${{ matrix.node }}-
 
       - name: Setup Chrome
         id: setup-chrome
@@ -32,13 +47,41 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Format check
+        run: npm run format:check
+
       - name: Test
-        run: npm test -- --watch=false --browsers=ChromeHeadless
+        run: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
         env:
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
 
       - name: Build
         run: npm run build
 
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node }}
+          path: coverage/**
+          if-no-files-found: warn
+
       - name: Docs
+        if: matrix.node == 22
         run: npm run docs
+
+      - name: Upload docs artifact
+        if: matrix.node == 22
+        uses: actions/upload-artifact@v4
+        with:
+          name: compodoc-site
+          path: docs/compodoc/**
+          if-no-files-found: error
+
+      - name: Upload build artifact
+        if: matrix.node == 22
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-browser
+          path: dist/formly-form-builder/**
+          if-no-files-found: error

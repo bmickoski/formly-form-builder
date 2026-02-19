@@ -19,6 +19,7 @@ npm run docs
 ## Commit conventions
 - Use Conventional Commits (validated by commitlint).
 - Keep commits scoped and reviewable (one concern per commit).
+- Use pull requests only; direct pushes to protected branch should be blocked.
 
 ## Development rules
 - Keep builder state in domain model only (never store raw Formly as editor state).

@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a new capability
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user need or gap does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the expected UX and behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable outcomes.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Builder Core
+        - Canvas / DnD
+        - Inspector
+        - Preview / Formly
+        - Docs / Tooling

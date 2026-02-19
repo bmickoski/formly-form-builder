@@ -35,7 +35,7 @@ npm run docs
 ## Engineering workflow
 - `pre-commit`: runs `lint-staged` (Prettier + ESLint fix on staged files).
 - `commit-msg`: validates Conventional Commits via Commitlint.
-- CI (`.github/workflows/ci.yml`) enforces: typecheck, lint, test, build, docs.
+- CI (`.github/workflows/ci.yml`) enforces: typecheck, lint, format check, test, build, docs.
 
 ## Export/Import modes
 - `Export Formly JSON`: production-consumable `FormlyFieldConfig[]`.
@@ -56,3 +56,4 @@ npm run docs
 - `ARCHITECTURE.md`: model, store, DnD, adapters, validation/migration.
 - `CONTRIBUTING.md`: coding/testing workflow and rules.
 - `TROUBLESHOOTING.md`: common runtime and DnD issues.
+- `docs/GITHUB_SETUP.md`: branch protection and required checks setup.

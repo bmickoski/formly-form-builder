@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a defect or regression
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Go to ...
+        2. Drag ...
+        3. Click ...
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      description: Paste console or build/runtime error messages.
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "OS, browser, Node version, branch/commit"
