@@ -12,7 +12,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}\"",
     "docs": "compodoc -p tsconfig.app.json -d docs/compodoc --disableGraph",
     "docs:serve": "compodoc -s -d docs/compodoc",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:pages": "ng build --configuration production --base-href /formly-form-builder/"
   },
   "dependencies": {
     "@angular/animations": "^21.1.5",

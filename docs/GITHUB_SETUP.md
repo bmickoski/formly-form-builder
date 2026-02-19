@@ -28,3 +28,9 @@ Use the CI checks from `.github/workflows/ci.yml`:
 - Enforce linear history.
 - Enable auto-delete branch after merge.
 - Enable Dependabot updates and security alerts.
+
+## GitHub Pages
+
+1. Open Settings -> Pages.
+2. In Build and deployment, select Source: GitHub Actions.
+3. Push to master to trigger .github/workflows/pages.yml.

@@ -2,6 +2,11 @@
 
 Production-oriented visual builder with a strict domain model and renderer-aware Formly export.
 
+## Live Demo
+
+- Demo URL: https://bmickoski.github.io/formly-form-builder/
+- Deployed automatically by `.github/workflows/pages.yml` on push to `master`.
+
 ## What this app does
 
 - Left panel: draggable palette (fields + layout).
@@ -31,6 +36,7 @@ App runs at `http://localhost:4201`.
 ```bash
 npm start
 npm run build
+npm run build:pages
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run typecheck
 npm run lint
