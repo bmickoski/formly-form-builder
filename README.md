@@ -38,6 +38,9 @@ npm start
 npm run build
 npm run build:pages
 npm test -- --watch=false --browsers=ChromeHeadless
+npm run e2e
+npm run e2e:smoke
+npm run e2e:critical
 npm run typecheck
 npm run lint
 npm run format:check
