@@ -1,4 +1,12 @@
-import { BuilderDocument, BuilderNode, ContainerNode, DropLocation, FieldNode, isContainerNode, isFieldNode } from './model';
+import {
+  BuilderDocument,
+  BuilderNode,
+  ContainerNode,
+  DropLocation,
+  FieldNode,
+  isContainerNode,
+  isFieldNode,
+} from './model';
 import { toFieldKey, uid } from './ids';
 import { PALETTE, PaletteItem } from './registry';
 
@@ -59,11 +67,7 @@ export function updateNodeValidatorsCommand(
   return { ...doc, nodes };
 }
 
-export function addFromPaletteCommand(
-  doc: BuilderDocument,
-  paletteId: string,
-  loc: DropLocation,
-): BuilderDocument {
+export function addFromPaletteCommand(doc: BuilderDocument, paletteId: string, loc: DropLocation): BuilderDocument {
   const item = PALETTE.find((candidate) => candidate.id === paletteId);
   if (!item) return doc;
 
