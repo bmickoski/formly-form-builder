@@ -4,6 +4,18 @@ export type PreviewRenderer = 'material' | 'bootstrap';
 
 export type FieldKind = 'input' | 'textarea' | 'checkbox' | 'radio' | 'select' | 'date' | 'number';
 
+export type AsyncUniqueSourceType = 'url' | 'lookup';
+
+export interface AsyncUniqueValidator {
+  sourceType: AsyncUniqueSourceType;
+  url?: string;
+  lookupKey?: string;
+  listPath?: string;
+  valueKey?: string;
+  caseSensitive?: boolean;
+  message?: string;
+}
+
 export interface BuilderValidators {
   required?: boolean;
   minLength?: number | null;
@@ -12,6 +24,7 @@ export interface BuilderValidators {
   max?: number | null;
   pattern?: string | null;
   email?: boolean;
+  asyncUnique?: AsyncUniqueValidator;
 }
 
 export interface OptionItem {

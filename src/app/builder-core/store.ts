@@ -20,6 +20,17 @@ export type { BuilderPresetId } from './presets';
 
 const ROOT_ID = 'root';
 
+interface ApplyOptions {
+  recordHistory?: boolean;
+  historyGroupKey?: string;
+  historyWindowMs?: number;
+}
+
+interface HistoryGroupState {
+  key: string;
+  expiresAt: number;
+}
+
 function createRoot(): BuilderDocument {
   const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
   return { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer: 'material' };
@@ -35,6 +46,7 @@ export class BuilderStore {
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
   private readonly maxHistory = 100;
+  private historyGroup: HistoryGroupState | null = null;
 
   readonly doc = this._doc.asReadonly();
   readonly nodes = computed(() => this._doc().nodes);
@@ -67,7 +79,7 @@ export class BuilderStore {
 
   /** Selects a node in canvas/inspector. */
   select(id: string | null): void {
-    this.apply((doc) => ({ ...doc, selectedId: id }), false);
+    this.apply((doc) => ({ ...doc, selectedId: id }), { recordHistory: false });
   }
 
   /** Resets builder state to a new empty document. */
@@ -104,6 +116,8 @@ export class BuilderStore {
   undo(): void {
     const past = this._past();
     if (past.length === 0) return;
+
+    this.historyGroup = null;
     const previous = past[past.length - 1];
     const current = this._doc();
     this._past.set(past.slice(0, -1));
@@ -115,6 +129,8 @@ export class BuilderStore {
   redo(): void {
     const future = this._future();
     if (future.length === 0) return;
+
+    this.historyGroup = null;
     const next = future[future.length - 1];
     const current = this._doc();
     this._future.set(future.slice(0, -1));
@@ -142,6 +158,21 @@ export class BuilderStore {
   /** Applies partial validator patch to a field node. */
   updateNodeValidators(id: string, patch: Record<string, unknown>): void {
     this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch));
+  }
+
+  /** Applies grouped props updates so rapid typing becomes one undo step. */
+  updateNodePropsGrouped(id: string, patch: Record<string, unknown>, groupKey: string, historyWindowMs = 500): void {
+    this.apply((doc) => updateNodePropsCommand(doc, id, patch), { historyGroupKey: groupKey, historyWindowMs });
+  }
+
+  /** Applies grouped validator updates so rapid typing becomes one undo step. */
+  updateNodeValidatorsGrouped(
+    id: string,
+    patch: Record<string, unknown>,
+    groupKey: string,
+    historyWindowMs = 500,
+  ): void {
+    this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch), { historyGroupKey: groupKey, historyWindowMs });
   }
 
   /** Adds a new palette item instance at drop location. */
@@ -174,15 +205,35 @@ export class BuilderStore {
     this.apply((doc) => splitColumnCommand(doc, columnId, parts));
   }
 
-  private apply(mutator: (doc: BuilderDocument) => BuilderDocument, recordHistory = true): void {
+  private apply(mutator: (doc: BuilderDocument) => BuilderDocument, options: ApplyOptions = {}): void {
+    const { recordHistory = true, historyGroupKey, historyWindowMs = 500 } = options;
+
     const previous = this._doc();
     const next = mutator(previous);
     if (next === previous) return;
 
     if (recordHistory) {
-      this._past.update((history) => [...history, previous].slice(-this.maxHistory));
+      const now = Date.now();
+      const canGroup =
+        !!historyGroupKey &&
+        !!this.historyGroup &&
+        this.historyGroup.key === historyGroupKey &&
+        now <= this.historyGroup.expiresAt;
+
+      if (!canGroup) {
+        this._past.update((history) => [...history, previous].slice(-this.maxHistory));
+      }
       this._future.set([]);
+
+      if (historyGroupKey) {
+        this.historyGroup = { key: historyGroupKey, expiresAt: now + historyWindowMs };
+      } else {
+        this.historyGroup = null;
+      }
+    } else {
+      this.historyGroup = null;
     }
+
     this._doc.set(next);
   }
 
@@ -228,4 +279,3 @@ export class BuilderStore {
     return node;
   }
 }
-

@@ -1,5 +1,13 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { BuilderDocument, BuilderNode, ConditionalRule, ContainerNode, FieldNode, isFieldNode } from './model';
+import {
+  AsyncUniqueValidator,
+  BuilderDocument,
+  BuilderNode,
+  ConditionalRule,
+  ContainerNode,
+  FieldNode,
+  isFieldNode,
+} from './model';
 
 interface FormlyFieldProps {
   label?: string;
@@ -18,6 +26,7 @@ interface FormlyFieldProps {
   };
   visibleRule?: ConditionalRule;
   enabledRule?: ConditionalRule;
+  asyncUnique?: AsyncUniqueValidator;
   type?: string;
   min?: number;
   max?: number;
@@ -59,6 +68,7 @@ function fieldProps(node: FieldNode): FormlyFieldProps {
   applyRuleProps(node, props);
   applyTypeProps(node, props);
   applyValidatorProps(node, props);
+  applyAsyncValidatorProps(node, props);
   return props;
 }
 
@@ -100,6 +110,11 @@ function applyValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
   if (node.validators.minLength != null) props.minLength = node.validators.minLength;
   if (node.validators.maxLength != null) props.maxLength = node.validators.maxLength;
   if (node.validators.pattern) props.pattern = node.validators.pattern;
+}
+
+function applyAsyncValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
+  if (!node.validators.asyncUnique) return;
+  props.asyncUnique = { ...node.validators.asyncUnique };
 }
 
 function ruleConditionExpression(rule: ConditionalRule): string | null {

@@ -10,6 +10,7 @@ import { FormlyMaterialModule, withFormlyMaterial } from '@ngx-formly/material';
 import { BuilderStore } from '../../builder-core/store';
 import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
+import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 
@@ -52,6 +53,9 @@ export class PreviewMaterialDialogComponent {
 
   async loadDynamicOptions(): Promise<void> {
     await resolveDynamicOptionsForFields(this.fields, {
+      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
+    });
+    resolveAsyncValidatorsForFields(this.fields, {
       lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
     });
     this.fields = [...this.fields];

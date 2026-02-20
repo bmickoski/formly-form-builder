@@ -113,4 +113,24 @@ describe('BuilderStore layout commands', () => {
       expect(nodes[colId]?.type).toBe('col');
     }
   });
+
+  it('groups rapid inspector updates into one undo step', () => {
+    store.addFromPalette('input', { containerId: rootId(), index: 0 });
+    const fieldId = selectedId();
+
+    store.updateNodePropsGrouped(fieldId, { label: 'N' }, `${fieldId}:prop:label`, 1000);
+    store.updateNodePropsGrouped(fieldId, { label: 'Na' }, `${fieldId}:prop:label`, 1000);
+    store.updateNodePropsGrouped(fieldId, { label: 'Name' }, `${fieldId}:prop:label`, 1000);
+
+    const node = store.nodes()[fieldId];
+    expect(node?.type).toBe('field');
+    if (!node || node.type !== 'field') return;
+    expect(node.props.label).toBe('Name');
+
+    store.undo();
+    const afterUndo = store.nodes()[fieldId];
+    expect(afterUndo?.type).toBe('field');
+    if (!afterUndo || afterUndo.type !== 'field') return;
+    expect(afterUndo.props.label).toBe('Input');
+  });
 });

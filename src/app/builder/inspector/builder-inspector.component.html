@@ -12,7 +12,7 @@
       Editing: <strong>{{ isField() ? 'Field' : 'Layout' }}</strong>
     </div>
 
-    <mat-tab-group>
+    <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="onSelectedTabChange($event)">
       <mat-tab label="Basic">
         <div style="padding-top: 10px">
           <mat-form-field appearance="outline" class="fb-field">
@@ -169,9 +169,9 @@
       <mat-tab label="Validation">
         <div style="padding-top: 10px">
           @if (isField()) {
-            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)">
-              Required
-            </mat-slide-toggle>
+            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)"
+              >Required</mat-slide-toggle
+            >
 
             <div style="display: grid; gap: 10px; margin-top: 10px">
               <mat-form-field appearance="outline" class="fb-field">
@@ -219,6 +219,71 @@
                 <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
               </mat-form-field>
             </div>
+
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Async uniqueness</div>
+            <mat-slide-toggle [ngModel]="!!asyncUnique()" (ngModelChange)="enableAsyncUnique($event)"
+              >Enable unique check</mat-slide-toggle
+            >
+
+            @if (asyncUnique()) {
+              <mat-form-field appearance="outline" class="fb-field" style="margin-top: 10px">
+                <mat-label>Source</mat-label>
+                <mat-select [ngModel]="asyncUnique()?.sourceType" (ngModelChange)="setAsyncUniqueSource($event)">
+                  @for (source of asyncUniqueSources; track source.value) {
+                    <mat-option [value]="source.value">{{ source.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (asyncUnique()?.sourceType === 'lookup') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Lookup key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.lookupKey"
+                    (ngModelChange)="updateAsyncUnique({ lookupKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              @if (asyncUnique()?.sourceType === 'url') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>URL</mat-label>
+                  <input matInput [ngModel]="asyncUnique()?.url" (ngModelChange)="updateAsyncUnique({ url: $event })" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>List path (optional)</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.listPath"
+                    (ngModelChange)="updateAsyncUnique({ listPath: $event })"
+                  />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.valueKey"
+                    (ngModelChange)="updateAsyncUnique({ valueKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Error message</mat-label>
+                <input
+                  matInput
+                  [ngModel]="asyncUnique()?.message"
+                  (ngModelChange)="updateAsyncUnique({ message: $event })"
+                />
+              </mat-form-field>
+              <mat-slide-toggle
+                [ngModel]="!!asyncUnique()?.caseSensitive"
+                (ngModelChange)="updateAsyncUnique({ caseSensitive: $event })"
+                >Case sensitive compare</mat-slide-toggle
+              >
+            }
           } @else {
             <div class="fb-hint">Validation settings are available for fields only.</div>
           }
@@ -229,9 +294,9 @@
         <div style="padding-top: 10px">
           @if (isField()) {
             <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
-            <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)">
-              Searchable (select only)
-            </mat-slide-toggle>
+            <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)"
+              >Searchable (select only)</mat-slide-toggle
+            >
 
             @if (isChoiceField()) {
               <mat-divider style="margin: 12px 0"></mat-divider>

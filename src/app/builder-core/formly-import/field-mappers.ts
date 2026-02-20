@@ -1,9 +1,18 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ConditionalRule, FieldNode, FieldProps, OptionsSource, OptionItem, RuleOperator } from '../model';
+import {
+  AsyncUniqueValidator,
+  ConditionalRule,
+  FieldNode,
+  FieldProps,
+  OptionsSource,
+  OptionItem,
+  RuleOperator,
+} from '../model';
 import { fieldPropsOf, isRecord, toBooleanOrUndefined, toNumberOrUndefined, toStringOrUndefined } from './shared';
 
 const RULE_OPERATORS = new Set<RuleOperator>(['truthy', 'falsy', 'eq', 'ne', 'contains', 'gt', 'lt']);
 const SOURCE_TYPES = new Set<OptionsSource['type']>(['static', 'lookup', 'url']);
+const UNIQUE_SOURCE_TYPES = new Set<AsyncUniqueValidator['sourceType']>(['lookup', 'url']);
 
 export function fieldKindFromType(field: FormlyFieldConfig): FieldNode['fieldKind'] {
   const type = String(field.type ?? 'input');
@@ -43,6 +52,9 @@ export function toValidators(field: FormlyFieldConfig): FieldNode['validators'] 
 
   const pattern = toStringOrUndefined(props['pattern']);
   if (pattern !== undefined) validators.pattern = pattern;
+
+  const asyncUnique = toAsyncUniqueValidator(props['asyncUnique']);
+  if (asyncUnique) validators.asyncUnique = asyncUnique;
 
   if (isRecord(field.validators)) {
     const vMinLength = toNumberOrUndefined(field.validators['minLength']);
@@ -126,5 +138,21 @@ function toConditionalRule(value: unknown): ConditionalRule | null {
     dependsOnKey,
     operator: operatorRaw as RuleOperator,
     value: toStringOrUndefined(value['value']),
+  };
+}
+
+function toAsyncUniqueValidator(value: unknown): AsyncUniqueValidator | null {
+  if (!isRecord(value)) return null;
+  const sourceType = toStringOrUndefined(value['sourceType']);
+  if (!sourceType || !UNIQUE_SOURCE_TYPES.has(sourceType as AsyncUniqueValidator['sourceType'])) return null;
+
+  return {
+    sourceType: sourceType as AsyncUniqueValidator['sourceType'],
+    url: toStringOrUndefined(value['url']),
+    lookupKey: toStringOrUndefined(value['lookupKey']),
+    listPath: toStringOrUndefined(value['listPath']),
+    valueKey: toStringOrUndefined(value['valueKey']),
+    message: toStringOrUndefined(value['message']),
+    caseSensitive: toBooleanOrUndefined(value['caseSensitive']),
   };
 }
