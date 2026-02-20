@@ -113,6 +113,66 @@
 
       @if (isChoiceField()) {
         <mat-divider style="margin: 12px 0"></mat-divider>
+        <div style="font-weight: 600; margin-bottom: 6px">Options source</div>
+        <mat-form-field appearance="outline" class="fb-field">
+          <mat-label>Source</mat-label>
+          <mat-select [ngModel]="optionsSourceType()" (ngModelChange)="setOptionsSourceType($event)">
+            @for (item of optionsSourceTypes; track item.value) {
+              <mat-option [value]="item.value">{{ item.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (optionsSourceType() === 'lookup') {
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>Lookup key</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.lookupKey"
+              (ngModelChange)="updateOptionsSource({ lookupKey: $event })"
+            />
+          </mat-form-field>
+        }
+
+        @if (optionsSourceType() === 'url') {
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>URL</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.url"
+              (ngModelChange)="updateOptionsSource({ url: $event })"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>List path (optional)</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.listPath"
+              (ngModelChange)="updateOptionsSource({ listPath: $event })"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>Label key</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.labelKey"
+              (ngModelChange)="updateOptionsSource({ labelKey: $event })"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>Value key</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.valueKey"
+              (ngModelChange)="updateOptionsSource({ valueKey: $event })"
+            />
+          </mat-form-field>
+        }
+
+        @if (optionsSourceType() !== 'static') {
+          <div class="fb-hint" style="margin-bottom: 10px">Static options below are used as fallback.</div>
+        }
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
           <div style="font-weight: 600">Options</div>
           <button mat-stroked-button type="button" (click)="addOption()">Add option</button>

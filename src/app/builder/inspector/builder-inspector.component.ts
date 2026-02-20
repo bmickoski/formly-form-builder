@@ -5,14 +5,23 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 
 import { BuilderStore } from '../../builder-core/store';
-import { OptionItem, isContainerNode, isFieldNode } from '../../builder-core/model';
+import { OptionItem, OptionsSource, OptionsSourceType, isContainerNode, isFieldNode } from '../../builder-core/model';
 
 @Component({
   selector: 'app-builder-inspector',
   standalone: true,
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatSlideToggleModule, MatDividerModule, MatButtonModule],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSlideToggleModule,
+    MatDividerModule,
+    MatButtonModule,
+    MatSelectModule,
+  ],
   templateUrl: './builder-inspector.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -34,6 +43,11 @@ export class BuilderInspectorComponent {
     const f = this.fieldNode();
     return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio');
   });
+  readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
+    { value: 'static', label: 'Static options' },
+    { value: 'lookup', label: 'Lookup key' },
+    { value: 'url', label: 'URL (HTTP)' },
+  ];
 
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
@@ -69,6 +83,45 @@ export class BuilderInspectorComponent {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return [];
     return f.props.options ?? [];
+  }
+
+  optionsSourceType(): OptionsSourceType {
+    const f = this.fieldNode();
+    if (!f || !this.isChoiceField()) return 'static';
+    return f.props.optionsSource?.type ?? 'static';
+  }
+
+  setOptionsSourceType(type: OptionsSourceType): void {
+    const f = this.fieldNode();
+    if (!f || !this.isChoiceField()) return;
+    if (type === 'static') {
+      this.store.updateNodeProps(f.id, { optionsSource: undefined });
+      return;
+    }
+    const current: Partial<OptionsSource> = f.props.optionsSource ?? {};
+    const next: OptionsSource = {
+      type,
+      url: current.url,
+      lookupKey: current.lookupKey,
+      listPath: current.listPath,
+      labelKey: current.labelKey,
+      valueKey: current.valueKey,
+    };
+    this.store.updateNodeProps(f.id, { optionsSource: next });
+  }
+
+  updateOptionsSource(patch: Partial<OptionsSource>): void {
+    const f = this.fieldNode();
+    if (!f || !this.isChoiceField()) return;
+    const sourceType = this.optionsSourceType();
+    if (sourceType === 'static') return;
+    const current = f.props.optionsSource ?? { type: sourceType };
+    this.store.updateNodeProps(f.id, {
+      optionsSource: {
+        ...current,
+        ...patch,
+      },
+    });
   }
 
   addOption(): void {
