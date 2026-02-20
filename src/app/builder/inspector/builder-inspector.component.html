@@ -12,216 +12,239 @@
       Editing: <strong>{{ isField() ? 'Field' : 'Layout' }}</strong>
     </div>
 
-    <mat-form-field appearance="outline" class="fb-field">
-      <mat-label>Label</mat-label>
-      <input matInput [ngModel]="n.props?.label" (ngModelChange)="setProp('label', $event)" />
-    </mat-form-field>
-
-    @if (isPanel()) {
-      <mat-form-field appearance="outline" class="fb-field">
-        <mat-label>Panel title</mat-label>
-        <input matInput [ngModel]="c?.props?.title" (ngModelChange)="setProp('title', $event)" />
-      </mat-form-field>
-    }
-
-    @if (isField()) {
-      <mat-form-field appearance="outline" class="fb-field">
-        <mat-label>Key</mat-label>
-        <input matInput [ngModel]="f?.props?.key" (ngModelChange)="setProp('key', $event)" />
-      </mat-form-field>
-    }
-
-    <mat-form-field appearance="outline" class="fb-field">
-      <mat-label>Placeholder</mat-label>
-      <input matInput [ngModel]="n.props?.placeholder" (ngModelChange)="setProp('placeholder', $event)" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="fb-field">
-      <mat-label>Description</mat-label>
-      <input matInput [ngModel]="n.props?.description" (ngModelChange)="setProp('description', $event)" />
-    </mat-form-field>
-
-    <mat-slide-toggle [ngModel]="!!n.props?.hidden" (ngModelChange)="setProp('hidden', $event)"
-      >Hidden</mat-slide-toggle
-    >
-    <mat-slide-toggle [ngModel]="!!n.props?.disabled" (ngModelChange)="setProp('disabled', $event)"
-      >Disabled</mat-slide-toggle
-    >
-
-    <mat-divider style="margin: 12px 0"></mat-divider>
-
-    @if (isField()) {
-      <div style="font-weight: 600; margin-bottom: 6px">Validation</div>
-
-      <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)">
-        Required
-      </mat-slide-toggle>
-
-      <div style="display: grid; gap: 10px; margin-top: 10px">
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Min length</mat-label>
-          <input
-            matInput
-            type="number"
-            [ngModel]="f?.validators?.minLength"
-            (ngModelChange)="setVal('minLength', $event === '' ? null : +$event)"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Max length</mat-label>
-          <input
-            matInput
-            type="number"
-            [ngModel]="f?.validators?.maxLength"
-            (ngModelChange)="setVal('maxLength', $event === '' ? null : +$event)"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Min</mat-label>
-          <input
-            matInput
-            type="number"
-            [ngModel]="f?.validators?.min"
-            (ngModelChange)="setVal('min', $event === '' ? null : +$event)"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Max</mat-label>
-          <input
-            matInput
-            type="number"
-            [ngModel]="f?.validators?.max"
-            (ngModelChange)="setVal('max', $event === '' ? null : +$event)"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Pattern (regex)</mat-label>
-          <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
-        </mat-form-field>
-      </div>
-
-      <mat-divider style="margin: 12px 0"></mat-divider>
-
-      <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
-      <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)">
-        Searchable (select only)
-      </mat-slide-toggle>
-
-      @if (isChoiceField()) {
-        <mat-divider style="margin: 12px 0"></mat-divider>
-        <div style="font-weight: 600; margin-bottom: 6px">Options source</div>
-        <mat-form-field appearance="outline" class="fb-field">
-          <mat-label>Source</mat-label>
-          <mat-select [ngModel]="optionsSourceType()" (ngModelChange)="setOptionsSourceType($event)">
-            @for (item of optionsSourceTypes; track item.value) {
-              <mat-option [value]="item.value">{{ item.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        @if (optionsSourceType() === 'lookup') {
+    <mat-tab-group>
+      <mat-tab label="Basic">
+        <div style="padding-top: 10px">
           <mat-form-field appearance="outline" class="fb-field">
-            <mat-label>Lookup key</mat-label>
-            <input
-              matInput
-              [ngModel]="f?.props?.optionsSource?.lookupKey"
-              (ngModelChange)="updateOptionsSource({ lookupKey: $event })"
-            />
+            <mat-label>Label</mat-label>
+            <input matInput [ngModel]="n.props?.label" (ngModelChange)="setProp('label', $event)" />
           </mat-form-field>
-        }
 
-        @if (optionsSourceType() === 'url') {
-          <mat-form-field appearance="outline" class="fb-field">
-            <mat-label>URL</mat-label>
-            <input
-              matInput
-              [ngModel]="f?.props?.optionsSource?.url"
-              (ngModelChange)="updateOptionsSource({ url: $event })"
-            />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="fb-field">
-            <mat-label>List path (optional)</mat-label>
-            <input
-              matInput
-              [ngModel]="f?.props?.optionsSource?.listPath"
-              (ngModelChange)="updateOptionsSource({ listPath: $event })"
-            />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="fb-field">
-            <mat-label>Label key</mat-label>
-            <input
-              matInput
-              [ngModel]="f?.props?.optionsSource?.labelKey"
-              (ngModelChange)="updateOptionsSource({ labelKey: $event })"
-            />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="fb-field">
-            <mat-label>Value key</mat-label>
-            <input
-              matInput
-              [ngModel]="f?.props?.optionsSource?.valueKey"
-              (ngModelChange)="updateOptionsSource({ valueKey: $event })"
-            />
-          </mat-form-field>
-        }
-
-        @if (optionsSourceType() !== 'static') {
-          <div class="fb-hint" style="margin-bottom: 10px">Static options below are used as fallback.</div>
-        }
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
-          <div style="font-weight: 600">Options</div>
-          <button mat-stroked-button type="button" (click)="addOption()">Add option</button>
-        </div>
-
-        @for (opt of options(); track $index) {
-          <div style="border: 1px solid #ececf5; border-radius: 10px; padding: 10px; margin-bottom: 8px">
+          @if (isPanel()) {
             <mat-form-field appearance="outline" class="fb-field">
-              <mat-label>Label</mat-label>
-              <input matInput [ngModel]="opt.label" (ngModelChange)="updateOption($index, { label: $event })" />
+              <mat-label>Panel title</mat-label>
+              <input matInput [ngModel]="c?.props?.title" (ngModelChange)="setProp('title', $event)" />
+            </mat-form-field>
+          }
+
+          @if (isField()) {
+            <mat-form-field appearance="outline" class="fb-field">
+              <mat-label>Key</mat-label>
+              <input matInput [ngModel]="f?.props?.key" (ngModelChange)="setProp('key', $event)" />
+            </mat-form-field>
+          }
+
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>Placeholder</mat-label>
+            <input matInput [ngModel]="n.props?.placeholder" (ngModelChange)="setProp('placeholder', $event)" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>Description</mat-label>
+            <input matInput [ngModel]="n.props?.description" (ngModelChange)="setProp('description', $event)" />
+          </mat-form-field>
+
+          <mat-slide-toggle [ngModel]="!!n.props?.hidden" (ngModelChange)="setProp('hidden', $event)"
+            >Hidden</mat-slide-toggle
+          >
+          <mat-slide-toggle [ngModel]="!!n.props?.disabled" (ngModelChange)="setProp('disabled', $event)"
+            >Disabled</mat-slide-toggle
+          >
+
+          @if (isCol()) {
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Column</div>
+            <mat-form-field appearance="outline" class="fb-field">
+              <mat-label>Span (1-12)</mat-label>
+              <input
+                matInput
+                type="number"
+                [ngModel]="c?.props?.colSpan"
+                (ngModelChange)="setProp('colSpan', +$event)"
+              />
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="fb-field">
-              <mat-label>Value</mat-label>
-              <input matInput [ngModel]="opt.value" (ngModelChange)="updateOption($index, { value: $event })" />
-            </mat-form-field>
-
-            <div style="display: flex; gap: 8px">
-              <button mat-button type="button" (click)="moveOption($index, -1)">Up</button>
-              <button mat-button type="button" (click)="moveOption($index, 1)">Down</button>
-              <button mat-button color="warn" type="button" (click)="removeOption($index)">Remove</button>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button mat-stroked-button type="button" (click)="splitSelectedColumn(2)">Split x2</button>
+              <button mat-stroked-button type="button" (click)="splitSelectedColumn(3)">Split x3</button>
             </div>
-          </div>
-        }
-      }
-    }
+          }
 
-    @if (isCol()) {
-      <mat-divider style="margin: 12px 0"></mat-divider>
-      <div style="font-weight: 600; margin-bottom: 6px">Column</div>
-      <mat-form-field appearance="outline" class="fb-field">
-        <mat-label>Span (1-12)</mat-label>
-        <input matInput type="number" [ngModel]="c?.props?.colSpan" (ngModelChange)="setProp('colSpan', +$event)" />
-      </mat-form-field>
+          @if (isRow()) {
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Row</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button mat-stroked-button type="button" (click)="addColumnToSelectedRow()">Add column</button>
+              <button mat-stroked-button type="button" (click)="rebalanceSelectedRow()">Rebalance columns</button>
+            </div>
+          }
+        </div>
+      </mat-tab>
 
-      <div style="display: flex; gap: 8px; margin-top: 6px">
-        <button mat-stroked-button type="button" (click)="splitSelectedColumn(2)">Split x2</button>
-        <button mat-stroked-button type="button" (click)="splitSelectedColumn(3)">Split x3</button>
-      </div>
-    }
+      <mat-tab label="Validation">
+        <div style="padding-top: 10px">
+          @if (isField()) {
+            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)">
+              Required
+            </mat-slide-toggle>
 
-    @if (isRow()) {
-      <mat-divider style="margin: 12px 0"></mat-divider>
-      <div style="font-weight: 600; margin-bottom: 6px">Row</div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap">
-        <button mat-stroked-button type="button" (click)="addColumnToSelectedRow()">Add column</button>
-        <button mat-stroked-button type="button" (click)="rebalanceSelectedRow()">Rebalance columns</button>
-      </div>
-    }
+            <div style="display: grid; gap: 10px; margin-top: 10px">
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Min length</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [ngModel]="f?.validators?.minLength"
+                  (ngModelChange)="setVal('minLength', $event === '' ? null : +$event)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Max length</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [ngModel]="f?.validators?.maxLength"
+                  (ngModelChange)="setVal('maxLength', $event === '' ? null : +$event)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Min</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [ngModel]="f?.validators?.min"
+                  (ngModelChange)="setVal('min', $event === '' ? null : +$event)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Max</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [ngModel]="f?.validators?.max"
+                  (ngModelChange)="setVal('max', $event === '' ? null : +$event)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Pattern (regex)</mat-label>
+                <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
+              </mat-form-field>
+            </div>
+          } @else {
+            <div class="fb-hint">Validation settings are available for fields only.</div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Data">
+        <div style="padding-top: 10px">
+          @if (isField()) {
+            <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
+            <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)">
+              Searchable (select only)
+            </mat-slide-toggle>
+
+            @if (isChoiceField()) {
+              <mat-divider style="margin: 12px 0"></mat-divider>
+              <div style="font-weight: 600; margin-bottom: 6px">Options source</div>
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Source</mat-label>
+                <mat-select [ngModel]="optionsSourceType()" (ngModelChange)="setOptionsSourceType($event)">
+                  @for (item of optionsSourceTypes; track item.value) {
+                    <mat-option [value]="item.value">{{ item.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (optionsSourceType() === 'lookup') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Lookup key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="f?.props?.optionsSource?.lookupKey"
+                    (ngModelChange)="updateOptionsSource({ lookupKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              @if (optionsSourceType() === 'url') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>URL</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="f?.props?.optionsSource?.url"
+                    (ngModelChange)="updateOptionsSource({ url: $event })"
+                  />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>List path (optional)</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="f?.props?.optionsSource?.listPath"
+                    (ngModelChange)="updateOptionsSource({ listPath: $event })"
+                  />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Label key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="f?.props?.optionsSource?.labelKey"
+                    (ngModelChange)="updateOptionsSource({ labelKey: $event })"
+                  />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="f?.props?.optionsSource?.valueKey"
+                    (ngModelChange)="updateOptionsSource({ valueKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              @if (optionsSourceType() !== 'static') {
+                <div class="fb-hint" style="margin-bottom: 10px">Static options below are used as fallback.</div>
+              }
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
+                <div style="font-weight: 600">Options</div>
+                <button mat-stroked-button type="button" (click)="addOption()">Add option</button>
+              </div>
+
+              @for (opt of options(); track $index) {
+                <div style="border: 1px solid #ececf5; border-radius: 10px; padding: 10px; margin-bottom: 8px">
+                  <mat-form-field appearance="outline" class="fb-field">
+                    <mat-label>Label</mat-label>
+                    <input matInput [ngModel]="opt.label" (ngModelChange)="updateOption($index, { label: $event })" />
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="fb-field">
+                    <mat-label>Value</mat-label>
+                    <input matInput [ngModel]="opt.value" (ngModelChange)="updateOption($index, { value: $event })" />
+                  </mat-form-field>
+
+                  <div style="display: flex; gap: 8px">
+                    <button mat-button type="button" (click)="moveOption($index, -1)">Up</button>
+                    <button mat-button type="button" (click)="moveOption($index, 1)">Down</button>
+                    <button mat-button color="warn" type="button" (click)="removeOption($index)">Remove</button>
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="fb-hint" style="margin-top: 10px">
+                Data source settings are available for select/radio fields.
+              </div>
+            }
+          } @else {
+            <div class="fb-hint">Data settings are available for fields only.</div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
 
     <mat-divider style="margin: 12px 0"></mat-divider>
     <button mat-button color="warn" (click)="store.removeSelected()">Delete selected</button>
