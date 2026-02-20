@@ -4,6 +4,18 @@ export type PreviewRenderer = 'material' | 'bootstrap';
 
 export type FieldKind = 'input' | 'textarea' | 'checkbox' | 'radio' | 'select' | 'date' | 'number';
 
+export type AsyncUniqueSourceType = 'url' | 'lookup';
+
+export interface AsyncUniqueValidator {
+  sourceType: AsyncUniqueSourceType;
+  url?: string;
+  lookupKey?: string;
+  listPath?: string;
+  valueKey?: string;
+  caseSensitive?: boolean;
+  message?: string;
+}
+
 export interface BuilderValidators {
   required?: boolean;
   minLength?: number | null;
@@ -12,11 +24,20 @@ export interface BuilderValidators {
   max?: number | null;
   pattern?: string | null;
   email?: boolean;
+  asyncUnique?: AsyncUniqueValidator;
 }
 
 export interface OptionItem {
   label: string;
   value: string;
+}
+
+export type RuleOperator = 'truthy' | 'falsy' | 'eq' | 'ne' | 'contains' | 'gt' | 'lt';
+
+export interface ConditionalRule {
+  dependsOnKey: string;
+  operator: RuleOperator;
+  value?: string;
 }
 
 export type OptionsSourceType = 'static' | 'url' | 'lookup';
@@ -44,6 +65,8 @@ export interface FieldProps extends CommonProps {
   defaultValue?: unknown;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
+  visibleRule?: ConditionalRule;
+  enabledRule?: ConditionalRule;
 }
 
 export interface ContainerProps extends CommonProps {

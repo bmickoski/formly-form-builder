@@ -52,3 +52,41 @@ test('switch renderer to bootstrap and preview uses bootstrap mode @critical', a
   await expect(previewDialog.getByText('(Bootstrap)')).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
 });
+
+test('undo groups inspector typing into one step', async ({ page }) => {
+  await page.goto('/');
+  await applyStarterLayout(page);
+
+  const firstFieldNode = page.locator('.fb-canvas .fb-node', { hasText: 'Field:' }).first();
+  const firstFieldTitle = firstFieldNode.locator('.fb-node-title');
+  const originalTitle = (await firstFieldTitle.textContent())?.trim() ?? 'First name';
+
+  await firstFieldNode.click();
+  await page.getByRole('tab', { name: 'Basic' }).click();
+  const labelInput = page.getByLabel('Label');
+  await expect(labelInput).toBeVisible();
+  await labelInput.fill('');
+  await page.getByLabel('Label').fill('Customer');
+  await page.getByLabel('Label').fill('Customer Name');
+  await expect(page.getByLabel('Label')).toHaveValue('Customer Name');
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.getByLabel('Label')).toHaveValue(originalTitle);
+});
+
+test('inspector tab is persisted by node type @critical', async ({ page }) => {
+  await page.goto('/');
+  await applyStarterLayout(page, 'Complex Form');
+
+  const firstFieldNode = page.locator('.fb-canvas .fb-node', { hasText: 'Field:' }).first();
+  await firstFieldNode.click();
+  await page.getByRole('tab', { name: 'Data' }).click();
+  await expect(page.locator('mat-tab-group .mdc-tab--active .mdc-tab__text-label')).toHaveText('Data');
+
+  const layoutNode = page.locator('.fb-canvas .fb-node', { hasText: 'Layout:' }).first();
+  await layoutNode.click();
+  await expect(page.locator('mat-tab-group .mdc-tab--active .mdc-tab__text-label')).toHaveText('Basic');
+
+  await firstFieldNode.click();
+  await expect(page.locator('mat-tab-group .mdc-tab--active .mdc-tab__text-label')).toHaveText('Data');
+});

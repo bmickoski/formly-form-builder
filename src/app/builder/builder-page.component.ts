@@ -40,6 +40,11 @@ export class BuilderPageComponent {
   private readonly dialog = inject(MatDialog);
   presetToApply: BuilderPresetId = 'simple';
 
+  get selectedPreset() {
+    const fallback = this.store.presets[0]!;
+    return this.store.presets.find((preset) => preset.id === this.presetToApply) ?? fallback;
+  }
+
   openPreview(): void {
     const renderer = this.store.renderer();
     this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {

@@ -12,7 +12,7 @@
       Editing: <strong>{{ isField() ? 'Field' : 'Layout' }}</strong>
     </div>
 
-    <mat-tab-group>
+    <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="onSelectedTabChange($event)">
       <mat-tab label="Basic">
         <div style="padding-top: 10px">
           <mat-form-field appearance="outline" class="fb-field">
@@ -51,6 +51,91 @@
             >Disabled</mat-slide-toggle
           >
 
+          @if (isField()) {
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Display rules</div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
+              <div style="font-weight: 500">Visible when</div>
+              @if (!rule('visibleRule')) {
+                <button mat-stroked-button type="button" (click)="initRule('visibleRule')">Add rule</button>
+              } @else {
+                <button mat-button color="warn" type="button" (click)="clearRule('visibleRule')">Clear</button>
+              }
+            </div>
+            @if (rule('visibleRule')) {
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Depends on key</mat-label>
+                <input
+                  matInput
+                  [ngModel]="rule('visibleRule')?.dependsOnKey"
+                  (ngModelChange)="updateRule('visibleRule', { dependsOnKey: $event })"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Operator</mat-label>
+                <mat-select
+                  [ngModel]="rule('visibleRule')?.operator"
+                  (ngModelChange)="updateRule('visibleRule', { operator: $event })"
+                >
+                  @for (op of ruleOperators; track op.value) {
+                    <mat-option [value]="op.value">{{ op.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (operatorNeedsValue(rule('visibleRule')?.operator)) {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="rule('visibleRule')?.value"
+                    (ngModelChange)="updateRule('visibleRule', { value: $event })"
+                  />
+                </mat-form-field>
+              }
+            }
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px">
+              <div style="font-weight: 500">Enabled when</div>
+              @if (!rule('enabledRule')) {
+                <button mat-stroked-button type="button" (click)="initRule('enabledRule')">Add rule</button>
+              } @else {
+                <button mat-button color="warn" type="button" (click)="clearRule('enabledRule')">Clear</button>
+              }
+            </div>
+            @if (rule('enabledRule')) {
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Depends on key</mat-label>
+                <input
+                  matInput
+                  [ngModel]="rule('enabledRule')?.dependsOnKey"
+                  (ngModelChange)="updateRule('enabledRule', { dependsOnKey: $event })"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Operator</mat-label>
+                <mat-select
+                  [ngModel]="rule('enabledRule')?.operator"
+                  (ngModelChange)="updateRule('enabledRule', { operator: $event })"
+                >
+                  @for (op of ruleOperators; track op.value) {
+                    <mat-option [value]="op.value">{{ op.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (operatorNeedsValue(rule('enabledRule')?.operator)) {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="rule('enabledRule')?.value"
+                    (ngModelChange)="updateRule('enabledRule', { value: $event })"
+                  />
+                </mat-form-field>
+              }
+            }
+          }
+
           @if (isCol()) {
             <mat-divider style="margin: 12px 0"></mat-divider>
             <div style="font-weight: 600; margin-bottom: 6px">Column</div>
@@ -84,9 +169,9 @@
       <mat-tab label="Validation">
         <div style="padding-top: 10px">
           @if (isField()) {
-            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)">
-              Required
-            </mat-slide-toggle>
+            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)"
+              >Required</mat-slide-toggle
+            >
 
             <div style="display: grid; gap: 10px; margin-top: 10px">
               <mat-form-field appearance="outline" class="fb-field">
@@ -134,6 +219,71 @@
                 <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
               </mat-form-field>
             </div>
+
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Async uniqueness</div>
+            <mat-slide-toggle [ngModel]="!!asyncUnique()" (ngModelChange)="enableAsyncUnique($event)"
+              >Enable unique check</mat-slide-toggle
+            >
+
+            @if (asyncUnique()) {
+              <mat-form-field appearance="outline" class="fb-field" style="margin-top: 10px">
+                <mat-label>Source</mat-label>
+                <mat-select [ngModel]="asyncUnique()?.sourceType" (ngModelChange)="setAsyncUniqueSource($event)">
+                  @for (source of asyncUniqueSources; track source.value) {
+                    <mat-option [value]="source.value">{{ source.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (asyncUnique()?.sourceType === 'lookup') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Lookup key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.lookupKey"
+                    (ngModelChange)="updateAsyncUnique({ lookupKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              @if (asyncUnique()?.sourceType === 'url') {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>URL</mat-label>
+                  <input matInput [ngModel]="asyncUnique()?.url" (ngModelChange)="updateAsyncUnique({ url: $event })" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>List path (optional)</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.listPath"
+                    (ngModelChange)="updateAsyncUnique({ listPath: $event })"
+                  />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value key</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUnique()?.valueKey"
+                    (ngModelChange)="updateAsyncUnique({ valueKey: $event })"
+                  />
+                </mat-form-field>
+              }
+
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Error message</mat-label>
+                <input
+                  matInput
+                  [ngModel]="asyncUnique()?.message"
+                  (ngModelChange)="updateAsyncUnique({ message: $event })"
+                />
+              </mat-form-field>
+              <mat-slide-toggle
+                [ngModel]="!!asyncUnique()?.caseSensitive"
+                (ngModelChange)="updateAsyncUnique({ caseSensitive: $event })"
+                >Case sensitive compare</mat-slide-toggle
+              >
+            }
           } @else {
             <div class="fb-hint">Validation settings are available for fields only.</div>
           }
@@ -144,9 +294,9 @@
         <div style="padding-top: 10px">
           @if (isField()) {
             <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
-            <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)">
-              Searchable (select only)
-            </mat-slide-toggle>
+            <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)"
+              >Searchable (select only)</mat-slide-toggle
+            >
 
             @if (isChoiceField()) {
               <mat-divider style="margin: 12px 0"></mat-divider>

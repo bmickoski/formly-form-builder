@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,7 +9,17 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { BuilderStore } from '../../builder-core/store';
-import { OptionItem, OptionsSource, OptionsSourceType, isContainerNode, isFieldNode } from '../../builder-core/model';
+import {
+  AsyncUniqueSourceType,
+  AsyncUniqueValidator,
+  ConditionalRule,
+  OptionItem,
+  OptionsSource,
+  OptionsSourceType,
+  RuleOperator,
+  isContainerNode,
+  isFieldNode,
+} from '../../builder-core/model';
 
 @Component({
   selector: 'app-builder-inspector',
@@ -45,11 +55,34 @@ export class BuilderInspectorComponent {
     const f = this.fieldNode();
     return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio');
   });
+
+  private readonly tabByNodeType = signal<{ field: number; layout: number }>({ field: 0, layout: 0 });
+  readonly selectedTabIndex = computed(() =>
+    this.isField() ? this.tabByNodeType().field : this.tabByNodeType().layout,
+  );
+
   readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
     { value: 'static', label: 'Static options' },
     { value: 'lookup', label: 'Lookup key' },
     { value: 'url', label: 'URL (HTTP)' },
   ];
+  readonly asyncUniqueSources: Array<{ value: AsyncUniqueSourceType; label: string }> = [
+    { value: 'lookup', label: 'Lookup dataset' },
+    { value: 'url', label: 'URL dataset' },
+  ];
+  readonly ruleOperators: Array<{ value: RuleOperator; label: string }> = [
+    { value: 'truthy', label: 'Is truthy' },
+    { value: 'falsy', label: 'Is falsy' },
+    { value: 'eq', label: 'Equals' },
+    { value: 'ne', label: 'Not equals' },
+    { value: 'contains', label: 'Contains' },
+    { value: 'gt', label: 'Greater than' },
+    { value: 'lt', label: 'Less than' },
+  ];
+
+  onSelectedTabChange(index: number): void {
+    this.tabByNodeType.update((state) => (this.isField() ? { ...state, field: index } : { ...state, layout: index }));
+  }
 
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
@@ -118,12 +151,108 @@ export class BuilderInspectorComponent {
     const sourceType = this.optionsSourceType();
     if (sourceType === 'static') return;
     const current = f.props.optionsSource ?? { type: sourceType };
-    this.store.updateNodeProps(f.id, {
-      optionsSource: {
+    this.store.updateNodePropsGrouped(
+      f.id,
+      {
+        optionsSource: {
+          ...current,
+          ...patch,
+        },
+      },
+      `${f.id}:options-source`,
+    );
+  }
+
+  asyncUnique(): AsyncUniqueValidator | null {
+    const f = this.fieldNode();
+    return f?.validators.asyncUnique ?? null;
+  }
+
+  enableAsyncUnique(enabled: boolean): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    if (!enabled) {
+      this.store.updateNodeValidators(f.id, { asyncUnique: undefined });
+      return;
+    }
+
+    const next: AsyncUniqueValidator = {
+      sourceType: 'lookup',
+      lookupKey: 'countries',
+      caseSensitive: false,
+      message: 'Value must be unique',
+    };
+    this.store.updateNodeValidators(f.id, { asyncUnique: next });
+  }
+
+  setAsyncUniqueSource(sourceType: AsyncUniqueSourceType): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const current = f.validators.asyncUnique;
+    if (!current) return;
+    this.store.updateNodeValidators(f.id, {
+      asyncUnique: {
         ...current,
-        ...patch,
+        sourceType,
       },
     });
+  }
+
+  updateAsyncUnique(patch: Partial<AsyncUniqueValidator>): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const current = f.validators.asyncUnique;
+    if (!current) return;
+    this.store.updateNodeValidatorsGrouped(
+      f.id,
+      {
+        asyncUnique: {
+          ...current,
+          ...patch,
+        },
+      },
+      `${f.id}:async-unique`,
+    );
+  }
+
+  rule(target: 'visibleRule' | 'enabledRule'): ConditionalRule | null {
+    const f = this.fieldNode();
+    if (!f) return null;
+    return f.props[target] ?? null;
+  }
+
+  initRule(target: 'visibleRule' | 'enabledRule'): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const next: ConditionalRule = {
+      dependsOnKey: '',
+      operator: 'truthy',
+    };
+    this.store.updateNodeProps(f.id, { [target]: next });
+  }
+
+  clearRule(target: 'visibleRule' | 'enabledRule'): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    this.store.updateNodeProps(f.id, { [target]: undefined });
+  }
+
+  updateRule(target: 'visibleRule' | 'enabledRule', patch: Partial<ConditionalRule>): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const current = f.props[target];
+    const next: ConditionalRule = {
+      dependsOnKey: current?.dependsOnKey ?? '',
+      operator: current?.operator ?? 'truthy',
+      value: current?.value,
+      ...patch,
+    };
+    this.store.updateNodePropsGrouped(f.id, { [target]: next }, `${f.id}:${target}`);
+  }
+
+  operatorNeedsValue(op?: RuleOperator): boolean {
+    if (!op) return false;
+    return op !== 'truthy' && op !== 'falsy';
   }
 
   addOption(): void {
@@ -142,7 +271,7 @@ export class BuilderInspectorComponent {
     const current = [...(f.props.options ?? [])];
     if (!current[index]) return;
     current[index] = { ...current[index], ...patch };
-    this.store.updateNodeProps(f.id, { options: current });
+    this.store.updateNodePropsGrouped(f.id, { options: current }, `${f.id}:options`);
   }
 
   removeOption(index: number): void {
@@ -169,12 +298,20 @@ export class BuilderInspectorComponent {
   setProp(key: string, value: unknown): void {
     const n = this.node();
     if (!n) return;
+    if (typeof value === 'string' || typeof value === 'number') {
+      this.store.updateNodePropsGrouped(n.id, { [key]: value }, `${n.id}:prop:${key}`);
+      return;
+    }
     this.store.updateNodeProps(n.id, { [key]: value });
   }
 
   setVal(key: string, value: unknown): void {
     const n = this.node();
     if (!n || !isFieldNode(n)) return;
+    if (typeof value === 'string' || typeof value === 'number') {
+      this.store.updateNodeValidatorsGrouped(n.id, { [key]: value }, `${n.id}:val:${key}`);
+      return;
+    }
     this.store.updateNodeValidators(n.id, { [key]: value });
   }
 }

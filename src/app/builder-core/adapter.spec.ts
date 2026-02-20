@@ -1,9 +1,10 @@
-import { BuilderStore } from './store';
-import { builderToFormly } from './adapter';
-import { formlyToBuilder } from './formly-import';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
-describe('builder/formly adapters', () => {
+import { builderToFormly } from './adapter';
+import { formlyToBuilder } from './formly-import';
+import { BuilderStore } from './store';
+
+describe('builder/formly adapters: layout + dynamic options', () => {
   it('exports bootstrap layout classes and v7 props', () => {
     const store = new BuilderStore();
     store.setRenderer('bootstrap');
@@ -26,7 +27,7 @@ describe('builder/formly adapters', () => {
 
     const firstField = firstCol.fieldGroup?.[0] as FormlyFieldConfig;
     expect(firstField.props).toBeDefined();
-    expect((firstField as any).templateOptions).toBeUndefined();
+    expect((firstField as unknown as { templateOptions?: unknown }).templateOptions).toBeUndefined();
   });
 
   it('round-trips bootstrap classes back to row/col nodes', () => {
@@ -99,5 +100,61 @@ describe('builder/formly adapters', () => {
     if (node.type !== 'field') return;
     expect(node.props.optionsSource?.type).toBe('lookup');
     expect(node.props.optionsSource?.lookupKey).toBe('priorities');
+  });
+});
+
+describe('builder/formly adapters: rules + async validators', () => {
+  it('exports expression rules to formly expressions', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
+    const fieldId = store.selectedId() as string;
+    store.updateNodeProps(fieldId, {
+      visibleRule: { dependsOnKey: 'status', operator: 'eq', value: 'active' },
+      enabledRule: { dependsOnKey: 'canEdit', operator: 'truthy' },
+    });
+
+    const fields = builderToFormly(store.doc());
+    const f = fields[0] as FormlyFieldConfig;
+    expect(f.expressions).toBeDefined();
+    const expressions = f.expressions as Record<string, string>;
+    expect(expressions['hide']).toContain('model?.["status"]');
+    expect(expressions['props.disabled']).toContain('model?.["canEdit"]');
+  });
+
+  it('exports and imports async unique validator config', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
+    const fieldId = store.selectedId() as string;
+
+    store.updateNodeValidators(fieldId, {
+      asyncUnique: {
+        sourceType: 'url',
+        url: 'https://dummyjson.com/users',
+        listPath: 'users',
+        valueKey: 'email',
+        message: 'Already exists',
+      },
+    });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.props?.['asyncUnique']).toEqual({
+      sourceType: 'url',
+      url: 'https://dummyjson.com/users',
+      listPath: 'users',
+      valueKey: 'email',
+      message: 'Already exists',
+    });
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+    expect(node.validators.asyncUnique?.sourceType).toBe('url');
+    expect(node.validators.asyncUnique?.url).toBe('https://dummyjson.com/users');
+    expect(node.validators.asyncUnique?.valueKey).toBe('email');
   });
 });
