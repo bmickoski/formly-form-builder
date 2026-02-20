@@ -1,4 +1,5 @@
 import { parseBuilderDocument, parseBuilderDocumentObject } from './document';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 
 describe('document parsing and migration', () => {
   it('returns error for invalid json', () => {
@@ -16,6 +17,7 @@ describe('document parsing and migration', () => {
     expect(out.ok).toBeTrue();
     if (!out.ok) return;
     expect(out.doc.rootId).toBe('root');
+    expect(out.doc.schemaVersion).toBe(CURRENT_BUILDER_SCHEMA_VERSION);
     expect(out.doc.nodes['root']).toBeDefined();
     expect(out.doc.renderer).toBe('bootstrap');
   });
@@ -34,9 +36,26 @@ describe('document parsing and migration', () => {
 
     expect(out.ok).toBeTrue();
     if (!out.ok) return;
+    expect(out.doc.schemaVersion).toBe(CURRENT_BUILDER_SCHEMA_VERSION);
     expect(out.doc.selectedId).toBeNull();
     const col = out.doc.nodes['c1'];
     expect(col.type).toBe('col');
     if (col.type === 'col') expect(col.props.colSpan).toBe(12);
+  });
+
+  it('migrates legacy document without schemaVersion', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      renderer: 'material',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
+      },
+      selectedId: null,
+    });
+
+    expect(out.ok).toBeTrue();
+    if (!out.ok) return;
+    expect(out.doc.schemaVersion).toBe(CURRENT_BUILDER_SCHEMA_VERSION);
+    expect(out.warnings.some((w) => w.includes('Migrated builder document schema'))).toBeTrue();
   });
 });

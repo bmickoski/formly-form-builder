@@ -1,6 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BuilderDocument, ContainerNode, FieldNode } from './model';
 import { toFieldKey, uid } from './ids';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { fieldKindFromType, toFieldProps, toValidators } from './formly-import/field-mappers';
 import {
   createContainerNode,
@@ -23,7 +24,13 @@ export function formlyToBuilder(
   const root = createContainerNode('panel', ROOT_ID, null);
   root.props.title = 'Form';
 
-  const doc: BuilderDocument = { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer };
+  const doc: BuilderDocument = {
+    schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
+    rootId: ROOT_ID,
+    nodes: { [ROOT_ID]: root },
+    selectedId: null,
+    renderer,
+  };
   for (const field of fields ?? []) {
     importOne(doc, ROOT_ID, field);
   }

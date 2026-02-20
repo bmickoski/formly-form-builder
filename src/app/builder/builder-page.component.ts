@@ -73,7 +73,7 @@ export class BuilderPageComponent {
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { mode: 'exportBuilder', json: this.store.exportDocument() },
+      data: { mode: 'exportBuilder', json: this.store.exportDocument(), schemaVersion: this.store.doc().schemaVersion },
     });
   }
 

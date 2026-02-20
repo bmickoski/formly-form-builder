@@ -18,6 +18,7 @@ export class JsonDialogComponent {
   readonly data = inject(MAT_DIALOG_DATA) as {
     mode: 'exportFormly' | 'exportBuilder' | 'import' | 'importFormly';
     json: string;
+    schemaVersion?: number;
   };
 
   readonly json = signal(this.data.json ?? '');
