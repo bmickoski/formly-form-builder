@@ -120,8 +120,12 @@ export function reorderWithinCommand(
   if (!container || !isContainerNode(container)) return doc;
 
   const arr = [...container.children];
+  if (arr.length === 0) return doc;
+  if (fromIndex < 0 || fromIndex >= arr.length) return doc;
+  const clampedTo = clampIndex(toIndex, arr.length - 1);
+  if (fromIndex === clampedTo) return doc;
   const [moved] = arr.splice(fromIndex, 1);
-  arr.splice(toIndex, 0, moved);
+  arr.splice(clampedTo, 0, moved);
   nodes[containerId] = { ...container, children: arr };
   return { ...doc, nodes };
 }

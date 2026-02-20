@@ -98,6 +98,7 @@ export class NodeRendererComponent {
 
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
+    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
 
     if (container.type === 'row' && draggedType !== 'col') return false;
 
@@ -112,6 +113,7 @@ export class NodeRendererComponent {
 
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
+    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
 
     if (container.type === 'row' && draggedType !== 'col') return false;
 
@@ -135,8 +137,9 @@ export class NodeRendererComponent {
     }
 
     const nodeId = data.nodeId;
-    const prevContainer = this.extractContainerId(event.previousContainer.id);
-    const nextContainer = this.extractContainerId(event.container.id);
+    const prevContainer =
+      this.extractContainerId(event.previousContainer.id) ?? this.store.nodes()[nodeId]?.parentId ?? null;
+    const nextContainer = this.extractContainerId(event.container.id) ?? containerId;
     if (!prevContainer || !nextContainer) return;
 
     if (prevContainer === nextContainer) {
@@ -156,7 +159,8 @@ export class NodeRendererComponent {
       return;
     }
 
-    const prevContainer = this.extractContainerId(event.previousContainer.id);
+    const prevContainer =
+      this.extractContainerId(event.previousContainer.id) ?? this.store.nodes()[data.nodeId]?.parentId ?? null;
     if (!prevContainer) return;
 
     if (prevContainer === containerId) {
@@ -172,6 +176,24 @@ export class NodeRendererComponent {
       return PALETTE.find((p) => p.id === data.paletteId)?.nodeType ?? null;
     }
     return this.store.nodes()[data.nodeId]?.type ?? null;
+  }
+
+  /**
+   * Avoid ambiguous nested drops:
+   * if a container already holds layout containers, field drops must target
+   * the inner containers directly (instead of being appended to the outer one).
+   */
+  private canAcceptInContainer(containerId: string, draggedType: BuilderNodeType): boolean {
+    if (draggedType !== 'field') return true;
+    const container = this.store.nodes()[containerId];
+    if (!container || !isContainerNode(container)) return false;
+
+    const nodes = this.store.nodes();
+    const hasContainerChildren = container.children.some((childId) => {
+      const child = nodes[childId];
+      return !!child && isContainerNode(child);
+    });
+    return !hasContainerChildren;
   }
 
   private isSelfOrDescendant(sourceId: string, targetId: string): boolean {
