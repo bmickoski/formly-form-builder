@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
-import { resolveAsyncValidatorsForFields } from './async-validators';
+import { checkAsyncUniqueValue, resolveAsyncValidatorsForFields } from './async-validators';
 
 describe('async validators resolver', () => {
   it('binds lookup-based uniqueness validator and rejects existing values', async () => {
@@ -67,5 +67,43 @@ describe('async validators resolver', () => {
 
     expect(await validator.expression({ value: 'a@demo.com' })).toBeFalse();
     expect(await validator.expression({ value: 'new@demo.com' })).toBeTrue();
+  });
+
+  it('returns source-error when url source fails', async () => {
+    const result = await checkAsyncUniqueValue(
+      {
+        sourceType: 'url',
+        url: 'https://example.test/users',
+      },
+      'john',
+      {
+        fetchJson: async () => {
+          throw new Error('boom');
+        },
+      },
+    );
+
+    expect(result.unique).toBeTrue();
+    expect(result.reason).toBe('source-error');
+  });
+
+  it('treats invalid listPath payload as unique without crashing', async () => {
+    const result = await checkAsyncUniqueValue(
+      {
+        sourceType: 'url',
+        url: 'https://example.test/users',
+        listPath: 'payload.rows',
+        valueKey: 'email',
+      },
+      'a@demo.com',
+      {
+        fetchJson: async () => ({
+          users: [{ email: 'a@demo.com' }],
+        }),
+      },
+    );
+
+    expect(result.unique).toBeTrue();
+    expect(result.reason).toBe('unique');
   });
 });

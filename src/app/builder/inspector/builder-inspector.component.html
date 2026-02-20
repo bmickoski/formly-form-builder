@@ -283,6 +283,33 @@
                 (ngModelChange)="updateAsyncUnique({ caseSensitive: $event })"
                 >Case sensitive compare</mat-slide-toggle
               >
+
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px">
+                <mat-form-field appearance="outline" class="fb-field" style="margin: 0">
+                  <mat-label>Test value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUniqueSampleValue()"
+                    (ngModelChange)="setAsyncUniqueSampleValue($event)"
+                  />
+                </mat-form-field>
+                <button mat-stroked-button type="button" (click)="runAsyncUniqueTest()">Test</button>
+              </div>
+              @if (asyncUniqueTestState() !== 'idle') {
+                <div
+                  class="fb-hint"
+                  style="margin-top: 6px"
+                  [style.color]="
+                    asyncUniqueTestState() === 'success'
+                      ? '#2e7d32'
+                      : asyncUniqueTestState() === 'loading'
+                        ? '#6b6b7a'
+                        : '#b00020'
+                  "
+                >
+                  {{ asyncUniqueTestMessage() }}
+                </div>
+              }
             }
           } @else {
             <div class="fb-hint">Validation settings are available for fields only.</div>
