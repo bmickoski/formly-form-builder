@@ -51,6 +51,91 @@
             >Disabled</mat-slide-toggle
           >
 
+          @if (isField()) {
+            <mat-divider style="margin: 12px 0"></mat-divider>
+            <div style="font-weight: 600; margin-bottom: 6px">Display rules</div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
+              <div style="font-weight: 500">Visible when</div>
+              @if (!rule('visibleRule')) {
+                <button mat-stroked-button type="button" (click)="initRule('visibleRule')">Add rule</button>
+              } @else {
+                <button mat-button color="warn" type="button" (click)="clearRule('visibleRule')">Clear</button>
+              }
+            </div>
+            @if (rule('visibleRule')) {
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Depends on key</mat-label>
+                <input
+                  matInput
+                  [ngModel]="rule('visibleRule')?.dependsOnKey"
+                  (ngModelChange)="updateRule('visibleRule', { dependsOnKey: $event })"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Operator</mat-label>
+                <mat-select
+                  [ngModel]="rule('visibleRule')?.operator"
+                  (ngModelChange)="updateRule('visibleRule', { operator: $event })"
+                >
+                  @for (op of ruleOperators; track op.value) {
+                    <mat-option [value]="op.value">{{ op.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (operatorNeedsValue(rule('visibleRule')?.operator)) {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="rule('visibleRule')?.value"
+                    (ngModelChange)="updateRule('visibleRule', { value: $event })"
+                  />
+                </mat-form-field>
+              }
+            }
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px">
+              <div style="font-weight: 500">Enabled when</div>
+              @if (!rule('enabledRule')) {
+                <button mat-stroked-button type="button" (click)="initRule('enabledRule')">Add rule</button>
+              } @else {
+                <button mat-button color="warn" type="button" (click)="clearRule('enabledRule')">Clear</button>
+              }
+            </div>
+            @if (rule('enabledRule')) {
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Depends on key</mat-label>
+                <input
+                  matInput
+                  [ngModel]="rule('enabledRule')?.dependsOnKey"
+                  (ngModelChange)="updateRule('enabledRule', { dependsOnKey: $event })"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="fb-field">
+                <mat-label>Operator</mat-label>
+                <mat-select
+                  [ngModel]="rule('enabledRule')?.operator"
+                  (ngModelChange)="updateRule('enabledRule', { operator: $event })"
+                >
+                  @for (op of ruleOperators; track op.value) {
+                    <mat-option [value]="op.value">{{ op.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (operatorNeedsValue(rule('enabledRule')?.operator)) {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="rule('enabledRule')?.value"
+                    (ngModelChange)="updateRule('enabledRule', { value: $event })"
+                  />
+                </mat-form-field>
+              }
+            }
+          }
+
           @if (isCol()) {
             <mat-divider style="margin: 12px 0"></mat-divider>
             <div style="font-weight: 600; margin-bottom: 6px">Column</div>

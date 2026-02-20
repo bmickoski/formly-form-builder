@@ -91,6 +91,28 @@ function toFieldProps(f: FormlyFieldConfig): FieldNode['props'] {
     }
   }
 
+  if (to.visibleRule && typeof to.visibleRule === 'object') {
+    const rule = to.visibleRule as any;
+    if (rule.dependsOnKey && rule.operator) {
+      props.visibleRule = {
+        dependsOnKey: String(rule.dependsOnKey),
+        operator: String(rule.operator),
+        value: rule.value != null ? String(rule.value) : undefined,
+      };
+    }
+  }
+
+  if (to.enabledRule && typeof to.enabledRule === 'object') {
+    const rule = to.enabledRule as any;
+    if (rule.dependsOnKey && rule.operator) {
+      props.enabledRule = {
+        dependsOnKey: String(rule.dependsOnKey),
+        operator: String(rule.operator),
+        value: rule.value != null ? String(rule.value) : undefined,
+      };
+    }
+  }
+
   if (to.searchable != null) props.searchable = !!to.searchable;
   if (f.defaultValue !== undefined) props.defaultValue = f.defaultValue;
 

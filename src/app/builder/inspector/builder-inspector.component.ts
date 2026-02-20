@@ -9,7 +9,15 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { BuilderStore } from '../../builder-core/store';
-import { OptionItem, OptionsSource, OptionsSourceType, isContainerNode, isFieldNode } from '../../builder-core/model';
+import {
+  ConditionalRule,
+  OptionItem,
+  OptionsSource,
+  OptionsSourceType,
+  RuleOperator,
+  isContainerNode,
+  isFieldNode,
+} from '../../builder-core/model';
 
 @Component({
   selector: 'app-builder-inspector',
@@ -49,6 +57,15 @@ export class BuilderInspectorComponent {
     { value: 'static', label: 'Static options' },
     { value: 'lookup', label: 'Lookup key' },
     { value: 'url', label: 'URL (HTTP)' },
+  ];
+  readonly ruleOperators: Array<{ value: RuleOperator; label: string }> = [
+    { value: 'truthy', label: 'Is truthy' },
+    { value: 'falsy', label: 'Is falsy' },
+    { value: 'eq', label: 'Equals' },
+    { value: 'ne', label: 'Not equals' },
+    { value: 'contains', label: 'Contains' },
+    { value: 'gt', label: 'Greater than' },
+    { value: 'lt', label: 'Less than' },
   ];
 
   isPanel(): boolean {
@@ -124,6 +141,46 @@ export class BuilderInspectorComponent {
         ...patch,
       },
     });
+  }
+
+  rule(target: 'visibleRule' | 'enabledRule'): ConditionalRule | null {
+    const f = this.fieldNode();
+    if (!f) return null;
+    return f.props[target] ?? null;
+  }
+
+  initRule(target: 'visibleRule' | 'enabledRule'): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const next: ConditionalRule = {
+      dependsOnKey: '',
+      operator: 'truthy',
+    };
+    this.store.updateNodeProps(f.id, { [target]: next });
+  }
+
+  clearRule(target: 'visibleRule' | 'enabledRule'): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    this.store.updateNodeProps(f.id, { [target]: undefined });
+  }
+
+  updateRule(target: 'visibleRule' | 'enabledRule', patch: Partial<ConditionalRule>): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    const current = f.props[target];
+    const next: ConditionalRule = {
+      dependsOnKey: current?.dependsOnKey ?? '',
+      operator: current?.operator ?? 'truthy',
+      value: current?.value,
+      ...patch,
+    };
+    this.store.updateNodeProps(f.id, { [target]: next });
+  }
+
+  operatorNeedsValue(op?: RuleOperator): boolean {
+    if (!op) return false;
+    return op !== 'truthy' && op !== 'falsy';
   }
 
   addOption(): void {

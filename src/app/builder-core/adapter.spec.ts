@@ -100,4 +100,21 @@ describe('builder/formly adapters', () => {
     expect(node.props.optionsSource?.type).toBe('lookup');
     expect(node.props.optionsSource?.lookupKey).toBe('priorities');
   });
+
+  it('exports expression rules to formly expressions', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
+    const fieldId = store.selectedId() as string;
+    store.updateNodeProps(fieldId, {
+      visibleRule: { dependsOnKey: 'status', operator: 'eq', value: 'active' },
+      enabledRule: { dependsOnKey: 'canEdit', operator: 'truthy' },
+    });
+
+    const fields = builderToFormly(store.doc());
+    const f = fields[0] as FormlyFieldConfig;
+    expect(f.expressions).toBeDefined();
+    const expressions = f.expressions as Record<string, string>;
+    expect(expressions['hide']).toContain('model?.["status"]');
+    expect(expressions['props.disabled']).toContain('model?.["canEdit"]');
+  });
 });

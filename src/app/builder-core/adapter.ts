@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, isFieldNode } from './model';
+import { BuilderDocument, BuilderNode, ConditionalRule, ContainerNode, FieldNode, isFieldNode } from './model';
 
 function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
   switch (fieldKind) {
@@ -45,6 +45,8 @@ function fieldProps(node: FieldNode): Record<string, any> {
       };
     }
   }
+  if (p.visibleRule) props.visibleRule = { ...p.visibleRule };
+  if (p.enabledRule) props.enabledRule = { ...p.enabledRule };
   if (node.fieldKind === 'date') props.type = 'date';
   if (node.fieldKind === 'number') props.type = 'number';
   if (node.validators.min != null) props.min = node.validators.min;
@@ -55,6 +57,30 @@ function fieldProps(node: FieldNode): Record<string, any> {
   if (node.validators.email) props.type = 'email';
 
   return props;
+}
+
+function ruleConditionExpression(rule: ConditionalRule): string | null {
+  if (!rule.dependsOnKey) return null;
+  const ref = `model?.[${JSON.stringify(rule.dependsOnKey)}]`;
+  const value = JSON.stringify(rule.value ?? '');
+  switch (rule.operator) {
+    case 'truthy':
+      return `!!(${ref})`;
+    case 'falsy':
+      return `!(${ref})`;
+    case 'eq':
+      return `${ref} == ${value}`;
+    case 'ne':
+      return `${ref} != ${value}`;
+    case 'contains':
+      return `String(${ref} ?? '').includes(${value})`;
+    case 'gt':
+      return `Number(${ref}) > Number(${value})`;
+    case 'lt':
+      return `Number(${ref}) < Number(${value})`;
+    default:
+      return null;
+  }
 }
 
 function rowClass(renderer: BuilderDocument['renderer']): string {
@@ -71,12 +97,19 @@ function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<stri
   visited.add(node.id);
 
   if (isFieldNode(node)) {
+    const expressions: Record<string, string> = {};
+    const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
+    if (visibleExpr) expressions['hide'] = `!(${visibleExpr})`;
+    const enabledExpr = node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null;
+    if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
+
     const field: FormlyFieldConfig = {
       key: node.props.key ?? node.id,
       type: toFormlyType(node.fieldKind),
       props: fieldProps(node),
       hide: !!node.props.hidden,
       defaultValue: node.props.defaultValue,
+      ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
     };
 
     return [field];

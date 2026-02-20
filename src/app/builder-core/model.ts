@@ -19,6 +19,14 @@ export interface OptionItem {
   value: string;
 }
 
+export type RuleOperator = 'truthy' | 'falsy' | 'eq' | 'ne' | 'contains' | 'gt' | 'lt';
+
+export interface ConditionalRule {
+  dependsOnKey: string;
+  operator: RuleOperator;
+  value?: string;
+}
+
 export type OptionsSourceType = 'static' | 'url' | 'lookup';
 
 export interface OptionsSource {
@@ -44,6 +52,8 @@ export interface FieldProps extends CommonProps {
   defaultValue?: unknown;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
+  visibleRule?: ConditionalRule;
+  enabledRule?: ConditionalRule;
 }
 
 export interface ContainerProps extends CommonProps {
