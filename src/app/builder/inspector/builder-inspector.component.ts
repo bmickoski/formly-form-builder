@@ -6,6 +6,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { BuilderStore } from '../../builder-core/store';
 import { OptionItem, OptionsSource, OptionsSourceType, isContainerNode, isFieldNode } from '../../builder-core/model';
@@ -21,6 +22,7 @@ import { OptionItem, OptionsSource, OptionsSourceType, isContainerNode, isFieldN
     MatDividerModule,
     MatButtonModule,
     MatSelectModule,
+    MatTabsModule,
   ],
   templateUrl: './builder-inspector.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
