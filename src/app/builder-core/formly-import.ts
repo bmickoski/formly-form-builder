@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { BuilderDocument, FieldNode } from './model';
+import { BuilderDocument, ContainerNode, FieldNode } from './model';
 import { toFieldKey, uid } from './ids';
 import { fieldKindFromType, toFieldProps, toValidators } from './formly-import/field-mappers';
 import {
@@ -84,7 +84,7 @@ function importGroup(doc: BuilderDocument, parentId: string, fields: FormlyField
   }
 }
 
-function attachContainer(doc: BuilderDocument, parentId: string, id: string, container: BuilderDocument['nodes'][string]): void {
+function attachContainer(doc: BuilderDocument, parentId: string, id: string, container: ContainerNode): void {
   doc.nodes[id] = container;
   doc.nodes[parentId].children.push(id);
 }

@@ -1,18 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import {
-  ConditionalRule,
-  FieldNode,
-  FieldProps,
-  OptionsSource,
-  OptionItem,
-  RuleOperator,
-} from '../model';
-import {
-  fieldPropsOf,
-  isRecord,
-  toBooleanOrUndefined,
-  toNumberOrUndefined,
-  toStringOrUndefined,} from './shared';
+import { ConditionalRule, FieldNode, FieldProps, OptionsSource, OptionItem, RuleOperator } from '../model';
+import { fieldPropsOf, isRecord, toBooleanOrUndefined, toNumberOrUndefined, toStringOrUndefined } from './shared';
 
 const RULE_OPERATORS = new Set<RuleOperator>(['truthy', 'falsy', 'eq', 'ne', 'contains', 'gt', 'lt']);
 const SOURCE_TYPES = new Set<OptionsSource['type']>(['static', 'lookup', 'url']);
@@ -107,12 +95,10 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
 
 function toOptionItems(value: unknown): OptionItem[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .filter(isRecord)
-    .map((item) => ({
-      label: String(item['label'] ?? ''),
-      value: String(item['value'] ?? ''),
-    }));
+  return value.filter(isRecord).map((item) => ({
+    label: String(item['label'] ?? ''),
+    value: String(item['value'] ?? ''),
+  }));
 }
 
 function toOptionsSource(value: unknown): OptionsSource | null {
@@ -142,7 +128,3 @@ function toConditionalRule(value: unknown): ConditionalRule | null {
     value: toStringOrUndefined(value['value']),
   };
 }
-
-
-
-

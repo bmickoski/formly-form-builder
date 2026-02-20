@@ -34,7 +34,11 @@ export interface PresetNodeFactory {
  * Applies a starter layout into an existing builder document.
  * The function mutates `doc` intentionally for simpler composition.
  */
-export function applyPresetToDocument(doc: BuilderDocument, presetId: BuilderPresetId, factory: PresetNodeFactory): void {
+export function applyPresetToDocument(
+  doc: BuilderDocument,
+  presetId: BuilderPresetId,
+  factory: PresetNodeFactory,
+): void {
   switch (presetId) {
     case 'simple':
       buildSimplePreset(doc, factory);
@@ -52,7 +56,13 @@ function buildSimplePreset(doc: BuilderDocument, factory: PresetNodeFactory): vo
   const panel = factory.addContainerNode(doc, 'panel', doc.rootId, { title: 'Contact Details' });
   factory.addFieldNode(doc, 'input', panel.id, { label: 'First name', placeholder: 'Enter first name' });
   factory.addFieldNode(doc, 'input', panel.id, { label: 'Last name', placeholder: 'Enter last name' });
-  factory.addFieldNode(doc, 'input', panel.id, { label: 'Email', placeholder: 'name@company.com' }, { required: true, email: true });
+  factory.addFieldNode(
+    doc,
+    'input',
+    panel.id,
+    { label: 'Email', placeholder: 'name@company.com' },
+    { required: true, email: true },
+  );
   factory.addFieldNode(doc, 'textarea', panel.id, { label: 'Notes', placeholder: 'Additional notes' });
 }
 
@@ -81,7 +91,13 @@ function buildComplexPreset(doc: BuilderDocument, factory: PresetNodeFactory): v
       { label: 'Phone', value: 'phone' },
     ],
   });
-  factory.addFieldNode(doc, 'textarea', right.id, { label: 'Summary', placeholder: 'Describe the request' }, { required: true });
+  factory.addFieldNode(
+    doc,
+    'textarea',
+    right.id,
+    { label: 'Summary', placeholder: 'Describe the request' },
+    { required: true },
+  );
 }
 
 function buildAdvancedPreset(doc: BuilderDocument, factory: PresetNodeFactory): void {
@@ -94,8 +110,20 @@ function buildAdvancedPreset(doc: BuilderDocument, factory: PresetNodeFactory): 
   const nestedLeft = factory.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
   const nestedRight = factory.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
 
-  factory.addFieldNode(doc, 'input', nestedLeft.id, { label: 'Username', placeholder: 'j.doe' }, { required: true, minLength: 3 });
-  factory.addFieldNode(doc, 'input', nestedLeft.id, { label: 'Email', placeholder: 'j.doe@company.com' }, { required: true, email: true });
+  factory.addFieldNode(
+    doc,
+    'input',
+    nestedLeft.id,
+    { label: 'Username', placeholder: 'j.doe' },
+    { required: true, minLength: 3 },
+  );
+  factory.addFieldNode(
+    doc,
+    'input',
+    nestedLeft.id,
+    { label: 'Email', placeholder: 'j.doe@company.com' },
+    { required: true, email: true },
+  );
   factory.addFieldNode(doc, 'number', nestedRight.id, { label: 'Age', placeholder: '18' }, { min: 18, max: 120 });
   factory.addFieldNode(doc, 'date', nestedRight.id, { label: 'Start date' });
 
@@ -112,5 +140,8 @@ function buildAdvancedPreset(doc: BuilderDocument, factory: PresetNodeFactory): 
 
   const bottomPanel = factory.addContainerNode(doc, 'panel', panel.id, { title: 'Additional Details' });
   factory.addFieldNode(doc, 'textarea', bottomPanel.id, { label: 'Biography', placeholder: 'Short profile summary' });
-  factory.addFieldNode(doc, 'textarea', bottomPanel.id, { label: 'Internal notes', placeholder: 'Visible to administrators' });
+  factory.addFieldNode(doc, 'textarea', bottomPanel.id, {
+    label: 'Internal notes',
+    placeholder: 'Visible to administrators',
+  });
 }
