@@ -34,6 +34,15 @@ function fieldProps(node: FieldNode): Record<string, any> {
 
   if (node.fieldKind === 'select' || node.fieldKind === 'radio') {
     props.options = (p.options ?? []).map((o) => ({ label: o.label, value: o.value }));
+    if (p.optionsSource && p.optionsSource.type !== 'static') {
+      props.optionsSource = {
+        type: p.optionsSource.type,
+        url: p.optionsSource.url,
+        lookupKey: p.optionsSource.lookupKey,
+        labelKey: p.optionsSource.labelKey,
+        valueKey: p.optionsSource.valueKey,
+      };
+    }
   }
   if (node.fieldKind === 'date') props.type = 'date';
   if (node.fieldKind === 'number') props.type = 'number';

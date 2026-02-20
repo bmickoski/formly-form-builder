@@ -64,4 +64,39 @@ describe('builder/formly adapters', () => {
     expect(col1.props.colSpan).toBe(12);
     expect(col2.props.colSpan).toBe(6);
   });
+
+  it('exports and imports dynamic options source metadata', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('select', { containerId: store.rootId(), index: 0 });
+    const selectId = store.selectedId() as string;
+
+    store.updateNodeProps(selectId, {
+      optionsSource: {
+        type: 'lookup',
+        lookupKey: 'priorities',
+      },
+      options: [{ label: 'Fallback', value: 'fallback' }],
+    });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.props?.['optionsSource']).toEqual({
+      type: 'lookup',
+      lookupKey: 'priorities',
+      url: undefined,
+      labelKey: undefined,
+      valueKey: undefined,
+    });
+    expect(first.props?.['options']).toEqual([{ label: 'Fallback', value: 'fallback' }]);
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+    expect(node.props.optionsSource?.type).toBe('lookup');
+    expect(node.props.optionsSource?.lookupKey).toBe('priorities');
+  });
 });

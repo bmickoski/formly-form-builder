@@ -76,6 +76,20 @@ function toFieldProps(f: FormlyFieldConfig): FieldNode['props'] {
     }));
   }
 
+  if (to.optionsSource && typeof to.optionsSource === 'object') {
+    const source = to.optionsSource as any;
+    const type = source.type === 'url' || source.type === 'lookup' || source.type === 'static' ? source.type : null;
+    if (type) {
+      props.optionsSource = {
+        type,
+        url: source.url != null ? String(source.url) : undefined,
+        lookupKey: source.lookupKey != null ? String(source.lookupKey) : undefined,
+        labelKey: source.labelKey != null ? String(source.labelKey) : undefined,
+        valueKey: source.valueKey != null ? String(source.valueKey) : undefined,
+      };
+    }
+  }
+
   if (to.searchable != null) props.searchable = !!to.searchable;
   if (f.defaultValue !== undefined) props.defaultValue = f.defaultValue;
 

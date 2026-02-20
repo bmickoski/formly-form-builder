@@ -19,6 +19,16 @@ export interface OptionItem {
   value: string;
 }
 
+export type OptionsSourceType = 'static' | 'url' | 'lookup';
+
+export interface OptionsSource {
+  type: OptionsSourceType;
+  url?: string;
+  lookupKey?: string;
+  labelKey?: string;
+  valueKey?: string;
+}
+
 export interface CommonProps {
   label?: string;
   description?: string;
@@ -32,6 +42,7 @@ export interface FieldProps extends CommonProps {
   key?: string;
   defaultValue?: unknown;
   options?: OptionItem[];
+  optionsSource?: OptionsSource;
 }
 
 export interface ContainerProps extends CommonProps {

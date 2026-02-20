@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -9,6 +9,8 @@ import { FormlyBootstrapModule, withFormlyBootstrap } from '@ngx-formly/bootstra
 
 import { BuilderStore } from '../../builder-core/store';
 import { builderToFormly } from '../../builder-core/adapter';
+import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
+import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 
 @Component({
@@ -27,14 +29,16 @@ import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 export class PreviewBootstrapDialogComponent {
   readonly store = inject(BuilderStore);
   readonly ref = inject(MatDialogRef<PreviewBootstrapDialogComponent>);
+  readonly cdr = inject(ChangeDetectorRef);
   readonly data = inject(MAT_DIALOG_DATA) as { renderer?: 'material' | 'bootstrap' };
 
   readonly form = new FormGroup({});
   model: any = {};
   readonly options: FormlyFormOptions = {};
+  fields = builderToFormly(this.store.doc());
 
-  get fields() {
-    return builderToFormly(this.store.doc());
+  constructor() {
+    void this.loadDynamicOptions();
   }
 
   get isBootstrap(): boolean {
@@ -47,5 +51,13 @@ export class PreviewBootstrapDialogComponent {
 
   submit(): void {
     alert(JSON.stringify(this.model, null, 2));
+  }
+
+  async loadDynamicOptions(): Promise<void> {
+    await resolveDynamicOptionsForFields(this.fields, {
+      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
+    });
+    this.fields = [...this.fields];
+    this.cdr.markForCheck();
   }
 }
