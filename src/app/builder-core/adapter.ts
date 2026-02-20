@@ -39,6 +39,7 @@ function fieldProps(node: FieldNode): Record<string, any> {
         type: p.optionsSource.type,
         url: p.optionsSource.url,
         lookupKey: p.optionsSource.lookupKey,
+        listPath: p.optionsSource.listPath,
         labelKey: p.optionsSource.labelKey,
         valueKey: p.optionsSource.valueKey,
       };

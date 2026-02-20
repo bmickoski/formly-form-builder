@@ -144,6 +144,14 @@
             />
           </mat-form-field>
           <mat-form-field appearance="outline" class="fb-field">
+            <mat-label>List path (optional)</mat-label>
+            <input
+              matInput
+              [ngModel]="f?.props?.optionsSource?.listPath"
+              (ngModelChange)="updateOptionsSource({ listPath: $event })"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Label key</mat-label>
             <input
               matInput

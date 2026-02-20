@@ -84,6 +84,7 @@ function toFieldProps(f: FormlyFieldConfig): FieldNode['props'] {
         type,
         url: source.url != null ? String(source.url) : undefined,
         lookupKey: source.lookupKey != null ? String(source.lookupKey) : undefined,
+        listPath: source.listPath != null ? String(source.listPath) : undefined,
         labelKey: source.labelKey != null ? String(source.labelKey) : undefined,
         valueKey: source.valueKey != null ? String(source.valueKey) : undefined,
       };

@@ -84,6 +84,7 @@ describe('builder/formly adapters', () => {
       type: 'lookup',
       lookupKey: 'priorities',
       url: undefined,
+      listPath: undefined,
       labelKey: undefined,
       valueKey: undefined,
     });

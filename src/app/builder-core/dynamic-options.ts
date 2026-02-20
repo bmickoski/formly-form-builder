@@ -34,10 +34,40 @@ async function resolveFromUrl(
 ): Promise<OptionItem[]> {
   if (!source.url) return [];
   const payload = await fetchJson(source.url);
-  if (!Array.isArray(payload)) return [];
-  return payload
-    .map((item) => toOptionItem(item, source.labelKey, source.valueKey))
-    .filter((x): x is OptionItem => !!x);
+  const list = extractListPayload(payload, source.listPath);
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => toOptionItem(item, source.labelKey, source.valueKey)).filter((x): x is OptionItem => !!x);
+}
+
+function resolveByPath(root: unknown, path: string): unknown {
+  const steps = path
+    .split('.')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  let cur: unknown = root;
+  for (const step of steps) {
+    const obj = asObject(cur);
+    if (!obj) return undefined;
+    cur = obj[step];
+  }
+  return cur;
+}
+
+function extractListPayload(payload: unknown, listPath?: string): unknown[] | null {
+  if (Array.isArray(payload)) return payload;
+  const obj = asObject(payload);
+  if (!obj) return null;
+
+  if (listPath?.trim()) {
+    const fromPath = resolveByPath(payload, listPath);
+    return Array.isArray(fromPath) ? fromPath : null;
+  }
+
+  // Fallback for simple wrapped payloads if no path is provided.
+  for (const value of Object.values(obj)) {
+    if (Array.isArray(value)) return value;
+  }
+  return null;
 }
 
 function resolveFromLookup(source: OptionsSource, lookupRegistry: Record<string, OptionItem[]>): OptionItem[] {

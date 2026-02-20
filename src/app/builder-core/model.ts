@@ -25,6 +25,7 @@ export interface OptionsSource {
   type: OptionsSourceType;
   url?: string;
   lookupKey?: string;
+  listPath?: string;
   labelKey?: string;
   valueKey?: string;
 }

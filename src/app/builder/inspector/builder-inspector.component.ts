@@ -103,6 +103,7 @@ export class BuilderInspectorComponent {
       type,
       url: current.url,
       lookupKey: current.lookupKey,
+      listPath: current.listPath,
       labelKey: current.labelKey,
       valueKey: current.valueKey,
     };

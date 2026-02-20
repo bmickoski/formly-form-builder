@@ -53,4 +53,64 @@ describe('dynamic options resolver', () => {
       { label: 'Bob', value: '2' },
     ]);
   });
+
+  it('resolves wrapped url payloads (e.g. products array)', async () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        key: 'product',
+        type: 'select',
+        props: {
+          optionsSource: { type: 'url', url: '/api/products', labelKey: 'title', valueKey: 'id' },
+        },
+      },
+    ];
+
+    await resolveDynamicOptionsForFields(fields, {
+      fetchJson: async () => ({
+        products: [
+          { id: 10, title: 'Phone' },
+          { id: 11, title: 'Laptop' },
+        ],
+      }),
+    });
+
+    expect(fields[0].props?.['options']).toEqual([
+      { label: 'Phone', value: '10' },
+      { label: 'Laptop', value: '11' },
+    ]);
+  });
+
+  it('resolves nested wrapped payload using configured listPath', async () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        key: 'project',
+        type: 'select',
+        props: {
+          optionsSource: {
+            type: 'url',
+            url: '/api/projects',
+            listPath: 'data.items',
+            labelKey: 'title',
+            valueKey: 'id',
+          },
+        },
+      },
+    ];
+
+    await resolveDynamicOptionsForFields(fields, {
+      fetchJson: async () => ({
+        data: {
+          items: [
+            { id: 'p1', title: 'Core' },
+            { id: 'p2', title: 'Platform' },
+          ],
+        },
+      }),
+    });
+
+    expect(fields[0].props?.['options']).toEqual([
+      { label: 'Core', value: 'p1' },
+      { label: 'Platform', value: 'p2' },
+    ]);
+  });
 });
