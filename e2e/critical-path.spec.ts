@@ -53,7 +53,7 @@ test('switch renderer to bootstrap and preview uses bootstrap mode @critical', a
   await page.getByRole('button', { name: 'Close' }).click();
 });
 
-test('undo groups inspector typing into one step', async ({ page }) => {
+test('undo groups inspector typing into one step @critical', async ({ page }) => {
   await page.goto('/');
   await applyStarterLayout(page);
 
@@ -63,15 +63,17 @@ test('undo groups inspector typing into one step', async ({ page }) => {
 
   await firstFieldNode.click();
   await page.getByRole('tab', { name: 'Basic' }).click();
-  const labelInput = page.getByLabel('Label');
-  await expect(labelInput).toBeVisible();
-  await labelInput.fill('');
-  await page.getByLabel('Label').fill('Customer');
-  await page.getByLabel('Label').fill('Customer Name');
-  await expect(page.getByLabel('Label')).toHaveValue('Customer Name');
+  const labelFieldInput = page.locator('.fb-panel.right mat-form-field').filter({ hasText: 'Label' }).locator('input');
+  await expect(labelFieldInput).toBeVisible();
+  await labelFieldInput.fill('');
+  await expect(labelFieldInput).toBeVisible();
+  await labelFieldInput.fill('Customer');
+  await expect(labelFieldInput).toBeVisible();
+  await labelFieldInput.fill('Customer Name');
+  await expect(labelFieldInput).toHaveValue('Customer Name');
 
   await page.getByRole('button', { name: 'Undo' }).click();
-  await expect(page.getByLabel('Label')).toHaveValue(originalTitle);
+  await expect(labelFieldInput).toHaveValue(originalTitle);
 });
 
 test('inspector tab is persisted by node type @critical', async ({ page }) => {

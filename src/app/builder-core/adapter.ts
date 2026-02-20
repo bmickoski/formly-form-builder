@@ -194,7 +194,7 @@ function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<stri
   }
 
   if (container.type === 'row') {
-    return [{ fieldGroup: childrenFields, className: rowClass(doc.renderer) }];
+    return [{ fieldGroup: childrenFields, fieldGroupClassName: rowClass(doc.renderer) }];
   }
 
   if (container.type === 'col') {

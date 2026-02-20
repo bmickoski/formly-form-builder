@@ -88,13 +88,34 @@ function buildSimplePreset(doc: BuilderDocument, factory: PresetNodeFactory): vo
 
 function buildComplexPreset(doc: BuilderDocument, factory: PresetNodeFactory): void {
   const panel = factory.addContainerNode(doc, 'panel', doc.rootId, { title: 'Case Intake' });
-  const row = factory.addContainerNode(doc, 'row', panel.id, {});
-  const left = factory.addContainerNode(doc, 'col', row.id, { colSpan: 6 });
-  const right = factory.addContainerNode(doc, 'col', row.id, { colSpan: 6 });
+  const row1 = factory.addContainerNode(doc, 'row', panel.id, {});
+  const row1Left = factory.addContainerNode(doc, 'col', row1.id, { colSpan: 6 });
+  const row1Right = factory.addContainerNode(doc, 'col', row1.id, { colSpan: 6 });
+  factory.addFieldNode(doc, 'input', row1Left.id, { label: 'Case ID', placeholder: 'CASE-0001' }, { required: true });
+  factory.addFieldNode(
+    doc,
+    'input',
+    row1Right.id,
+    { label: 'Requester', placeholder: 'Full name' },
+    { required: true },
+  );
 
-  factory.addFieldNode(doc, 'input', left.id, { label: 'Case ID', placeholder: 'CASE-0001' }, { required: true });
-  factory.addFieldNode(doc, 'date', left.id, { label: 'Opened date' });
-  factory.addFieldNode(doc, 'select', left.id, {
+  const row2 = factory.addContainerNode(doc, 'row', panel.id, {});
+  const row2Left = factory.addContainerNode(doc, 'col', row2.id, { colSpan: 6 });
+  const row2Right = factory.addContainerNode(doc, 'col', row2.id, { colSpan: 6 });
+  factory.addFieldNode(doc, 'date', row2Left.id, { label: 'Opened date' });
+  factory.addFieldNode(doc, 'radio', row2Right.id, {
+    label: 'Contact method',
+    options: [
+      { label: 'Email', value: 'email' },
+      { label: 'Phone', value: 'phone' },
+    ],
+  });
+
+  const row3 = factory.addContainerNode(doc, 'row', panel.id, {});
+  const row3Left = factory.addContainerNode(doc, 'col', row3.id, { colSpan: 6 });
+  const row3Right = factory.addContainerNode(doc, 'col', row3.id, { colSpan: 6 });
+  factory.addFieldNode(doc, 'select', row3Left.id, {
     label: 'Priority',
     options: [
       { label: 'Low', value: 'low' },
@@ -102,21 +123,14 @@ function buildComplexPreset(doc: BuilderDocument, factory: PresetNodeFactory): v
       { label: 'High', value: 'high' },
     ],
   });
-
-  factory.addFieldNode(doc, 'input', right.id, { label: 'Requester', placeholder: 'Full name' }, { required: true });
-  factory.addFieldNode(doc, 'radio', right.id, {
-    label: 'Contact method',
-    options: [
-      { label: 'Email', value: 'email' },
-      { label: 'Phone', value: 'phone' },
-    ],
-  });
   factory.addFieldNode(
     doc,
     'textarea',
-    right.id,
+    row3Right.id,
     { label: 'Summary', placeholder: 'Describe the request' },
-    { required: true },
+    {
+      required: true,
+    },
   );
 }
 
@@ -126,26 +140,29 @@ function buildAdvancedPreset(doc: BuilderDocument, factory: PresetNodeFactory): 
   const profileCol = factory.addContainerNode(doc, 'col', topRow.id, { colSpan: 8 });
   const metaCol = factory.addContainerNode(doc, 'col', topRow.id, { colSpan: 4 });
 
-  const nestedRow = factory.addContainerNode(doc, 'row', profileCol.id, {});
-  const nestedLeft = factory.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
-  const nestedRight = factory.addContainerNode(doc, 'col', nestedRow.id, { colSpan: 6 });
-
+  const nestedTop = factory.addContainerNode(doc, 'row', profileCol.id, {});
+  const nestedTopLeft = factory.addContainerNode(doc, 'col', nestedTop.id, { colSpan: 6 });
+  const nestedTopRight = factory.addContainerNode(doc, 'col', nestedTop.id, { colSpan: 6 });
   factory.addFieldNode(
     doc,
     'input',
-    nestedLeft.id,
+    nestedTopLeft.id,
     { label: 'Username', placeholder: 'j.doe' },
     { required: true, minLength: 3 },
   );
+  factory.addFieldNode(doc, 'number', nestedTopRight.id, { label: 'Age', placeholder: '18' }, { min: 18, max: 120 });
+
+  const nestedBottom = factory.addContainerNode(doc, 'row', profileCol.id, {});
+  const nestedBottomLeft = factory.addContainerNode(doc, 'col', nestedBottom.id, { colSpan: 6 });
+  const nestedBottomRight = factory.addContainerNode(doc, 'col', nestedBottom.id, { colSpan: 6 });
   factory.addFieldNode(
     doc,
     'input',
-    nestedLeft.id,
+    nestedBottomLeft.id,
     { label: 'Email', placeholder: 'j.doe@company.com' },
     { required: true, email: true },
   );
-  factory.addFieldNode(doc, 'number', nestedRight.id, { label: 'Age', placeholder: '18' }, { min: 18, max: 120 });
-  factory.addFieldNode(doc, 'date', nestedRight.id, { label: 'Start date' });
+  factory.addFieldNode(doc, 'date', nestedBottomRight.id, { label: 'Start date' });
 
   factory.addFieldNode(doc, 'select', metaCol.id, {
     label: 'Department',

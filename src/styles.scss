@@ -226,6 +226,26 @@ body {
 .fb-toolbar-spacer {
   flex: 1 1 auto;
 }
+.fb-preset-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #ececf5;
+  border-radius: 10px;
+  max-width: 320px;
+}
+.fb-preset-thumb {
+  width: 34px;
+  min-width: 34px;
+  display: grid;
+  gap: 3px;
+}
+.fb-preset-thumb-row {
+  height: 5px;
+  border-radius: 4px;
+  background: #8f8fd8;
+}
 
 /* Preview layout helpers */
 .fb-row {
@@ -243,34 +263,60 @@ body {
   flex: 0 0 100%;
   max-width: 100%;
 }
-.fb-col-12 {
-  flex: 0 0 100%;
-  max-width: 100%;
+.fb-col-1 {
+  flex: 0 0 8.3333%;
+  max-width: 8.3333%;
 }
-.fb-col-6 {
-  flex: 0 0 50%;
-  max-width: 50%;
-}
-.fb-col-4 {
-  flex: 0 0 33.3333%;
-  max-width: 33.3333%;
+.fb-col-2 {
+  flex: 0 0 16.6667%;
+  max-width: 16.6667%;
 }
 .fb-col-3 {
   flex: 0 0 25%;
   max-width: 25%;
 }
+.fb-col-4 {
+  flex: 0 0 33.3333%;
+  max-width: 33.3333%;
+}
+.fb-col-5 {
+  flex: 0 0 41.6667%;
+  max-width: 41.6667%;
+}
+.fb-col-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+.fb-col-7 {
+  flex: 0 0 58.3333%;
+  max-width: 58.3333%;
+}
+.fb-col-8 {
+  flex: 0 0 66.6667%;
+  max-width: 66.6667%;
+}
+.fb-col-9 {
+  flex: 0 0 75%;
+  max-width: 75%;
+}
+.fb-col-10 {
+  flex: 0 0 83.3333%;
+  max-width: 83.3333%;
+}
+.fb-col-11 {
+  flex: 0 0 91.6667%;
+  max-width: 91.6667%;
+}
+.fb-col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
 
-/* Ensure preview fields actually fill column width (especially Material form-field). */
-.fb-form formly-field,
-.fb-form formly-group,
-.fb-form .formly-field {
-  display: block;
-  width: 100%;
-}
-.fb-form .fb-col .mat-mdc-form-field {
+/* Ensure controls fill their column, but do not override row/col container widths. */
+.fb-form .mat-mdc-form-field {
   width: 100%;
   display: block;
 }
-.fb-form .fb-col .form-control {
+.fb-form .form-control {
   width: 100%;
 }

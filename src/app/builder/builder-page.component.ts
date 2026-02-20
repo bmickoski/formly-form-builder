@@ -45,6 +45,12 @@ export class BuilderPageComponent {
     return this.store.presets.find((preset) => preset.id === this.presetToApply) ?? fallback;
   }
 
+  get selectedPresetThumbnailRows(): number[] {
+    const lines = this.selectedPreset.thumbnail.split('\\n').map((line) => (line.match(/#/g) ?? []).length);
+    const max = Math.max(1, ...lines);
+    return lines.map((count) => Math.round((count / max) * 100));
+  }
+
   openPreview(): void {
     const renderer = this.store.renderer();
     this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {
@@ -118,6 +124,13 @@ export class BuilderPageComponent {
 
   @HostListener('document:keydown', ['$event'])
   onKeyDown(e: KeyboardEvent): void {
+    const target = e.target as HTMLElement | null;
+    if (target) {
+      const tag = target.tagName;
+      const isEditable = target.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      if (isEditable) return;
+    }
+
     const metaOrCtrl = e.ctrlKey || e.metaKey;
     if (metaOrCtrl && e.key.toLowerCase() === 'z') {
       e.preventDefault();

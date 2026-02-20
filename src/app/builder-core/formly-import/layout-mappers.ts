@@ -15,7 +15,8 @@ export function detectLayoutKind(field: FormlyFieldConfig): LayoutImportKind {
   if (group.length === 0) return 'field';
 
   const className = field.className ?? '';
-  if (ROW_REGEX.test(className)) return 'row';
+  const fieldGroupClassName = field.fieldGroupClassName ?? '';
+  if (ROW_REGEX.test(className) || ROW_REGEX.test(fieldGroupClassName)) return 'row';
   if (COL_REGEX.test(className)) return 'col';
   if (!field.type && !field.key) return 'anonymous-group';
   return 'panel-group';
