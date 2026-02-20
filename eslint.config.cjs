@@ -24,7 +24,10 @@ module.exports = tseslint.config(
         'error',
         { type: 'attribute', prefix: 'app', style: 'camelCase' },
       ],
-      '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+      complexity: ['error', 15],
+      'max-lines': ['error', { max: 400, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
     },
   },
   {
@@ -36,3 +39,4 @@ module.exports = tseslint.config(
   },
   eslintConfigPrettier,
 );
+
