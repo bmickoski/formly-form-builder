@@ -39,20 +39,16 @@
       Apply Layout
     </button>
 
-    <div
-      style="
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 10px;
-        border: 1px solid #ececf5;
-        border-radius: 10px;
-        max-width: 320px;
-      "
-    >
+    <div class="fb-preset-preview">
+      <div class="fb-preset-thumb" aria-hidden="true">
+        @for (row of selectedPresetThumbnailRows; track $index) {
+          <div class="fb-preset-thumb-row" [style.width.%]="row"></div>
+        }
+      </div>
       <div style="min-width: 0">
         <div style="font-weight: 600; font-size: 12px">{{ selectedPreset.title }}</div>
         <div style="font-size: 11px; color: #6f6f84">{{ selectedPreset.description }}</div>
-        <div style="font-size: 10px; color: #8c8ca2">{{ selectedPreset.highlights.join(' � ') }}</div>
+        <div style="font-size: 10px; color: #8c8ca2">{{ selectedPreset.highlights.join(' | ') }}</div>
       </div>
     </div>
 

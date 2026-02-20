@@ -20,7 +20,7 @@ describe('builder/formly adapters: layout + dynamic options', () => {
     const fields = builderToFormly(store.doc());
     expect(fields.length).toBeGreaterThan(0);
     const exportedRow = fields[0];
-    expect(exportedRow.className).toBe('row');
+    expect(exportedRow.fieldGroupClassName).toBe('row');
 
     const firstCol = exportedRow.fieldGroup?.[0] as FormlyFieldConfig;
     expect(firstCol.className).toBe('col-6');
