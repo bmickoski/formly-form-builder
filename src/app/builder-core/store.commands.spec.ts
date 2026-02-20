@@ -8,10 +8,17 @@ import {
   splitColumnCommand,
 } from './store.commands';
 import { BuilderDocument, ContainerNode } from './model';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 
 function createDoc(): BuilderDocument {
   const root: ContainerNode = { id: 'root', type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
-  return { rootId: 'root', nodes: { root }, selectedId: null, renderer: 'material' };
+  return {
+    schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
+    rootId: 'root',
+    nodes: { root },
+    selectedId: null,
+    renderer: 'material',
+  };
 }
 
 describe('store.commands', () => {

@@ -19,7 +19,9 @@
     {{
       data.mode === 'exportFormly'
         ? 'FormlyFieldConfig[] ready to use in an application.'
-        : 'Builder document JSON (domain tree).'
+        : data.mode === 'exportBuilder'
+          ? 'Builder document JSON (domain tree). Schema v' + (data.schemaVersion ?? '?') + '.'
+          : 'Builder document JSON (domain tree).'
     }}
   </div>
 </mat-dialog-content>

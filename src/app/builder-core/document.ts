@@ -1,4 +1,5 @@
 import { BuilderDocument, BuilderNode, ContainerNode, FieldNode, PreviewRenderer } from './model';
+import { CURRENT_BUILDER_SCHEMA_VERSION, LEGACY_BUILDER_SCHEMA_VERSION } from './schema';
 
 const DEFAULT_ROOT_ID = 'root';
 
@@ -15,6 +16,35 @@ function toRenderer(v: unknown): PreviewRenderer {
 function toStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return [];
   return v.filter((x): x is string => typeof x === 'string');
+}
+
+function toSchemaVersion(v: unknown): number {
+  const num = Number(v);
+  if (!Number.isFinite(num) || num <= 0) return LEGACY_BUILDER_SCHEMA_VERSION;
+  return Math.trunc(num);
+}
+
+function migrateRawDocument(rawDoc: Record<string, unknown>): {
+  migrated: Record<string, unknown>;
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+  let out = { ...rawDoc };
+  const fromVersion = toSchemaVersion(rawDoc['schemaVersion']);
+
+  if (fromVersion < CURRENT_BUILDER_SCHEMA_VERSION) {
+    warnings.push(`Migrated builder document schema v${fromVersion} to v${CURRENT_BUILDER_SCHEMA_VERSION}.`);
+    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
+  } else if (fromVersion > CURRENT_BUILDER_SCHEMA_VERSION) {
+    warnings.push(
+      `Document schema v${fromVersion} is newer than supported v${CURRENT_BUILDER_SCHEMA_VERSION}; imported in compatibility mode.`,
+    );
+    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
+  } else {
+    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
+  }
+
+  return { migrated: out, warnings };
 }
 
 function normalizeFieldNode(raw: Record<string, unknown>, id: string, parentId: string | null): FieldNode {
@@ -83,12 +113,15 @@ export function parseBuilderDocument(json: string): ParseResult {
 
 export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
   if (!isObject(rawDoc)) return { ok: false, error: 'Invalid document: expected object' };
-  if (!isObject(rawDoc['nodes'])) return { ok: false, error: 'Invalid document: nodes must be an object map' };
 
-  const rawNodes = rawDoc['nodes'] as Record<string, unknown>;
-  const requestedRootId = typeof rawDoc['rootId'] === 'string' ? rawDoc['rootId'] : DEFAULT_ROOT_ID;
+  const migrated = migrateRawDocument(rawDoc);
+  const source = migrated.migrated;
+  if (!isObject(source['nodes'])) return { ok: false, error: 'Invalid document: nodes must be an object map' };
+
+  const rawNodes = source['nodes'] as Record<string, unknown>;
+  const requestedRootId = typeof source['rootId'] === 'string' ? source['rootId'] : DEFAULT_ROOT_ID;
   const rootId = rawNodes[requestedRootId] ? requestedRootId : DEFAULT_ROOT_ID;
-  const warnings: string[] = [];
+  const warnings: string[] = [...migrated.warnings];
 
   if (rootId !== requestedRootId) {
     warnings.push(`Root "${requestedRootId}" missing, fell back to "${DEFAULT_ROOT_ID}".`);
@@ -107,9 +140,10 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
       warnings: ['Root node missing; created empty root panel.'],
       doc: {
         rootId: DEFAULT_ROOT_ID,
+        schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
         nodes: { [DEFAULT_ROOT_ID]: root },
         selectedId: null,
-        renderer: toRenderer(rawDoc['renderer']),
+        renderer: toRenderer(source['renderer']),
       },
     };
   }
@@ -151,8 +185,8 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
     return { ok: false, error: 'Invalid document: root must be a container node' };
 
   const selectedId =
-    typeof rawDoc['selectedId'] === 'string' && outNodes[rawDoc['selectedId']] ? rawDoc['selectedId'] : null;
-  if (rawDoc['selectedId'] && selectedId == null) {
+    typeof source['selectedId'] === 'string' && outNodes[source['selectedId']] ? source['selectedId'] : null;
+  if (source['selectedId'] && selectedId == null) {
     warnings.push('Selected node was invalid and has been cleared.');
   }
 
@@ -161,9 +195,10 @@ export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
     warnings,
     doc: {
       rootId: resolvedRootId,
+      schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
       nodes: outNodes,
       selectedId,
-      renderer: toRenderer(rawDoc['renderer']),
+      renderer: toRenderer(source['renderer']),
     },
   };
 }
