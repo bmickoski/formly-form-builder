@@ -39,6 +39,7 @@ type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
     MatTabsModule,
   ],
   templateUrl: './builder-inspector.component.html',
+  styleUrl: './builder-inspector.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuilderInspectorComponent {

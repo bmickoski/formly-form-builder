@@ -11,6 +11,7 @@ import { PaletteItem } from '../../builder-core/registry';
   standalone: true,
   imports: [DragDropModule, MatExpansionModule, MatFormFieldModule, MatInputModule, CdkDrag],
   templateUrl: './builder-palette.component.html',
+  styleUrl: './builder-palette.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuilderPaletteComponent {
