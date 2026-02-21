@@ -33,6 +33,7 @@ import type { BuilderPresetId } from '../builder-core/store';
     BuilderInspectorComponent,
   ],
   templateUrl: './builder-page.component.html',
+  styleUrl: './builder-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuilderPageComponent {

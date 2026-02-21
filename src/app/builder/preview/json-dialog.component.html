@@ -27,9 +27,9 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="copy()" *ngIf="data.mode === 'exportFormly' || data.mode === 'exportBuilder'">
-    Copy
-  </button>
+  @if (data.mode === 'exportFormly' || data.mode === 'exportBuilder') {
+    <button mat-button (click)="copy()">Copy</button>
+  }
   <button mat-button (click)="close()">Close</button>
   <button mat-raised-button color="primary" (click)="done()">
     {{ data.mode === 'import' || data.mode === 'importFormly' ? 'Import' : 'Done' }}
