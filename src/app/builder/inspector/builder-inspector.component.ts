@@ -20,6 +20,10 @@ import {
   isContainerNode,
   isFieldNode,
 } from '../../builder-core/model';
+import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
+import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+
+type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-builder-inspector',
@@ -60,6 +64,9 @@ export class BuilderInspectorComponent {
   readonly selectedTabIndex = computed(() =>
     this.isField() ? this.tabByNodeType().field : this.tabByNodeType().layout,
   );
+  readonly asyncUniqueSampleValue = signal('');
+  readonly asyncUniqueTestState = signal<AsyncTestState>('idle');
+  readonly asyncUniqueTestMessage = signal('');
 
   readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
     { value: 'static', label: 'Static options' },
@@ -173,6 +180,7 @@ export class BuilderInspectorComponent {
     if (!f) return;
     if (!enabled) {
       this.store.updateNodeValidators(f.id, { asyncUnique: undefined });
+      this.resetAsyncUniqueTest();
       return;
     }
 
@@ -183,6 +191,7 @@ export class BuilderInspectorComponent {
       message: 'Value must be unique',
     };
     this.store.updateNodeValidators(f.id, { asyncUnique: next });
+    this.resetAsyncUniqueTest();
   }
 
   setAsyncUniqueSource(sourceType: AsyncUniqueSourceType): void {
@@ -196,6 +205,7 @@ export class BuilderInspectorComponent {
         sourceType,
       },
     });
+    this.resetAsyncUniqueTest();
   }
 
   updateAsyncUnique(patch: Partial<AsyncUniqueValidator>): void {
@@ -213,6 +223,51 @@ export class BuilderInspectorComponent {
       },
       `${f.id}:async-unique`,
     );
+    this.resetAsyncUniqueTest();
+  }
+
+  setAsyncUniqueSampleValue(value: string): void {
+    this.asyncUniqueSampleValue.set(value);
+  }
+
+  async runAsyncUniqueTest(): Promise<void> {
+    const f = this.fieldNode();
+    const config = f?.validators.asyncUnique;
+    if (!f || !config) return;
+
+    const sample = this.asyncUniqueSampleValue().trim();
+    if (!sample) {
+      this.asyncUniqueTestState.set('error');
+      this.asyncUniqueTestMessage.set('Enter a sample value to test.');
+      return;
+    }
+
+    this.asyncUniqueTestState.set('loading');
+    this.asyncUniqueTestMessage.set('Checking...');
+
+    const result = await checkAsyncUniqueValue(config, sample, {
+      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
+    });
+
+    if (result.reason === 'duplicate') {
+      this.asyncUniqueTestState.set('error');
+      this.asyncUniqueTestMessage.set('Duplicate found in source.');
+      return;
+    }
+
+    if (result.reason === 'source-error') {
+      this.asyncUniqueTestState.set('error');
+      this.asyncUniqueTestMessage.set('Could not validate source. Check URL/lookup settings.');
+      return;
+    }
+
+    this.asyncUniqueTestState.set('success');
+    this.asyncUniqueTestMessage.set('Value is unique.');
+  }
+
+  resetAsyncUniqueTest(): void {
+    this.asyncUniqueTestState.set('idle');
+    this.asyncUniqueTestMessage.set('');
   }
 
   rule(target: 'visibleRule' | 'enabledRule'): ConditionalRule | null {
