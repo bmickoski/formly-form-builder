@@ -6,7 +6,7 @@
   <form [formGroup]="form" (ngSubmit)="submit()">
     <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
 
-    <div style="display: flex; gap: 8px; margin-top: 16px">
+    <div class="fb-preview-actions">
       @if (isBootstrap) {
         <button class="btn btn-primary" type="submit">Submit</button>
         <button class="btn btn-outline-secondary" type="button" (click)="form.reset(); model = {}">Reset</button>
@@ -16,11 +16,9 @@
       }
     </div>
 
-    <div style="margin-top: 14px">
+    <div class="fb-preview-model">
       <div class="fb-hint">Model</div>
-      <pre style="background: #fafafe; border: 1px solid #eee; padding: 10px; border-radius: 10px; overflow: auto">{{
-        model | json
-      }}</pre>
+      <pre class="fb-preview-model-json">{{ model | json }}</pre>
     </div>
   </form>
 </mat-dialog-content>

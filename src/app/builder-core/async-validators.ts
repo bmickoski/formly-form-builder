@@ -7,6 +7,11 @@ export interface DynamicAsyncValidatorContext {
   fetchJson?: (url: string) => Promise<unknown>;
 }
 
+export interface AsyncUniqueCheckResult {
+  unique: boolean;
+  reason: 'empty' | 'unique' | 'duplicate' | 'source-error';
+}
+
 function asObject(value: unknown): Record<string, unknown> | null {
   return !!value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
@@ -105,6 +110,28 @@ async function loadExistingValues(
 }
 
 /**
+ * Evaluates one value against async unique source config.
+ */
+export async function checkAsyncUniqueValue(
+  config: AsyncUniqueValidator,
+  value: unknown,
+  ctx: DynamicAsyncValidatorContext = {},
+  fetchCache: Map<string, Promise<unknown>> = new Map<string, Promise<unknown>>(),
+): Promise<AsyncUniqueCheckResult> {
+  if (value == null || String(value).trim() === '') return { unique: true, reason: 'empty' };
+
+  try {
+    const caseSensitive = !!config.caseSensitive;
+    const existingValues = await loadExistingValues(config, ctx, fetchCache);
+    const normalizedExisting = new Set(existingValues.map((item) => normalizeValue(item, caseSensitive)));
+    const isUnique = !normalizedExisting.has(normalizeValue(value, caseSensitive));
+    return { unique: isUnique, reason: isUnique ? 'unique' : 'duplicate' };
+  } catch {
+    return { unique: true, reason: 'source-error' };
+  }
+}
+
+/**
  * Binds async unique validators defined in `props.asyncUnique` to Formly fields.
  */
 export function resolveAsyncValidatorsForFields(
@@ -120,17 +147,24 @@ export function resolveAsyncValidatorsForFields(
 
     const caseSensitive = !!config.caseSensitive;
     const message = config.message || 'Value must be unique';
+    let latestRunId = 0;
 
     field.asyncValidators = {
       ...(field.asyncValidators ?? {}),
       unique: {
         expression: async (control: { value: unknown }): Promise<boolean> => {
-          const rawValue = control?.value;
-          if (rawValue == null || String(rawValue).trim() === '') return true;
+          const runId = ++latestRunId;
+          await new Promise<void>((resolve) => setTimeout(resolve, 250));
+          if (runId !== latestRunId) return true;
 
-          const existingValues = await loadExistingValues(config, ctx, fetchCache);
-          const normalizedExisting = new Set(existingValues.map((value) => normalizeValue(value, caseSensitive)));
-          return !normalizedExisting.has(normalizeValue(rawValue, caseSensitive));
+          const result = await checkAsyncUniqueValue(config, control?.value, ctx, fetchCache);
+          if (runId !== latestRunId) return true;
+          if (result.reason === 'source-error') return true;
+
+          // Keep existing behavior of case-sensitive compare from config.
+          // The helper already applies it; this local read ensures config remains captured by closure.
+          void caseSensitive;
+          return result.unique;
         },
         message,
       },

@@ -1,0 +1,17 @@
+.fb-preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.fb-preview-model {
+  margin-top: 14px;
+}
+
+.fb-preview-model-json {
+  background: #fafafe;
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 10px;
+  overflow: auto;
+}

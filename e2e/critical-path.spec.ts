@@ -53,6 +53,39 @@ test('switch renderer to bootstrap and preview uses bootstrap mode @critical', a
   await page.getByRole('button', { name: 'Close' }).click();
 });
 
+test('bootstrap renderer is default on fresh load @critical', async ({ page }) => {
+  await page.goto('/');
+
+  const rendererField = page.locator('mat-form-field').filter({ hasText: 'Preview UI' });
+  await expect(rendererField).toContainText('Bootstrap');
+
+  await page.getByRole('button', { name: 'Preview' }).click();
+  const previewDialog = page.locator('mat-dialog-container');
+  await expect(previewDialog.getByText('(Bootstrap)')).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+});
+
+test('async uniqueness test reports duplicate and unique states @critical', async ({ page }) => {
+  await page.goto('/');
+  await applyStarterLayout(page);
+
+  const firstFieldNode = page.locator('.fb-canvas .fb-node', { hasText: 'Field:' }).first();
+  await firstFieldNode.click();
+  await page.getByRole('tab', { name: 'Validation' }).click();
+
+  const inspector = page.locator('.fb-panel.right');
+  await inspector.getByLabel('Enable unique check').click();
+
+  const testInput = inspector.locator('mat-form-field').filter({ hasText: 'Test value' }).locator('input');
+  await testInput.fill('US');
+  await inspector.getByRole('button', { name: 'Test' }).click();
+  await expect(inspector.getByText('Duplicate found in source.')).toBeVisible();
+
+  await testInput.fill('ZZ_UNIQUE_TEST');
+  await inspector.getByRole('button', { name: 'Test' }).click();
+  await expect(inspector.getByText('Value is unique.')).toBeVisible();
+});
+
 test('undo groups inspector typing into one step @critical', async ({ page }) => {
   await page.goto('/');
   await applyStarterLayout(page);

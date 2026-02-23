@@ -2,6 +2,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BuilderDocument, ContainerNode, FieldNode } from './model';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { fieldKindFromType, toFieldProps, toValidators } from './formly-import/field-mappers';
 import {
   createContainerNode,

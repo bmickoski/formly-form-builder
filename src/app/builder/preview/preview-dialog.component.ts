@@ -15,6 +15,7 @@ import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, ReactiveFormsModule, FormlyModule, JsonPipe],
   templateUrl: './preview-dialog.component.html',
+  styleUrl: './preview-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreviewDialogComponent {

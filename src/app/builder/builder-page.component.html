@@ -25,7 +25,7 @@
       Import Formly JSON
     </button>
 
-    <mat-form-field appearance="outline" style="width: 220px; margin-left: 8px">
+    <mat-form-field appearance="outline" class="fb-starter-layout-field">
       <mat-label>Starter layout</mat-label>
       <mat-select [(value)]="presetToApply">
         @for (preset of store.presets; track preset.id) {
@@ -41,14 +41,14 @@
 
     <div class="fb-preset-preview">
       <div class="fb-preset-thumb" aria-hidden="true">
-        @for (row of selectedPresetThumbnailRows; track $index) {
+        @for (row of selectedPreset.thumbnailRows; track $index) {
           <div class="fb-preset-thumb-row" [style.width.%]="row"></div>
         }
       </div>
-      <div style="min-width: 0">
-        <div style="font-weight: 600; font-size: 12px">{{ selectedPreset.title }}</div>
-        <div style="font-size: 11px; color: #6f6f84">{{ selectedPreset.description }}</div>
-        <div style="font-size: 10px; color: #8c8ca2">{{ selectedPreset.highlights.join(' | ') }}</div>
+      <div class="fb-preset-preview-content">
+        <div class="fb-preset-preview-title">{{ selectedPreset.title }}</div>
+        <div class="fb-preset-preview-description">{{ selectedPreset.description }}</div>
+        <div class="fb-preset-preview-highlights">{{ selectedPreset.highlights.join(' | ') }}</div>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
       Redo
     </button>
 
-    <mat-form-field appearance="outline" style="width: 170px; margin-left: 8px">
+    <mat-form-field appearance="outline" class="fb-preview-ui-field">
       <mat-label>Preview UI</mat-label>
       <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
         <mat-option value="material">Material</mat-option>

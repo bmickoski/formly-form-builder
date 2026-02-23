@@ -1,5 +1,5 @@
 <div class="fb-section">
-  <div style="font-weight: 700; margin-bottom: 6px">Inspector</div>
+  <div class="fb-inspector-title">Inspector</div>
 
   @if (!node()) {
     <div class="fb-hint">Select an element on the canvas to edit its settings.</div>
@@ -8,13 +8,13 @@
     @let f = fieldNode();
     @let c = containerNode();
 
-    <div class="fb-hint" style="margin-bottom: 12px">
+    <div class="fb-hint fb-inspector-editing">
       Editing: <strong>{{ isField() ? 'Field' : 'Layout' }}</strong>
     </div>
 
     <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="onSelectedTabChange($event)">
       <mat-tab label="Basic">
-        <div style="padding-top: 10px">
+        <div class="fb-tab-content">
           <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Label</mat-label>
             <input matInput [ngModel]="n.props?.label" (ngModelChange)="setProp('label', $event)" />
@@ -52,11 +52,13 @@
           >
 
           @if (isField()) {
-            <mat-divider style="margin: 12px 0"></mat-divider>
-            <div style="font-weight: 600; margin-bottom: 6px">Display rules</div>
+            <mat-divider class="fb-inspector-divider"></mat-divider>
+            <div class="fb-section-title">Display rules</div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
-              <div style="font-weight: 500">Visible when</div>
+            <div
+              class="fb-inline-row fb-inline-row-space-between fb-inline-row-align-center fb-inline-row-margin-bottom"
+            >
+              <div class="fb-subsection-title">Visible when</div>
               @if (!rule('visibleRule')) {
                 <button mat-stroked-button type="button" (click)="initRule('visibleRule')">Add rule</button>
               } @else {
@@ -95,8 +97,8 @@
               }
             }
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px">
-              <div style="font-weight: 500">Enabled when</div>
+            <div class="fb-inline-row fb-inline-row-space-between fb-inline-row-align-center fb-enabled-row">
+              <div class="fb-subsection-title">Enabled when</div>
               @if (!rule('enabledRule')) {
                 <button mat-stroked-button type="button" (click)="initRule('enabledRule')">Add rule</button>
               } @else {
@@ -137,8 +139,8 @@
           }
 
           @if (isCol()) {
-            <mat-divider style="margin: 12px 0"></mat-divider>
-            <div style="font-weight: 600; margin-bottom: 6px">Column</div>
+            <mat-divider class="fb-inspector-divider"></mat-divider>
+            <div class="fb-section-title">Column</div>
             <mat-form-field appearance="outline" class="fb-field">
               <mat-label>Span (1-12)</mat-label>
               <input
@@ -149,16 +151,16 @@
               />
             </mat-form-field>
 
-            <div style="display: flex; gap: 8px; margin-top: 6px">
+            <div class="fb-inline-row fb-inline-row-gap-sm fb-inline-row-margin-top-sm">
               <button mat-stroked-button type="button" (click)="splitSelectedColumn(2)">Split x2</button>
               <button mat-stroked-button type="button" (click)="splitSelectedColumn(3)">Split x3</button>
             </div>
           }
 
           @if (isRow()) {
-            <mat-divider style="margin: 12px 0"></mat-divider>
-            <div style="font-weight: 600; margin-bottom: 6px">Row</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <mat-divider class="fb-inspector-divider"></mat-divider>
+            <div class="fb-section-title">Row</div>
+            <div class="fb-inline-row fb-inline-row-gap-sm fb-inline-row-wrap">
               <button mat-stroked-button type="button" (click)="addColumnToSelectedRow()">Add column</button>
               <button mat-stroked-button type="button" (click)="rebalanceSelectedRow()">Rebalance columns</button>
             </div>
@@ -167,13 +169,13 @@
       </mat-tab>
 
       <mat-tab label="Validation">
-        <div style="padding-top: 10px">
+        <div class="fb-tab-content">
           @if (isField()) {
             <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)"
               >Required</mat-slide-toggle
             >
 
-            <div style="display: grid; gap: 10px; margin-top: 10px">
+            <div class="fb-grid-gap fb-grid-gap-margin-top">
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Min length</mat-label>
                 <input
@@ -220,14 +222,14 @@
               </mat-form-field>
             </div>
 
-            <mat-divider style="margin: 12px 0"></mat-divider>
-            <div style="font-weight: 600; margin-bottom: 6px">Async uniqueness</div>
+            <mat-divider class="fb-inspector-divider"></mat-divider>
+            <div class="fb-section-title">Async uniqueness</div>
             <mat-slide-toggle [ngModel]="!!asyncUnique()" (ngModelChange)="enableAsyncUnique($event)"
               >Enable unique check</mat-slide-toggle
             >
 
             @if (asyncUnique()) {
-              <mat-form-field appearance="outline" class="fb-field" style="margin-top: 10px">
+              <mat-form-field appearance="outline" class="fb-field fb-field-margin-top">
                 <mat-label>Source</mat-label>
                 <mat-select [ngModel]="asyncUnique()?.sourceType" (ngModelChange)="setAsyncUniqueSource($event)">
                   @for (source of asyncUniqueSources; track source.value) {
@@ -283,6 +285,28 @@
                 (ngModelChange)="updateAsyncUnique({ caseSensitive: $event })"
                 >Case sensitive compare</mat-slide-toggle
               >
+
+              <div class="fb-inline-row fb-inline-row-gap-sm fb-inline-row-align-center fb-inline-row-margin-top">
+                <mat-form-field appearance="outline" class="fb-field fb-field-no-margin">
+                  <mat-label>Test value</mat-label>
+                  <input
+                    matInput
+                    [ngModel]="asyncUniqueSampleValue()"
+                    (ngModelChange)="setAsyncUniqueSampleValue($event)"
+                  />
+                </mat-form-field>
+                <button mat-stroked-button type="button" (click)="runAsyncUniqueTest()">Test</button>
+              </div>
+              @if (asyncUniqueTestState() !== 'idle') {
+                <div
+                  class="fb-hint fb-async-test-status"
+                  [class.fb-async-test-success]="asyncUniqueTestState() === 'success'"
+                  [class.fb-async-test-loading]="asyncUniqueTestState() === 'loading'"
+                  [class.fb-async-test-error]="asyncUniqueTestState() === 'error'"
+                >
+                  {{ asyncUniqueTestMessage() }}
+                </div>
+              }
             }
           } @else {
             <div class="fb-hint">Validation settings are available for fields only.</div>
@@ -291,16 +315,16 @@
       </mat-tab>
 
       <mat-tab label="Data">
-        <div style="padding-top: 10px">
+        <div class="fb-tab-content">
           @if (isField()) {
-            <div style="font-weight: 600; margin-bottom: 6px">Field extras</div>
+            <div class="fb-section-title">Field extras</div>
             <mat-slide-toggle [ngModel]="!!n.props?.searchable" (ngModelChange)="setProp('searchable', $event)"
               >Searchable (select only)</mat-slide-toggle
             >
 
             @if (isChoiceField()) {
-              <mat-divider style="margin: 12px 0"></mat-divider>
-              <div style="font-weight: 600; margin-bottom: 6px">Options source</div>
+              <mat-divider class="fb-inspector-divider"></mat-divider>
+              <div class="fb-section-title">Options source</div>
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Source</mat-label>
                 <mat-select [ngModel]="optionsSourceType()" (ngModelChange)="setOptionsSourceType($event)">
@@ -357,16 +381,16 @@
               }
 
               @if (optionsSourceType() !== 'static') {
-                <div class="fb-hint" style="margin-bottom: 10px">Static options below are used as fallback.</div>
+                <div class="fb-hint fb-hint-margin-bottom">Static options below are used as fallback.</div>
               }
 
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
-                <div style="font-weight: 600">Options</div>
+              <div class="fb-inline-row fb-inline-row-space-between fb-inline-row-align-center fb-options-header">
+                <div class="fb-section-title fb-section-title-no-margin">Options</div>
                 <button mat-stroked-button type="button" (click)="addOption()">Add option</button>
               </div>
 
               @for (opt of options(); track $index) {
-                <div style="border: 1px solid #ececf5; border-radius: 10px; padding: 10px; margin-bottom: 8px">
+                <div class="fb-option-card">
                   <mat-form-field appearance="outline" class="fb-field">
                     <mat-label>Label</mat-label>
                     <input matInput [ngModel]="opt.label" (ngModelChange)="updateOption($index, { label: $event })" />
@@ -377,7 +401,7 @@
                     <input matInput [ngModel]="opt.value" (ngModelChange)="updateOption($index, { value: $event })" />
                   </mat-form-field>
 
-                  <div style="display: flex; gap: 8px">
+                  <div class="fb-inline-row fb-inline-row-gap-sm">
                     <button mat-button type="button" (click)="moveOption($index, -1)">Up</button>
                     <button mat-button type="button" (click)="moveOption($index, 1)">Down</button>
                     <button mat-button color="warn" type="button" (click)="removeOption($index)">Remove</button>
@@ -385,9 +409,7 @@
                 </div>
               }
             } @else {
-              <div class="fb-hint" style="margin-top: 10px">
-                Data source settings are available for select/radio fields.
-              </div>
+              <div class="fb-hint fb-hint-margin-top">Data source settings are available for select/radio fields.</div>
             }
           } @else {
             <div class="fb-hint">Data settings are available for fields only.</div>
@@ -396,7 +418,7 @@
       </mat-tab>
     </mat-tab-group>
 
-    <mat-divider style="margin: 12px 0"></mat-divider>
+    <mat-divider class="fb-inspector-divider"></mat-divider>
     <button mat-button color="warn" (click)="store.removeSelected()">Delete selected</button>
   }
 </div>

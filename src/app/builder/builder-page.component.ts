@@ -33,6 +33,7 @@ import type { BuilderPresetId } from '../builder-core/store';
     BuilderInspectorComponent,
   ],
   templateUrl: './builder-page.component.html',
+  styleUrl: './builder-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuilderPageComponent {
@@ -43,12 +44,6 @@ export class BuilderPageComponent {
   get selectedPreset() {
     const fallback = this.store.presets[0]!;
     return this.store.presets.find((preset) => preset.id === this.presetToApply) ?? fallback;
-  }
-
-  get selectedPresetThumbnailRows(): number[] {
-    const lines = this.selectedPreset.thumbnail.split('\\n').map((line) => (line.match(/#/g) ?? []).length);
-    const max = Math.max(1, ...lines);
-    return lines.map((count) => Math.round((count / max) * 100));
   }
 
   openPreview(): void {
@@ -73,7 +68,7 @@ export class BuilderPageComponent {
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { mode: 'exportBuilder', json: this.store.exportDocument() },
+      data: { mode: 'exportBuilder', json: this.store.exportDocument(), schemaVersion: this.store.doc().schemaVersion },
     });
   }
 

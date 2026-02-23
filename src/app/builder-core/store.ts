@@ -5,6 +5,7 @@ import { parseBuilderDocument } from './document';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import {
   addColumnToRowCommand,
   addFromPaletteCommand,
@@ -61,7 +62,7 @@ export class BuilderStore {
   readonly selectedId = computed(() => this._doc().selectedId);
   readonly canUndo = computed(() => this._past().length > 0);
   readonly canRedo = computed(() => this._future().length > 0);
-  readonly renderer = computed(() => this._doc().renderer ?? 'material');
+  readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
 
   readonly selectedNode = computed(() => {
@@ -80,7 +81,7 @@ export class BuilderStore {
   });
 
   /** Updates the active preview renderer. */
-  setRenderer(renderer: 'material' | 'bootstrap'): void {
+  setRenderer(renderer: 'bootstrap' | 'bootstrap'): void {
     this.apply((doc) => ({ ...doc, renderer }));
   }
 
