@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+﻿import { FormlyFieldConfig } from '@ngx-formly/core';
 
 import { builderToFormly } from './adapter';
 import { formlyToBuilder } from './formly-import';
@@ -105,58 +105,52 @@ describe('builder/formly adapters: layout + dynamic options', () => {
 });
 
 describe('builder/formly adapters: rules + async validators', () => {
-  it('exports expression rules to formly expressions', () => {
+  it('prefers advanced expressions over simple rules', () => {
     const store = new BuilderStore();
     store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
     const fieldId = store.selectedId() as string;
     store.updateNodeProps(fieldId, {
       visibleRule: { dependsOnKey: 'status', operator: 'eq', value: 'active' },
+      visibleExpression: "model?.status === 'ready'",
       enabledRule: { dependsOnKey: 'canEdit', operator: 'truthy' },
+      enabledExpression: "model?.role !== 'readonly'",
     });
 
     const fields = builderToFormly(store.doc());
-    const f = fields[0] as FormlyFieldConfig;
-    expect(f.expressions).toBeDefined();
-    const expressions = f.expressions as Record<string, string>;
-    expect(expressions['hide']).toContain('model?.["status"]');
-    expect(expressions['props.disabled']).toContain('model?.["canEdit"]');
+    const first = fields[0] as FormlyFieldConfig;
+    const expressions = first.expressions as Record<string, string>;
+    expect(expressions['hide']).toContain("model?.status === 'ready'");
+    expect(expressions['props.disabled']).toContain("model?.role !== 'readonly'");
   });
 
-  it('exports and imports async unique validator config', () => {
+  it('exports and imports custom validation expression config', () => {
     const store = new BuilderStore();
     store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
     const fieldId = store.selectedId() as string;
 
     store.updateNodeValidators(fieldId, {
-      asyncUnique: {
-        sourceType: 'url',
-        url: 'https://dummyjson.com/users',
-        listPath: 'users',
-        valueKey: 'email',
-        message: 'Already exists',
-      },
+      customExpression: "valid = value === 'Joe' ? true : 'Name must be Joe';",
+      customExpressionMessage: 'Name is invalid',
     });
 
     const fields = builderToFormly(store.doc());
     const first = fields[0] as FormlyFieldConfig;
-    expect(first.props?.['asyncUnique']).toEqual({
-      sourceType: 'url',
-      url: 'https://dummyjson.com/users',
-      listPath: 'users',
-      valueKey: 'email',
-      message: 'Already exists',
+    expect(first.props?.['customValidation']).toEqual({
+      expression: "valid = value === 'Joe' ? true : 'Name must be Joe';",
+      message: 'Name is invalid',
     });
 
     const imported = formlyToBuilder(fields, 'material');
     const root = imported.nodes[imported.rootId];
     expect(root.type).toBe('panel');
     if (root.type !== 'panel') return;
+
     const node = imported.nodes[root.children[0]];
     expect(node.type).toBe('field');
     if (node.type !== 'field') return;
-    expect(node.validators.asyncUnique?.sourceType).toBe('url');
-    expect(node.validators.asyncUnique?.url).toBe('https://dummyjson.com/users');
-    expect(node.validators.asyncUnique?.valueKey).toBe('email');
+
+    expect(node.validators.customExpression).toContain('Name must be Joe');
+    expect(node.validators.customExpressionMessage).toBe('Name is invalid');
   });
 });
 

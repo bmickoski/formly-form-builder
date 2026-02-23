@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 ## Domain model (source of truth)
 

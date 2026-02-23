@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatAutocompleteSelectedEvent, MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,6 +29,7 @@ import { HELP_TEXT, HelpKey } from './help-text';
 
 type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
 type RuleTarget = 'visibleRule' | 'enabledRule';
+type RuleExpressionTarget = 'visibleExpression' | 'enabledExpression';
 
 interface DependencyKeyOption {
   key: string;
@@ -379,9 +380,66 @@ export class BuilderInspectorComponent {
     this.store.updateNodePropsGrouped(f.id, { [target]: next }, `${f.id}:${target}`);
   }
 
+  ruleExpression(target: RuleExpressionTarget): string {
+    const f = this.fieldNode();
+    if (!f) return '';
+    return (f.props[target] ?? '').trim();
+  }
+
+  setRuleExpression(target: RuleExpressionTarget, value: string): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    this.store.updateNodePropsGrouped(f.id, { [target]: value }, `${f.id}:${target}`);
+  }
+
   operatorNeedsValue(op?: RuleOperator): boolean {
     if (!op) return false;
     return op !== 'truthy' && op !== 'falsy';
+  }
+
+  customValidationEnabled(): boolean {
+    const f = this.fieldNode();
+    return !!f?.validators.customExpression?.trim();
+  }
+
+  setCustomValidationEnabled(enabled: boolean): void {
+    const f = this.fieldNode();
+    if (!f) return;
+
+    if (!enabled) {
+      this.store.updateNodeValidators(f.id, {
+        customExpression: undefined,
+        customExpressionMessage: undefined,
+      });
+      return;
+    }
+
+    this.store.updateNodeValidators(f.id, {
+      customExpression: f.validators.customExpression?.trim() || 'valid = true;',
+      customExpressionMessage: f.validators.customExpressionMessage || 'Custom validation failed.',
+    });
+  }
+
+  customValidationExpression(): string {
+    const f = this.fieldNode();
+    return f?.validators.customExpression ?? '';
+  }
+
+  customValidationMessage(): string {
+    const f = this.fieldNode();
+    return f?.validators.customExpressionMessage ?? 'Custom validation failed.';
+  }
+
+  setCustomValidationExpression(value: string): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    this.store.updateNodeValidatorsGrouped(f.id, { customExpression: value }, `${f.id}:customExpression`);
+  }
+
+  setCustomValidationMessage(value: string): void {
+    const f = this.fieldNode();
+    if (!f) return;
+    this.store.updateNodeValidatorsGrouped(f.id, { customExpressionMessage: value }, `${f.id}:customExpressionMessage`);
   }
 
   addOption(): void {

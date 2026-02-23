@@ -1,4 +1,4 @@
-export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col';
+﻿export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col';
 
 export type PreviewRenderer = 'material' | 'bootstrap';
 
@@ -39,6 +39,8 @@ export interface BuilderValidators {
   pattern?: string | null;
   email?: boolean;
   asyncUnique?: AsyncUniqueValidator;
+  customExpression?: string;
+  customExpressionMessage?: string;
 }
 
 export interface OptionItem {
@@ -84,6 +86,8 @@ export interface FieldProps extends CommonProps {
   repeaterItemPlaceholder?: string;
   visibleRule?: ConditionalRule;
   enabledRule?: ConditionalRule;
+  visibleExpression?: string;
+  enabledExpression?: string;
 }
 
 export interface ContainerProps extends CommonProps {

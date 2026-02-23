@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+﻿import { FormlyFieldConfig } from '@ngx-formly/core';
 import {
   AsyncUniqueValidator,
   ConditionalRule,
@@ -75,6 +75,10 @@ export function toValidators(field: FormlyFieldConfig): FieldNode['validators'] 
   const asyncUnique = toAsyncUniqueValidator(props['asyncUnique']);
   if (asyncUnique) validators.asyncUnique = asyncUnique;
 
+  const customValidation = toCustomValidation(props['customValidation']);
+  if (customValidation.expression) validators.customExpression = customValidation.expression;
+  if (customValidation.message) validators.customExpressionMessage = customValidation.message;
+
   if (isRecord(field.validators)) {
     const vMinLength = toNumberOrUndefined(field.validators['minLength']);
     if (vMinLength !== undefined) validators.minLength = vMinLength;
@@ -118,6 +122,12 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
 
   const enabledRule = toConditionalRule(props['enabledRule']);
   if (enabledRule) mapped.enabledRule = enabledRule;
+
+  const visibleExpression = toStringOrUndefined(props['visibleExpression']);
+  if (visibleExpression) mapped.visibleExpression = visibleExpression;
+
+  const enabledExpression = toStringOrUndefined(props['enabledExpression']);
+  if (enabledExpression) mapped.enabledExpression = enabledExpression;
 
   const searchable = toBooleanOrUndefined(props['searchable']);
   if (searchable !== undefined) mapped.searchable = searchable;
@@ -180,6 +190,14 @@ function toAsyncUniqueValidator(value: unknown): AsyncUniqueValidator | null {
     valueKey: toStringOrUndefined(value['valueKey']),
     message: toStringOrUndefined(value['message']),
     caseSensitive: toBooleanOrUndefined(value['caseSensitive']),
+  };
+}
+
+function toCustomValidation(value: unknown): { expression?: string; message?: string } {
+  if (!isRecord(value)) return {};
+  return {
+    expression: toStringOrUndefined(value['expression']),
+    message: toStringOrUndefined(value['message']),
   };
 }
 

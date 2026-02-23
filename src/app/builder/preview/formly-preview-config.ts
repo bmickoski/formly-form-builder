@@ -1,4 +1,4 @@
-import { AbstractControl } from '@angular/forms';
+﻿import { AbstractControl } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 
 export interface PreviewFormState {
@@ -40,5 +40,10 @@ export const PREVIEW_VALIDATION_MESSAGES = [
     name: 'asyncUnique',
     message: (_: unknown, field: FormlyFieldConfig) =>
       String(field.props?.['asyncUnique']?.['message'] ?? 'Value must be unique.'),
+  },
+  {
+    name: 'builderCustom',
+    message: (_: unknown, field: FormlyFieldConfig) =>
+      String(field.props?.['customValidation']?.['message'] ?? 'Custom validation failed.'),
   },
 ] as const;

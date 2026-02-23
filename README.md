@@ -1,4 +1,4 @@
-# Formly Form Builder (Angular 21 + ngx-formly v7)
+﻿# Formly Form Builder (Angular 21 + ngx-formly v7)
 
 Production-oriented visual builder with a strict domain model and renderer-aware Formly export.
 
@@ -11,7 +11,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 
 - Left panel: draggable palette (fields + layout).
 - Center panel: placeholder canvas with nested layout editing.
-- Right panel: inspector for props, validators, and layout controls.
+- Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
 - Preview: real Formly render (Material or Bootstrap).
 - Default preview renderer: Bootstrap.
 
@@ -82,3 +82,12 @@ npm run docs
 - docs/RELEASE.md: release and hotfix process.
 - SECURITY.md: security reporting policy.
 - CODE_OF_CONDUCT.md: expected contributor behavior.
+
+## Advanced Logic
+
+- Display rules support both simple rule-builder mode and advanced expressions.
+- `Visible expression` / `Enabled expression` override simple `dependsOn` rules when present.
+- Validation supports custom expression mode:
+  - Expression must assign `valid` to `true`, `false`, or an error-message string.
+  - Example: `valid = value === 'Joe' ? true : 'Name must be Joe';`
+- Async uniqueness can be combined with custom validation.

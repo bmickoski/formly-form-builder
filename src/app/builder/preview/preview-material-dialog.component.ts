@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+﻿import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -11,6 +11,7 @@ import { BuilderStore } from '../../builder-core/store';
 import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
+import { resolveCustomValidatorsForFields } from '../../builder-core/custom-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
@@ -78,6 +79,7 @@ export class PreviewMaterialDialogComponent {
     resolveAsyncValidatorsForFields(this.fields, {
       lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
     });
+    resolveCustomValidatorsForFields(this.fields);
     this.fields = [...this.fields];
     this.cdr.markForCheck();
   }
