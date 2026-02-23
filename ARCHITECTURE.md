@@ -22,6 +22,14 @@ Why flat map + ids:
 - efficient immutable updates
 - easy subtree operations (move/delete)
 
+Palette model:
+
+- `PaletteItem[]` with category/title/node defaults
+- Default categories: `Common Fields`, `Advanced Fields`, `Layout`
+- Extensible via DI token `BUILDER_PALETTE`
+- Runtime overrides supported by store commands (`setPalette`, `resetPalette`)
+- Imported runtime palette configs are validated in `src/app/builder-core/palette-config.ts`
+
 ## Store
 
 Main store: `src/app/builder-core/store.ts`
@@ -34,6 +42,7 @@ Key command categories:
 - Deletion: `removeNode`, `removeSelected`
 - Layout commands: `addColumnToRow`, `rebalanceRowColumns`, `splitColumn`
 - Persistence: `exportDocument`, `importDocument`
+- Palette selectors: `paletteItems`, `paletteByCategory`, `paletteDropListIds`
 
 Constraint rules are enforced in store-level commands:
 

@@ -1,6 +1,6 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
-import { PALETTE, PaletteItem } from './registry';
+import { BUILDER_PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
@@ -49,6 +49,8 @@ function createRoot(): BuilderDocument {
  */
 @Injectable({ providedIn: 'root' })
 export class BuilderStore {
+  private readonly defaultPalette = inject(BUILDER_PALETTE);
+  private readonly palette = signal<readonly PaletteItem[]>(this.defaultPalette);
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
@@ -63,6 +65,7 @@ export class BuilderStore {
   readonly canRedo = computed(() => this._future().length > 0);
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
+  readonly paletteItems = computed(() => this.palette());
 
   readonly selectedNode = computed(() => {
     const id = this._doc().selectedId;
@@ -71,13 +74,16 @@ export class BuilderStore {
 
   readonly paletteByCategory = computed(() => {
     const map = new Map<string, PaletteItem[]>();
-    for (const item of PALETTE) {
+    for (const item of this.paletteItems()) {
       const arr = map.get(item.category) ?? [];
       arr.push(item);
       map.set(item.category, arr);
     }
     return map;
   });
+  readonly paletteDropListIds = computed(() =>
+    Array.from(this.paletteByCategory().keys()).map((category) => paletteListIdForCategory(category)),
+  );
 
   /** Updates the active preview renderer. */
   setRenderer(renderer: 'material' | 'bootstrap'): void {
@@ -184,7 +190,19 @@ export class BuilderStore {
 
   /** Adds a new palette item instance at drop location. */
   addFromPalette(paletteId: string, loc: DropLocation): void {
-    this.apply((doc) => addFromPaletteCommand(doc, paletteId, loc));
+    this.apply((doc) => addFromPaletteCommand(doc, paletteId, loc, this.paletteItems()));
+  }
+
+  getPaletteItem(paletteId: string): PaletteItem | null {
+    return this.paletteItems().find((candidate) => candidate.id === paletteId) ?? null;
+  }
+
+  setPalette(items: readonly PaletteItem[]): void {
+    this.palette.set([...items]);
+  }
+
+  resetPalette(): void {
+    this.palette.set([...this.defaultPalette]);
   }
 
   /** Moves existing node between containers/reorder targets. */

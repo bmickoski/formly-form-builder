@@ -4,7 +4,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BuilderStore } from '../../builder-core/store';
-import { PaletteItem } from '../../builder-core/registry';
+import { DEFAULT_PALETTE_CATEGORIES, paletteListIdForCategory, PaletteItem } from '../../builder-core/registry';
 
 @Component({
   selector: 'app-builder-palette',
@@ -17,6 +17,11 @@ import { PaletteItem } from '../../builder-core/registry';
 export class BuilderPaletteComponent {
   readonly store = inject(BuilderStore);
   readonly filter = signal('');
+  private readonly categoryOrder: Record<string, number> = {
+    [DEFAULT_PALETTE_CATEGORIES.common]: 0,
+    [DEFAULT_PALETTE_CATEGORIES.advanced]: 1,
+    [DEFAULT_PALETTE_CATEGORIES.layout]: 2,
+  };
   readonly connectedDropLists = computed(() => {
     const ids: string[] = [];
     const nodes = this.store.nodes();
@@ -38,10 +43,19 @@ export class BuilderPaletteComponent {
       const filtered = q ? items.filter((i) => i.title.toLowerCase().includes(q)) : items;
       out.push({ category, items: filtered });
     }
-    return out;
+    return out.sort((a, b) => {
+      const aRank = this.categoryOrder[a.category] ?? Number.MAX_SAFE_INTEGER;
+      const bRank = this.categoryOrder[b.category] ?? Number.MAX_SAFE_INTEGER;
+      if (aRank !== bRank) return aRank - bRank;
+      return a.category.localeCompare(b.category);
+    });
   });
 
   paletteListId(category: string): string {
-    return `palette_${category.replace(/\s+/g, '_').toLowerCase()}`;
+    return paletteListIdForCategory(category);
+  }
+
+  isCategoryExpanded(category: string): boolean {
+    return !/advanced/i.test(category);
   }
 }

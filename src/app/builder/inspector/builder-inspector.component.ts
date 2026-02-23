@@ -1,4 +1,5 @@
-﻿import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+/* eslint-disable max-lines */
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatAutocompleteSelectedEvent, MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,16 +27,17 @@ import {
 import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { HELP_TEXT, HelpKey } from './help-text';
-
-type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
-type RuleTarget = 'visibleRule' | 'enabledRule';
-type RuleExpressionTarget = 'visibleExpression' | 'enabledExpression';
-
-interface DependencyKeyOption {
-  key: string;
-  label: string;
-  fieldKind: string;
-}
+import {
+  ASYNC_UNIQUE_SOURCES,
+  DependencyKeyOption,
+  OPTIONS_SOURCE_TYPES,
+  RULE_OPERATORS,
+  RuleExpressionTarget,
+  RuleTarget,
+  AsyncTestState,
+  ruleOperatorNeedsValue,
+} from './builder-inspector.constants';
+import { addOptionItem, moveOptionItem, removeOptionItem, updateOptionItem } from './builder-inspector.options';
 @Component({
   selector: 'app-builder-inspector',
   standalone: true,
@@ -58,10 +60,8 @@ interface DependencyKeyOption {
 })
 export class BuilderInspectorComponent {
   readonly store = inject(BuilderStore);
-
   readonly node = this.store.selectedNode;
   readonly isField = computed(() => !!this.fieldNode());
-  readonly isContainer = computed(() => !!this.containerNode());
   readonly fieldNode = computed(() => {
     const n = this.node();
     return n && isFieldNode(n) ? n : null;
@@ -109,24 +109,9 @@ export class BuilderInspectorComponent {
     return out.sort((a, b) => a.label.localeCompare(b.label));
   });
 
-  readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
-    { value: 'static', label: 'Static options' },
-    { value: 'lookup', label: 'Lookup key' },
-    { value: 'url', label: 'URL (HTTP)' },
-  ];
-  readonly asyncUniqueSources: Array<{ value: AsyncUniqueSourceType; label: string }> = [
-    { value: 'lookup', label: 'Lookup dataset' },
-    { value: 'url', label: 'URL dataset' },
-  ];
-  readonly ruleOperators: Array<{ value: RuleOperator; label: string }> = [
-    { value: 'truthy', label: 'Is truthy' },
-    { value: 'falsy', label: 'Is falsy' },
-    { value: 'eq', label: 'Equals' },
-    { value: 'ne', label: 'Not equals' },
-    { value: 'contains', label: 'Contains' },
-    { value: 'gt', label: 'Greater than' },
-    { value: 'lt', label: 'Less than' },
-  ];
+  readonly optionsSourceTypes = OPTIONS_SOURCE_TYPES;
+  readonly asyncUniqueSources = ASYNC_UNIQUE_SOURCES;
+  readonly ruleOperators = RULE_OPERATORS;
 
   onSelectedTabChange(index: number): void {
     this.tabByNodeType.update((state) => (this.isField() ? { ...state, field: index } : { ...state, layout: index }));
@@ -165,11 +150,9 @@ export class BuilderInspectorComponent {
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
   }
-
   isCol(): boolean {
     return this.containerNode()?.type === 'col';
   }
-
   isRow(): boolean {
     return this.containerNode()?.type === 'row';
   }
@@ -193,15 +176,10 @@ export class BuilderInspectorComponent {
   }
 
   options(): OptionItem[] {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return [];
-    return f.props.options ?? [];
+    return this.isChoiceField() ? (this.fieldNode()?.props.options ?? []) : [];
   }
-
   optionsSourceType(): OptionsSourceType {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return 'static';
-    return f.props.optionsSource?.type ?? 'static';
+    return this.isChoiceField() ? (this.fieldNode()?.props.optionsSource?.type ?? 'static') : 'static';
   }
 
   setOptionsSourceType(type: OptionsSourceType): void {
@@ -242,8 +220,7 @@ export class BuilderInspectorComponent {
   }
 
   asyncUnique(): AsyncUniqueValidator | null {
-    const f = this.fieldNode();
-    return f?.validators.asyncUnique ?? null;
+    return this.fieldNode()?.validators.asyncUnique ?? null;
   }
 
   enableAsyncUnique(enabled: boolean): void {
@@ -342,9 +319,7 @@ export class BuilderInspectorComponent {
   }
 
   rule(target: RuleTarget): ConditionalRule | null {
-    const f = this.fieldNode();
-    if (!f) return null;
-    return f.props[target] ?? null;
+    return this.fieldNode()?.props[target] ?? null;
   }
 
   initRule(target: RuleTarget): void {
@@ -381,9 +356,7 @@ export class BuilderInspectorComponent {
   }
 
   ruleExpression(target: RuleExpressionTarget): string {
-    const f = this.fieldNode();
-    if (!f) return '';
-    return (f.props[target] ?? '').trim();
+    return (this.fieldNode()?.props[target] ?? '').trim();
   }
 
   setRuleExpression(target: RuleExpressionTarget, value: string): void {
@@ -393,13 +366,11 @@ export class BuilderInspectorComponent {
   }
 
   operatorNeedsValue(op?: RuleOperator): boolean {
-    if (!op) return false;
-    return op !== 'truthy' && op !== 'falsy';
+    return ruleOperatorNeedsValue(op);
   }
 
   customValidationEnabled(): boolean {
-    const f = this.fieldNode();
-    return !!f?.validators.customExpression?.trim();
+    return !!this.fieldNode()?.validators.customExpression?.trim();
   }
 
   setCustomValidationEnabled(enabled: boolean): void {
@@ -421,13 +392,10 @@ export class BuilderInspectorComponent {
   }
 
   customValidationExpression(): string {
-    const f = this.fieldNode();
-    return f?.validators.customExpression ?? '';
+    return this.fieldNode()?.validators.customExpression ?? '';
   }
-
   customValidationMessage(): string {
-    const f = this.fieldNode();
-    return f?.validators.customExpressionMessage ?? 'Custom validation failed.';
+    return this.fieldNode()?.validators.customExpressionMessage ?? 'Custom validation failed.';
   }
 
   setCustomValidationExpression(value: string): void {
@@ -445,41 +413,32 @@ export class BuilderInspectorComponent {
   addOption(): void {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return;
-    const next = [
-      ...(f.props.options ?? []),
-      { label: `Option ${(f.props.options?.length ?? 0) + 1}`, value: `option_${(f.props.options?.length ?? 0) + 1}` },
-    ];
+    const next = addOptionItem(f.props.options);
     this.store.updateNodeProps(f.id, { options: next });
   }
 
   updateOption(index: number, patch: Partial<OptionItem>): void {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    if (!current[index]) return;
-    current[index] = { ...current[index], ...patch };
-    this.store.updateNodePropsGrouped(f.id, { options: current }, `${f.id}:options`);
+    const next = updateOptionItem(f.props.options, index, patch);
+    if (!next) return;
+    this.store.updateNodePropsGrouped(f.id, { options: next }, `${f.id}:options`);
   }
 
   removeOption(index: number): void {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    if (!current[index]) return;
-    current.splice(index, 1);
-    this.store.updateNodeProps(f.id, { options: current });
+    const next = removeOptionItem(f.props.options, index);
+    if (!next) return;
+    this.store.updateNodeProps(f.id, { options: next });
   }
 
   moveOption(index: number, direction: -1 | 1): void {
     const f = this.fieldNode();
     if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    const nextIndex = index + direction;
-    if (!current[index] || nextIndex < 0 || nextIndex >= current.length) return;
-    const tmp = current[index];
-    current[index] = current[nextIndex];
-    current[nextIndex] = tmp;
-    this.store.updateNodeProps(f.id, { options: current });
+    const next = moveOptionItem(f.props.options, index, direction);
+    if (!next) return;
+    this.store.updateNodeProps(f.id, { options: next });
   }
 
   setProp(key: string, value: unknown): void {
