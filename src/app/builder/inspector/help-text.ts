@@ -36,13 +36,13 @@ export const HELP_TEXT: Record<HelpKey, string> = {
   operator: 'How to compare the dependent field value with the value below.',
   ruleValue: 'Comparison value used by the selected operator (not used for truthy/falsy).',
   advancedExpression:
-    'JavaScript-like expression evaluated against model/data/value. When set, this overrides the simple rule builder.',
+    "JavaScript-like expression evaluated against model/data/value. When set, this overrides the simple rule builder. Example: model?.status === 'approved' && value !== 'blocked'",
   colSpan: 'Column width in the 12-column grid.',
   required: 'Forces user input before submit.',
   email: 'Validates the value as a valid email format.',
   pattern: 'Regular expression pattern the value must match.',
   customValidation:
-    'Custom expression must assign `valid` to true, false, or an error message string. Example: valid = value > 0;',
+    "Custom expression must assign `valid` to true, false, or an error message string. Example: valid = value > 0 ? true : 'Value must be greater than 0';",
   customValidationMessage: 'Fallback message shown when expression returns false.',
   asyncUnique: 'Checks uniqueness against lookup or URL data during validation.',
 };

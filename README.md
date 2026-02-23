@@ -87,6 +87,10 @@ npm run docs
 
 - Display rules support both simple rule-builder mode and advanced expressions.
 - `Visible expression` / `Enabled expression` override simple `dependsOn` rules when present.
+- Expression context supports `model`, `data`, and `value`.
+- Examples:
+  - Visible expression: `model?.status === 'approved'`
+  - Enabled expression: `model?.role !== 'readonly' && !!model?.canEdit`
 - Validation supports custom expression mode:
   - Expression must assign `valid` to `true`, `false`, or an error-message string.
   - Example: `valid = value === 'Joe' ? true : 'Name must be Joe';`

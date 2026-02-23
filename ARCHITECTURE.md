@@ -66,6 +66,13 @@ Notes:
   - Bootstrap: `row`, `col-*`
   - Material preview/internal: `fb-row`, `fb-col fb-col-*`
 - Import supports both `props` and legacy `templateOptions`.
+- Conditional logic precedence:
+  - advanced visible/enabled expressions win over simple `dependsOn` rules when provided
+  - simple rules are used only when advanced expressions are empty
+- Custom validation expression contract:
+  - expression runs with access to `form`, `model`, `data`, `row`, `field`, `control`, and `value`
+  - expression must assign `valid` to `true`, `false`, or a string message
+  - fallback message is used when expression returns `false`
 
 ## UI layers
 
