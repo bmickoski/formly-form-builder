@@ -61,6 +61,12 @@ export class BuilderInspectorComponent {
     return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio' || f.fieldKind === 'multiselect');
   });
 
+  readonly supportsEmailValidator = computed(() => {
+    const f = this.fieldNode();
+    if (!f) return false;
+    return f.fieldKind === 'input' || f.fieldKind === 'email';
+  });
+
   private readonly tabByNodeType = signal<{ field: number; layout: number }>({ field: 0, layout: 0 });
   readonly selectedTabIndex = computed(() =>
     this.isField() ? this.tabByNodeType().field : this.tabByNodeType().layout,

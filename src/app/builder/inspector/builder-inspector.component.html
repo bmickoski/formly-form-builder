@@ -175,6 +175,12 @@
               >Required</mat-slide-toggle
             >
 
+            @if (supportsEmailValidator()) {
+              <mat-slide-toggle [ngModel]="!!f?.validators?.email" (ngModelChange)="setVal('email', $event)">
+                Email format</mat-slide-toggle
+              >
+            }
+
             <div class="fb-grid-gap fb-grid-gap-margin-top">
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Min length</mat-label>
