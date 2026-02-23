@@ -1,6 +1,6 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
-import { BUILDER_PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
+import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
@@ -49,13 +49,17 @@ function createRoot(): BuilderDocument {
  */
 @Injectable({ providedIn: 'root' })
 export class BuilderStore {
-  private readonly defaultPalette = inject(BUILDER_PALETTE);
-  private readonly palette = signal<readonly PaletteItem[]>(this.defaultPalette);
+  private readonly defaultPalette = resolveDefaultPalette();
+  private readonly palette: WritableSignal<readonly PaletteItem[]>;
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
   private readonly maxHistory = 100;
   private historyGroup: HistoryGroupState | null = null;
+
+  constructor() {
+    this.palette = signal<readonly PaletteItem[]>(this.defaultPalette);
+  }
 
   readonly doc = this._doc.asReadonly();
   readonly nodes = computed(() => this._doc().nodes);
@@ -302,5 +306,14 @@ export class BuilderStore {
       doc.nodes[parentId] = { ...parent, children: [...parent.children, id] };
     }
     return node;
+  }
+}
+
+function resolveDefaultPalette(): readonly PaletteItem[] {
+  try {
+    return inject(BUILDER_PALETTE, { optional: true }) ?? PALETTE;
+  } catch {
+    // Allows direct `new BuilderStore()` in unit tests where no DI context exists.
+    return PALETTE;
   }
 }
