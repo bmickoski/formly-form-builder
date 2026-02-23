@@ -33,6 +33,7 @@ interface FormlyFieldProps {
   minLength?: number;
   maxLength?: number;
   pattern?: string;
+  email?: boolean;
   multiple?: boolean;
   addText?: string;
 }
@@ -138,6 +139,7 @@ function applyValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
   if (node.validators.minLength != null) props.minLength = node.validators.minLength;
   if (node.validators.maxLength != null) props.maxLength = node.validators.maxLength;
   if (node.validators.pattern) props.pattern = node.validators.pattern;
+  if (node.validators.email) props.email = true;
 }
 
 function applyAsyncValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
