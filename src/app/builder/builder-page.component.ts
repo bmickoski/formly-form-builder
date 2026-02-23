@@ -46,12 +46,6 @@ export class BuilderPageComponent {
     return this.store.presets.find((preset) => preset.id === this.presetToApply) ?? fallback;
   }
 
-  get selectedPresetThumbnailRows(): number[] {
-    const lines = this.selectedPreset.thumbnail.split('\\n').map((line) => (line.match(/#/g) ?? []).length);
-    const max = Math.max(1, ...lines);
-    return lines.map((count) => Math.round((count / max) * 100));
-  }
-
   openPreview(): void {
     const renderer = this.store.renderer();
     this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {

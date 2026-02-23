@@ -7,7 +7,7 @@ export interface BuilderPresetMeta {
   title: string;
   description: string;
   highlights: string[];
-  thumbnail: string;
+  thumbnailRows: number[];
 }
 
 export const BUILDER_PRESETS: ReadonlyArray<BuilderPresetMeta> = [
@@ -16,21 +16,21 @@ export const BUILDER_PRESETS: ReadonlyArray<BuilderPresetMeta> = [
     title: 'Simple Form',
     description: 'Single-column contact-style starter.',
     highlights: ['Fast start', 'Linear flow', 'Contact forms'],
-    thumbnail: '[#]\\n[#]\\n[#]',
+    thumbnailRows: [100, 100, 100],
   },
   {
     id: 'complex',
     title: 'Complex Form',
     description: 'Two-column sectioned business form.',
     highlights: ['Two columns', 'Case intake', 'Balanced layout'],
-    thumbnail: '[##]\\n[##]\\n[##]',
+    thumbnailRows: [100, 100, 100],
   },
   {
     id: 'advanced',
     title: 'Advanced Form',
     description: 'Nested layout with grouped sections.',
     highlights: ['Nested rows', 'Metadata column', 'Panel grouping'],
-    thumbnail: '[###]\\n[##]\\n[####]',
+    thumbnailRows: [100, 72, 100],
   },
 ];
 

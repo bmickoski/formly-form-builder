@@ -41,7 +41,7 @@
 
     <div class="fb-preset-preview">
       <div class="fb-preset-thumb" aria-hidden="true">
-        @for (row of selectedPresetThumbnailRows; track $index) {
+        @for (row of selectedPreset.thumbnailRows; track $index) {
           <div class="fb-preset-thumb-row" [style.width.%]="row"></div>
         }
       </div>
