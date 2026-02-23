@@ -26,6 +26,11 @@ export function fieldKindFromType(field: FormlyFieldConfig): FieldNode['fieldKin
     const inputType = String(props['type'] ?? '').toLowerCase();
     if (inputType === 'date') return 'date';
     if (inputType === 'number') return 'number';
+    if (inputType === 'email') return 'email';
+    if (inputType === 'password') return 'password';
+    if (inputType === 'tel') return 'tel';
+    if (inputType === 'url') return 'url';
+    if (inputType === 'file') return 'file';
   }
 
   return 'input';

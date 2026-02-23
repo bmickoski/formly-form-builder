@@ -57,7 +57,12 @@ function normalizeFieldNode(raw: Record<string, unknown>, id: string, parentId: 
     raw['fieldKind'] === 'radio' ||
     raw['fieldKind'] === 'select' ||
     raw['fieldKind'] === 'date' ||
-    raw['fieldKind'] === 'number'
+    raw['fieldKind'] === 'number' ||
+    raw['fieldKind'] === 'email' ||
+    raw['fieldKind'] === 'password' ||
+    raw['fieldKind'] === 'tel' ||
+    raw['fieldKind'] === 'url' ||
+    raw['fieldKind'] === 'file'
       ? raw['fieldKind']
       : 'input';
 

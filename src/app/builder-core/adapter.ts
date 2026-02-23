@@ -37,8 +37,6 @@ interface FormlyFieldProps {
 
 function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
   switch (fieldKind) {
-    case 'input':
-      return 'input';
     case 'textarea':
       return 'textarea';
     case 'checkbox':
@@ -47,9 +45,6 @@ function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
       return 'radio';
     case 'select':
       return 'select';
-    case 'date':
-    case 'number':
-      return 'input';
     default:
       return 'input';
   }
@@ -99,9 +94,34 @@ function applyRuleProps(node: FieldNode, props: FormlyFieldProps): void {
 }
 
 function applyTypeProps(node: FieldNode, props: FormlyFieldProps): void {
-  if (node.fieldKind === 'date') props.type = 'date';
-  if (node.fieldKind === 'number') props.type = 'number';
-  if (node.validators.email) props.type = 'email';
+  switch (node.fieldKind) {
+    case 'date':
+      props.type = 'date';
+      break;
+    case 'number':
+      props.type = 'number';
+      break;
+    case 'email':
+      props.type = 'email';
+      break;
+    case 'password':
+      props.type = 'password';
+      break;
+    case 'tel':
+      props.type = 'tel';
+      break;
+    case 'url':
+      props.type = 'url';
+      break;
+    case 'file':
+      props.type = 'file';
+      break;
+    case 'input':
+      if (node.validators.email) props.type = 'email';
+      break;
+    default:
+      break;
+  }
 }
 
 function applyValidatorProps(node: FieldNode, props: FormlyFieldProps): void {

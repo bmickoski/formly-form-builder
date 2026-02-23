@@ -2,7 +2,19 @@ export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col';
 
 export type PreviewRenderer = 'material' | 'bootstrap';
 
-export type FieldKind = 'input' | 'textarea' | 'checkbox' | 'radio' | 'select' | 'date' | 'number';
+export type FieldKind =
+  | 'input'
+  | 'textarea'
+  | 'checkbox'
+  | 'radio'
+  | 'select'
+  | 'date'
+  | 'number'
+  | 'email'
+  | 'password'
+  | 'tel'
+  | 'url'
+  | 'file';
 
 export type AsyncUniqueSourceType = 'url' | 'lookup';
 
