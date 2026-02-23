@@ -158,3 +158,48 @@ describe('builder/formly adapters: rules + async validators', () => {
     expect(node.validators.asyncUnique?.valueKey).toBe('email');
   });
 });
+
+describe('builder/formly adapters: field library v2 batch 1', () => {
+  const fieldKinds = ['email', 'password', 'tel', 'url', 'file'] as const;
+
+  it('exports new field kinds as input with matching HTML input type', () => {
+    const store = new BuilderStore();
+
+    for (const kind of fieldKinds) {
+      store.addFromPalette(kind, { containerId: store.rootId(), index: store.nodes()[store.rootId()].children.length });
+    }
+
+    const fields = builderToFormly(store.doc());
+    expect(fields.length).toBe(fieldKinds.length);
+
+    fieldKinds.forEach((kind, index) => {
+      const field = fields[index] as FormlyFieldConfig;
+      expect(field.type).toBe('input');
+      expect(field.props?.['type']).toBe(kind);
+    });
+
+    expect(fields[0].props?.['required']).toBeFalse();
+    expect(fields[0].props?.['type']).toBe('email');
+  });
+
+  it('imports input types back to matching builder fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      { type: 'input', key: 'email1', props: { type: 'email', label: 'Email' } },
+      { type: 'input', key: 'pwd1', props: { type: 'password', label: 'Password' } },
+      { type: 'input', key: 'tel1', props: { type: 'tel', label: 'Phone' } },
+      { type: 'input', key: 'url1', props: { type: 'url', label: 'Website' } },
+      { type: 'input', key: 'file1', props: { type: 'file', label: 'Attachment' } },
+    ];
+
+    const doc = formlyToBuilder(fields, 'bootstrap');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const kinds = root.children
+      .map((id) => doc.nodes[id])
+      .filter((n): n is any => n?.type === 'field')
+      .map((n) => n.fieldKind);
+    expect(kinds).toEqual(['email', 'password', 'tel', 'url', 'file']);
+  });
+});
