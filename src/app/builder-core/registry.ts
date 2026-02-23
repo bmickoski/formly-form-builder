@@ -1,4 +1,5 @@
-import { BuilderNodeType, FieldKind, BuilderValidators, FieldProps, ContainerProps } from './model';
+import { BuilderNodeType, BuilderValidators, ContainerProps, FieldKind, FieldProps } from './model';
+import { defaultValidatorsForFieldKind } from './validation-presets';
 
 export interface PaletteItem {
   id: string;
@@ -28,7 +29,10 @@ export const PALETTE: PaletteItem[] = [
     title: 'Email',
     nodeType: 'field',
     fieldKind: 'email',
-    defaults: { props: { label: 'Email', placeholder: 'name@example.com' }, validators: { email: true } },
+    defaults: {
+      props: { label: 'Email', placeholder: 'name@example.com' },
+      validators: defaultValidatorsForFieldKind('email'),
+    },
   },
   {
     id: 'password',
@@ -36,7 +40,10 @@ export const PALETTE: PaletteItem[] = [
     title: 'Password',
     nodeType: 'field',
     fieldKind: 'password',
-    defaults: { props: { label: 'Password', placeholder: 'Enter password' }, validators: {} },
+    defaults: {
+      props: { label: 'Password', placeholder: 'Enter password' },
+      validators: defaultValidatorsForFieldKind('password'),
+    },
   },
   {
     id: 'tel',
@@ -44,7 +51,10 @@ export const PALETTE: PaletteItem[] = [
     title: 'Phone',
     nodeType: 'field',
     fieldKind: 'tel',
-    defaults: { props: { label: 'Phone', placeholder: '+1 555 000 0000' }, validators: {} },
+    defaults: {
+      props: { label: 'Phone', placeholder: '+1 555 000 0000' },
+      validators: defaultValidatorsForFieldKind('tel'),
+    },
   },
   {
     id: 'url',
@@ -52,7 +62,10 @@ export const PALETTE: PaletteItem[] = [
     title: 'URL',
     nodeType: 'field',
     fieldKind: 'url',
-    defaults: { props: { label: 'URL', placeholder: 'https://example.com' }, validators: {} },
+    defaults: {
+      props: { label: 'URL', placeholder: 'https://example.com' },
+      validators: defaultValidatorsForFieldKind('url'),
+    },
   },
   {
     id: 'file',
