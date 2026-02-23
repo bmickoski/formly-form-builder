@@ -2,7 +2,21 @@ export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col';
 
 export type PreviewRenderer = 'material' | 'bootstrap';
 
-export type FieldKind = 'input' | 'textarea' | 'checkbox' | 'radio' | 'select' | 'date' | 'number';
+export type FieldKind =
+  | 'input'
+  | 'textarea'
+  | 'checkbox'
+  | 'radio'
+  | 'select'
+  | 'date'
+  | 'number'
+  | 'email'
+  | 'password'
+  | 'tel'
+  | 'url'
+  | 'file'
+  | 'multiselect'
+  | 'repeater';
 
 export type AsyncUniqueSourceType = 'url' | 'lookup';
 
@@ -65,6 +79,9 @@ export interface FieldProps extends CommonProps {
   defaultValue?: unknown;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
+  multiple?: boolean;
+  repeaterItemLabel?: string;
+  repeaterItemPlaceholder?: string;
   visibleRule?: ConditionalRule;
   enabledRule?: ConditionalRule;
 }
@@ -96,6 +113,7 @@ export interface ContainerNode extends BuilderNodeBase {
 export type BuilderNode = FieldNode | ContainerNode;
 
 export interface BuilderDocument {
+  schemaVersion: number;
   rootId: string;
   renderer?: PreviewRenderer;
   nodes: Record<string, BuilderNode>;

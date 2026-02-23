@@ -158,3 +158,130 @@ describe('builder/formly adapters: rules + async validators', () => {
     expect(node.validators.asyncUnique?.valueKey).toBe('email');
   });
 });
+
+describe('builder/formly adapters: field library v2 batch 1', () => {
+  const fieldKinds = ['email', 'password', 'tel', 'url', 'file'] as const;
+
+  it('exports new field kinds as input with matching HTML input type', () => {
+    const store = new BuilderStore();
+
+    for (const kind of fieldKinds) {
+      store.addFromPalette(kind, { containerId: store.rootId(), index: store.nodes()[store.rootId()].children.length });
+    }
+
+    const fields = builderToFormly(store.doc());
+    expect(fields.length).toBe(fieldKinds.length);
+
+    fieldKinds.forEach((kind, index) => {
+      const field = fields[index] as FormlyFieldConfig;
+      expect(field.type).toBe('input');
+      expect(field.props?.['type']).toBe(kind);
+    });
+
+    expect(fields[0].props?.['required']).toBeFalse();
+    expect(fields[0].props?.['type']).toBe('email');
+  });
+
+  it('imports input types back to matching builder fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      { type: 'input', key: 'email1', props: { type: 'email', label: 'Email' } },
+      { type: 'input', key: 'pwd1', props: { type: 'password', label: 'Password' } },
+      { type: 'input', key: 'tel1', props: { type: 'tel', label: 'Phone' } },
+      { type: 'input', key: 'url1', props: { type: 'url', label: 'Website' } },
+      { type: 'input', key: 'file1', props: { type: 'file', label: 'Attachment' } },
+    ];
+
+    const doc = formlyToBuilder(fields, 'bootstrap');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const kinds = root.children
+      .map((id) => doc.nodes[id])
+      .filter((n): n is any => n?.type === 'field')
+      .map((n) => n.fieldKind);
+    expect(kinds).toEqual(['email', 'password', 'tel', 'url', 'file']);
+  });
+});
+
+describe('builder/formly adapters: field library v2 batch 2', () => {
+  it('exports multiselect as select with multiple=true', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('multiselect', { containerId: store.rootId(), index: 0 });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.type).toBe('select');
+    expect(first.props?.['multiple']).toBeTrue();
+    expect(Array.isArray(first.props?.['options'])).toBeTrue();
+  });
+
+  it('imports select multiple=true as multiselect fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        type: 'select',
+        key: 'tags',
+        props: {
+          label: 'Tags',
+          multiple: true,
+          options: [
+            { label: 'A', value: 'a' },
+            { label: 'B', value: 'b' },
+          ],
+        },
+      },
+    ];
+
+    const doc = formlyToBuilder(fields, 'bootstrap');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = doc.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+
+    expect(node.fieldKind).toBe('multiselect');
+    expect(node.props.multiple).toBeTrue();
+  });
+
+  it('exports repeater with repeat type and fieldArray', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('repeater', { containerId: store.rootId(), index: 0 });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.type).toBe('repeat');
+    expect(first.fieldArray).toBeDefined();
+    expect((first.fieldArray as FormlyFieldConfig).type).toBe('input');
+    expect(Array.isArray(first.defaultValue)).toBeTrue();
+  });
+
+  it('imports repeat type as repeater fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        type: 'repeat',
+        key: 'contacts',
+        props: { label: 'Contacts' },
+        fieldArray: {
+          type: 'input',
+          key: 'value',
+          props: { label: 'Contact', placeholder: 'Enter contact' },
+        },
+      },
+    ];
+
+    const doc = formlyToBuilder(fields, 'material');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = doc.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+
+    expect(node.fieldKind).toBe('repeater');
+    expect(node.props.repeaterItemLabel).toBe('Contact');
+    expect(node.props.repeaterItemPlaceholder).toBe('Enter contact');
+  });
+});

@@ -13,6 +13,7 @@ import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-optio
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
+import { FbRepeatTypeComponent } from './fb-repeat.type.component';
 
 @Component({
   selector: 'app-preview-bootstrap-dialog',
@@ -22,6 +23,7 @@ import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
     provideFormlyCore([
       ...withFormlyBootstrap(),
       { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
+      { types: [{ name: 'repeat', component: FbRepeatTypeComponent }] },
     ]),
   ],
   templateUrl: './preview-dialog.component.html',

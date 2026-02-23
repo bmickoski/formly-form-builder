@@ -2,6 +2,7 @@ import { computed, Injectable, signal } from '@angular/core';
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
 import { PALETTE, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
 import {
@@ -33,7 +34,13 @@ interface HistoryGroupState {
 
 function createRoot(): BuilderDocument {
   const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
-  return { rootId: ROOT_ID, nodes: { [ROOT_ID]: root }, selectedId: null, renderer: 'material' };
+  return {
+    schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
+    rootId: ROOT_ID,
+    nodes: { [ROOT_ID]: root },
+    selectedId: null,
+    renderer: 'material',
+  };
 }
 
 /**

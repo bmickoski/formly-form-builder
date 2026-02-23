@@ -2,10 +2,11 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import {
   AsyncUniqueValidator,
   ConditionalRule,
+  FieldKind,
   FieldNode,
   FieldProps,
-  OptionsSource,
   OptionItem,
+  OptionsSource,
   RuleOperator,
 } from '../model';
 import { fieldPropsOf, isRecord, toBooleanOrUndefined, toNumberOrUndefined, toStringOrUndefined } from './shared';
@@ -14,18 +15,33 @@ const RULE_OPERATORS = new Set<RuleOperator>(['truthy', 'falsy', 'eq', 'ne', 'co
 const SOURCE_TYPES = new Set<OptionsSource['type']>(['static', 'lookup', 'url']);
 const UNIQUE_SOURCE_TYPES = new Set<AsyncUniqueValidator['sourceType']>(['lookup', 'url']);
 
+const DIRECT_FIELD_KIND_MAP: Record<string, FieldKind> = {
+  textarea: 'textarea',
+  checkbox: 'checkbox',
+  radio: 'radio',
+};
+
+const INPUT_FIELD_KIND_MAP: Record<string, FieldKind> = {
+  date: 'date',
+  number: 'number',
+  email: 'email',
+  password: 'password',
+  tel: 'tel',
+  url: 'url',
+  file: 'file',
+};
+
 export function fieldKindFromType(field: FormlyFieldConfig): FieldNode['fieldKind'] {
   const type = String(field.type ?? 'input');
   const props = fieldPropsOf(field);
 
-  if (type === 'textarea' || type === 'checkbox' || type === 'radio' || type === 'select') {
-    return type;
-  }
+  if (DIRECT_FIELD_KIND_MAP[type]) return DIRECT_FIELD_KIND_MAP[type];
+  if (type === 'select') return props['multiple'] ? 'multiselect' : 'select';
+  if (type === 'repeat' || field.fieldArray) return 'repeater';
 
   if (type === 'input') {
     const inputType = String(props['type'] ?? '').toLowerCase();
-    if (inputType === 'date') return 'date';
-    if (inputType === 'number') return 'number';
+    return INPUT_FIELD_KIND_MAP[inputType] ?? 'input';
   }
 
   return 'input';
@@ -52,6 +68,9 @@ export function toValidators(field: FormlyFieldConfig): FieldNode['validators'] 
 
   const pattern = toStringOrUndefined(props['pattern']);
   if (pattern !== undefined) validators.pattern = pattern;
+
+  const inputType = String(props['type'] ?? '').toLowerCase();
+  if (inputType === 'email') validators.email = true;
 
   const asyncUnique = toAsyncUniqueValidator(props['asyncUnique']);
   if (asyncUnique) validators.asyncUnique = asyncUnique;
@@ -88,6 +107,9 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
   const options = toOptionItems(props['options']);
   if (options.length > 0) mapped.options = options;
 
+  const multiple = toBooleanOrUndefined(props['multiple']);
+  if (multiple !== undefined) mapped.multiple = multiple;
+
   const source = toOptionsSource(props['optionsSource']);
   if (source) mapped.optionsSource = source;
 
@@ -99,6 +121,10 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
 
   const searchable = toBooleanOrUndefined(props['searchable']);
   if (searchable !== undefined) mapped.searchable = searchable;
+
+  const repeater = toRepeaterTemplate(field);
+  if (repeater.itemLabel) mapped.repeaterItemLabel = repeater.itemLabel;
+  if (repeater.itemPlaceholder) mapped.repeaterItemPlaceholder = repeater.itemPlaceholder;
 
   if (field.defaultValue !== undefined) mapped.defaultValue = field.defaultValue;
 
@@ -154,5 +180,16 @@ function toAsyncUniqueValidator(value: unknown): AsyncUniqueValidator | null {
     valueKey: toStringOrUndefined(value['valueKey']),
     message: toStringOrUndefined(value['message']),
     caseSensitive: toBooleanOrUndefined(value['caseSensitive']),
+  };
+}
+
+function toRepeaterTemplate(field: FormlyFieldConfig): { itemLabel?: string; itemPlaceholder?: string } {
+  const fieldArray = isRecord(field.fieldArray) ? (field.fieldArray as FormlyFieldConfig) : null;
+  if (!fieldArray) return {};
+
+  const arrayProps = fieldPropsOf(fieldArray);
+  return {
+    itemLabel: toStringOrUndefined(arrayProps['label']),
+    itemPlaceholder: toStringOrUndefined(arrayProps['placeholder']),
   };
 }
