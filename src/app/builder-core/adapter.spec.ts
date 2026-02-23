@@ -182,6 +182,7 @@ describe('builder/formly adapters: field library v2 batch 1', () => {
     expect(fields[0].props?.['required']).toBeFalse();
     expect(fields[0].props?.['type']).toBe('email');
     expect(fields[0].props?.['email']).toBeTrue();
+    expect((fields[0].validators as { validation?: string[] })?.validation).toContain('email');
     expect(fields[1].props?.['minLength']).toBe(8);
     expect(fields[2].props?.['pattern']).toBe(FIELD_VALIDATION_PATTERNS.tel);
     expect(fields[3].props?.['pattern']).toBe(FIELD_VALIDATION_PATTERNS.url);

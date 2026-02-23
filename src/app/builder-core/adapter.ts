@@ -196,6 +196,12 @@ function colClass(renderer: BuilderDocument['renderer'], span: number): string {
   return renderer === 'bootstrap' ? `col-${span}` : `fb-col fb-col-${span}`;
 }
 
+function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | undefined {
+  const validation: string[] = [];
+  if (node.validators.email) validation.push('email');
+  return validation.length > 0 ? { validation } : undefined;
+}
+
 function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
   const expressions: Record<string, string> = {};
   const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
@@ -211,6 +217,7 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
     hide: !!node.props.hidden,
     defaultValue: node.props.defaultValue,
     ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
+    ...(formlyValidators(node) ? { validators: formlyValidators(node) } : {}),
   };
 
   if (node.fieldKind === 'repeater') {
