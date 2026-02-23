@@ -1,6 +1,6 @@
 <div class="fb-section">
   <mat-form-field appearance="outline" class="fb-field">
-    <mat-label>Search fields</mat-label>
+    <mat-label>Search palette</mat-label>
     <input matInput [value]="filter()" (input)="filter.set(($any($event.target).value ?? '').toString())" />
   </mat-form-field>
   <div class="fb-hint">Drag items into the canvas. Canvas shows placeholders only; Preview renders the real form.</div>
@@ -8,7 +8,7 @@
 
 <mat-accordion multi class="fb-section">
   @for (cat of categories(); track cat.category) {
-    <mat-expansion-panel [expanded]="true">
+    <mat-expansion-panel [expanded]="isCategoryExpanded(cat.category)">
       <mat-expansion-panel-header>
         <mat-panel-title>{{ cat.category }}</mat-panel-title>
       </mat-expansion-panel-header>

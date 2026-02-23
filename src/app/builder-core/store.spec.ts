@@ -1,4 +1,5 @@
 import { BuilderStore } from './store';
+import { FieldNode } from './model';
 
 describe('BuilderStore layout commands', () => {
   let store: BuilderStore;
@@ -112,6 +113,19 @@ describe('BuilderStore layout commands', () => {
     for (const colId of row.children) {
       expect(nodes[colId]?.type).toBe('col');
     }
+  });
+
+  it('applies advancedLogic preset with expressions and custom validation samples', () => {
+    store.applyPreset('advancedLogic');
+    const fields = Object.values(store.nodes()).filter((n): n is FieldNode => n.type === 'field');
+
+    const withVisibleExpression = fields.find((f) => typeof f.props?.visibleExpression === 'string');
+    const withEnabledExpression = fields.find((f) => typeof f.props?.enabledExpression === 'string');
+    const withCustomValidation = fields.find((f) => typeof f.validators?.customExpression === 'string');
+
+    expect(withVisibleExpression).toBeTruthy();
+    expect(withEnabledExpression).toBeTruthy();
+    expect(withCustomValidation).toBeTruthy();
   });
 
   it('groups rapid inspector updates into one undo step', () => {

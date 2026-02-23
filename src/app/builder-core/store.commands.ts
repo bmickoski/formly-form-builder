@@ -67,8 +67,13 @@ export function updateNodeValidatorsCommand(
   return { ...doc, nodes };
 }
 
-export function addFromPaletteCommand(doc: BuilderDocument, paletteId: string, loc: DropLocation): BuilderDocument {
-  const item = PALETTE.find((candidate) => candidate.id === paletteId);
+export function addFromPaletteCommand(
+  doc: BuilderDocument,
+  paletteId: string,
+  loc: DropLocation,
+  palette: readonly PaletteItem[] = PALETTE,
+): BuilderDocument {
+  const item = palette.find((candidate) => candidate.id === paletteId);
   if (!item) return doc;
 
   const nodes = { ...doc.nodes };
@@ -76,7 +81,7 @@ export function addFromPaletteCommand(doc: BuilderDocument, paletteId: string, l
   if (!target || !isContainerNode(target)) return doc;
   if (target.type === 'row' && item.nodeType !== 'col') return doc;
 
-  const created = createNodeFromPalette(item, loc.containerId);
+  const created = createNodeFromPalette(item, loc.containerId, palette);
   const children = [...target.children];
   const index = clampIndex(loc.index, children.length);
   children.splice(index, 0, created.id);
@@ -209,6 +214,7 @@ export function splitColumnCommand(doc: BuilderDocument, columnId: string, parts
 function createNodeFromPalette(
   item: PaletteItem,
   parentId: string,
+  palette: readonly PaletteItem[],
 ): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
   const id = uid(item.nodeType === 'field' ? 'f' : 'c');
   const extraNodes: BuilderNode[] = [];
@@ -236,9 +242,9 @@ function createNodeFromPalette(
 
   const template = item.defaults.childrenTemplate ?? [];
   for (const childType of template) {
-    const childItem = PALETTE.find((paletteItem) => paletteItem.id === childType);
+    const childItem = palette.find((paletteItem) => paletteItem.id === childType);
     if (!childItem) continue;
-    const createdChild = createNodeFromPalette(childItem, id);
+    const createdChild = createNodeFromPalette(childItem, id, palette);
     node.children.push(createdChild.id);
     extraNodes.push(createdChild.node, ...createdChild.extraNodes);
   }

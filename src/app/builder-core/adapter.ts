@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+﻿import { FormlyFieldConfig } from '@ngx-formly/core';
 import {
   AsyncUniqueValidator,
   BuilderDocument,
@@ -8,6 +8,11 @@ import {
   FieldNode,
   isFieldNode,
 } from './model';
+
+interface CustomValidationConfig {
+  expression?: string;
+  message?: string;
+}
 
 interface FormlyFieldProps {
   label?: string;
@@ -26,6 +31,9 @@ interface FormlyFieldProps {
   };
   visibleRule?: ConditionalRule;
   enabledRule?: ConditionalRule;
+  visibleExpression?: string;
+  enabledExpression?: string;
+  customValidation?: CustomValidationConfig;
   asyncUnique?: AsyncUniqueValidator;
   type?: string;
   min?: number;
@@ -70,6 +78,7 @@ function fieldProps(node: FieldNode): FormlyFieldProps {
   applyTypeProps(node, props);
   applyValidatorProps(node, props);
   applyAsyncValidatorProps(node, props);
+  applyCustomValidatorProps(node, props);
   applyRepeaterProps(node, props);
   return props;
 }
@@ -100,6 +109,8 @@ function applyChoiceProps(node: FieldNode, props: FormlyFieldProps): void {
 function applyRuleProps(node: FieldNode, props: FormlyFieldProps): void {
   if (node.props.visibleRule) props.visibleRule = { ...node.props.visibleRule };
   if (node.props.enabledRule) props.enabledRule = { ...node.props.enabledRule };
+  if (node.props.visibleExpression) props.visibleExpression = node.props.visibleExpression;
+  if (node.props.enabledExpression) props.enabledExpression = node.props.enabledExpression;
 }
 
 function applyTypeProps(node: FieldNode, props: FormlyFieldProps): void {
@@ -147,6 +158,16 @@ function applyAsyncValidatorProps(node: FieldNode, props: FormlyFieldProps): voi
   props.asyncUnique = { ...node.validators.asyncUnique };
 }
 
+function applyCustomValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
+  const expression = node.validators.customExpression?.trim();
+  if (!expression) return;
+
+  props.customValidation = {
+    expression,
+    ...(node.validators.customExpressionMessage ? { message: node.validators.customExpressionMessage } : {}),
+  };
+}
+
 function applyRepeaterProps(node: FieldNode, props: FormlyFieldProps): void {
   if (node.fieldKind !== 'repeater') return;
   props.addText = `Add ${node.props.label ?? 'item'}`;
@@ -188,6 +209,27 @@ function ruleConditionExpression(rule: ConditionalRule): string | null {
   }
 }
 
+function normalizedAdvancedExpression(expression: string | undefined): string | null {
+  const trimmed = expression?.trim();
+  if (!trimmed) return null;
+
+  const candidate = trimmed
+    .split(';')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+    .at(-1);
+
+  if (!candidate) return null;
+
+  const showMatch = candidate.match(/^show\s*=\s*(.+)$/);
+  if (showMatch?.[1]) return showMatch[1].trim();
+
+  const validMatch = candidate.match(/^valid\s*=\s*(.+)$/);
+  if (validMatch?.[1]) return validMatch[1].trim();
+
+  return candidate;
+}
+
 function rowClass(renderer: BuilderDocument['renderer']): string {
   return renderer === 'bootstrap' ? 'row' : 'fb-row';
 }
@@ -205,11 +247,16 @@ function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | un
 function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
   const safeKey =
     typeof node.props.key === 'string' && node.props.key.trim().length > 0 ? node.props.key.trim() : node.id;
+
   const expressions: Record<string, string> = {};
-  const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
+  const visibleExpr =
+    normalizedAdvancedExpression(node.props.visibleExpression) ??
+    (node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null);
   if (visibleExpr) expressions['hide'] = `!(${visibleExpr})`;
 
-  const enabledExpr = node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null;
+  const enabledExpr =
+    normalizedAdvancedExpression(node.props.enabledExpression) ??
+    (node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null);
   if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
 
   const mapped: FormlyFieldConfig = {

@@ -23,18 +23,20 @@ import {
   isContainerNode,
   isFieldNode,
 } from '../../builder-core/model';
-import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
-import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { HELP_TEXT, HelpKey } from './help-text';
-
-type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
-type RuleTarget = 'visibleRule' | 'enabledRule';
-
-interface DependencyKeyOption {
-  key: string;
-  label: string;
-  fieldKind: string;
-}
+import {
+  ASYNC_UNIQUE_SOURCES,
+  DependencyKeyOption,
+  OPTIONS_SOURCE_TYPES,
+  RULE_OPERATORS,
+  RuleExpressionTarget,
+  RuleTarget,
+  AsyncTestState,
+  ruleOperatorNeedsValue,
+} from './builder-inspector.constants';
+import { BuilderInspectorRulesService } from './builder-inspector-rules.service';
+import { BuilderInspectorValidationService } from './builder-inspector-validation.service';
+import { BuilderInspectorDataService } from './builder-inspector-data.service';
 @Component({
   selector: 'app-builder-inspector',
   standalone: true,
@@ -57,10 +59,11 @@ interface DependencyKeyOption {
 })
 export class BuilderInspectorComponent {
   readonly store = inject(BuilderStore);
-
+  private readonly rulesService = inject(BuilderInspectorRulesService);
+  private readonly validationService = inject(BuilderInspectorValidationService);
+  private readonly dataService = inject(BuilderInspectorDataService);
   readonly node = this.store.selectedNode;
   readonly isField = computed(() => !!this.fieldNode());
-  readonly isContainer = computed(() => !!this.containerNode());
   readonly fieldNode = computed(() => {
     const n = this.node();
     return n && isFieldNode(n) ? n : null;
@@ -92,40 +95,12 @@ export class BuilderInspectorComponent {
   readonly enabledRuleKeyQuery = signal('');
 
   readonly dependencyKeyOptions = computed<DependencyKeyOption[]>(() => {
-    const selectedNodeId = this.fieldNode()?.id;
-    const out: DependencyKeyOption[] = [];
-    const seen = new Set<string>();
-
-    for (const node of Object.values(this.store.nodes())) {
-      if (!isFieldNode(node)) continue;
-      if (node.id === selectedNodeId) continue;
-      const key = (node.props.key ?? '').trim();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      out.push({ key, label: node.props.label ?? key, fieldKind: node.fieldKind });
-    }
-
-    return out.sort((a, b) => a.label.localeCompare(b.label));
+    return this.rulesService.buildDependencyKeyOptions(this.store.nodes(), this.fieldNode()?.id);
   });
 
-  readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
-    { value: 'static', label: 'Static options' },
-    { value: 'lookup', label: 'Lookup key' },
-    { value: 'url', label: 'URL (HTTP)' },
-  ];
-  readonly asyncUniqueSources: Array<{ value: AsyncUniqueSourceType; label: string }> = [
-    { value: 'lookup', label: 'Lookup dataset' },
-    { value: 'url', label: 'URL dataset' },
-  ];
-  readonly ruleOperators: Array<{ value: RuleOperator; label: string }> = [
-    { value: 'truthy', label: 'Is truthy' },
-    { value: 'falsy', label: 'Is falsy' },
-    { value: 'eq', label: 'Equals' },
-    { value: 'ne', label: 'Not equals' },
-    { value: 'contains', label: 'Contains' },
-    { value: 'gt', label: 'Greater than' },
-    { value: 'lt', label: 'Less than' },
-  ];
+  readonly optionsSourceTypes = OPTIONS_SOURCE_TYPES;
+  readonly asyncUniqueSources = ASYNC_UNIQUE_SOURCES;
+  readonly ruleOperators = RULE_OPERATORS;
 
   onSelectedTabChange(index: number): void {
     this.tabByNodeType.update((state) => (this.isField() ? { ...state, field: index } : { ...state, layout: index }));
@@ -136,16 +111,8 @@ export class BuilderInspectorComponent {
   }
 
   filteredDependencyKeyOptions(target: RuleTarget): DependencyKeyOption[] {
-    const query = (target === 'visibleRule' ? this.visibleRuleKeyQuery() : this.enabledRuleKeyQuery())
-      .trim()
-      .toLowerCase();
-    if (!query) return this.dependencyKeyOptions();
-    return this.dependencyKeyOptions().filter(
-      (option) =>
-        option.key.toLowerCase().includes(query) ||
-        option.label.toLowerCase().includes(query) ||
-        option.fieldKind.toLowerCase().includes(query),
-    );
+    const query = target === 'visibleRule' ? this.visibleRuleKeyQuery() : this.enabledRuleKeyQuery();
+    return this.rulesService.filterDependencyKeyOptions(this.dependencyKeyOptions(), query);
   }
 
   onDependsOnKeyInput(target: RuleTarget, value: string): void {
@@ -155,7 +122,7 @@ export class BuilderInspectorComponent {
   }
 
   onDependsOnKeySelected(target: RuleTarget, event: MatAutocompleteSelectedEvent): void {
-    const key = String(event.option.value ?? '');
+    const key = this.rulesService.selectedRuleKey(event);
     if (target === 'visibleRule') this.visibleRuleKeyQuery.set(key);
     else this.enabledRuleKeyQuery.set(key);
     this.updateRule(target, { dependsOnKey: key });
@@ -164,11 +131,9 @@ export class BuilderInspectorComponent {
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
   }
-
   isCol(): boolean {
     return this.containerNode()?.type === 'col';
   }
-
   isRow(): boolean {
     return this.containerNode()?.type === 'row';
   }
@@ -192,107 +157,42 @@ export class BuilderInspectorComponent {
   }
 
   options(): OptionItem[] {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return [];
-    return f.props.options ?? [];
+    return this.dataService.options(this.fieldNode(), this.isChoiceField());
   }
-
   optionsSourceType(): OptionsSourceType {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return 'static';
-    return f.props.optionsSource?.type ?? 'static';
+    return this.dataService.optionsSourceType(this.fieldNode(), this.isChoiceField());
   }
 
   setOptionsSourceType(type: OptionsSourceType): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    if (type === 'static') {
-      this.store.updateNodeProps(f.id, { optionsSource: undefined });
-      return;
-    }
-    const current: Partial<OptionsSource> = f.props.optionsSource ?? {};
-    const next: OptionsSource = {
-      type,
-      url: current.url,
-      lookupKey: current.lookupKey,
-      listPath: current.listPath,
-      labelKey: current.labelKey,
-      valueKey: current.valueKey,
-    };
-    this.store.updateNodeProps(f.id, { optionsSource: next });
+    this.dataService.setOptionsSourceType(this.store, this.fieldNode(), this.isChoiceField(), type);
   }
 
   updateOptionsSource(patch: Partial<OptionsSource>): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    const sourceType = this.optionsSourceType();
-    if (sourceType === 'static') return;
-    const current = f.props.optionsSource ?? { type: sourceType };
-    this.store.updateNodePropsGrouped(
-      f.id,
-      {
-        optionsSource: {
-          ...current,
-          ...patch,
-        },
-      },
-      `${f.id}:options-source`,
+    this.dataService.updateOptionsSource(
+      this.store,
+      this.fieldNode(),
+      this.isChoiceField(),
+      this.optionsSourceType(),
+      patch,
     );
   }
 
   asyncUnique(): AsyncUniqueValidator | null {
-    const f = this.fieldNode();
-    return f?.validators.asyncUnique ?? null;
+    return this.validationService.asyncUnique(this.fieldNode());
   }
 
   enableAsyncUnique(enabled: boolean): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    if (!enabled) {
-      this.store.updateNodeValidators(f.id, { asyncUnique: undefined });
-      this.resetAsyncUniqueTest();
-      return;
-    }
-
-    const next: AsyncUniqueValidator = {
-      sourceType: 'lookup',
-      lookupKey: 'countries',
-      caseSensitive: false,
-      message: 'Value must be unique',
-    };
-    this.store.updateNodeValidators(f.id, { asyncUnique: next });
+    this.validationService.enableAsyncUnique(this.store, this.fieldNode(), enabled);
     this.resetAsyncUniqueTest();
   }
 
   setAsyncUniqueSource(sourceType: AsyncUniqueSourceType): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    const current = f.validators.asyncUnique;
-    if (!current) return;
-    this.store.updateNodeValidators(f.id, {
-      asyncUnique: {
-        ...current,
-        sourceType,
-      },
-    });
+    this.validationService.setAsyncUniqueSource(this.store, this.fieldNode(), sourceType);
     this.resetAsyncUniqueTest();
   }
 
   updateAsyncUnique(patch: Partial<AsyncUniqueValidator>): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    const current = f.validators.asyncUnique;
-    if (!current) return;
-    this.store.updateNodeValidatorsGrouped(
-      f.id,
-      {
-        asyncUnique: {
-          ...current,
-          ...patch,
-        },
-      },
-      `${f.id}:async-unique`,
-    );
+    this.validationService.updateAsyncUnique(this.store, this.fieldNode(), patch);
     this.resetAsyncUniqueTest();
   }
 
@@ -301,38 +201,13 @@ export class BuilderInspectorComponent {
   }
 
   async runAsyncUniqueTest(): Promise<void> {
-    const f = this.fieldNode();
-    const config = f?.validators.asyncUnique;
-    if (!f || !config) return;
-
-    const sample = this.asyncUniqueSampleValue().trim();
-    if (!sample) {
-      this.asyncUniqueTestState.set('error');
-      this.asyncUniqueTestMessage.set('Enter a sample value to test.');
-      return;
-    }
-
+    const config = this.fieldNode()?.validators.asyncUnique;
+    if (!config) return;
     this.asyncUniqueTestState.set('loading');
     this.asyncUniqueTestMessage.set('Checking...');
-
-    const result = await checkAsyncUniqueValue(config, sample, {
-      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
-    });
-
-    if (result.reason === 'duplicate') {
-      this.asyncUniqueTestState.set('error');
-      this.asyncUniqueTestMessage.set('Duplicate found in source.');
-      return;
-    }
-
-    if (result.reason === 'source-error') {
-      this.asyncUniqueTestState.set('error');
-      this.asyncUniqueTestMessage.set('Could not validate source. Check URL/lookup settings.');
-      return;
-    }
-
-    this.asyncUniqueTestState.set('success');
-    this.asyncUniqueTestMessage.set('Value is unique.');
+    const out = await this.validationService.runAsyncUniqueTest(config, this.asyncUniqueSampleValue());
+    this.asyncUniqueTestState.set(out.state);
+    this.asyncUniqueTestMessage.set(out.message);
   }
 
   resetAsyncUniqueTest(): void {
@@ -341,87 +216,74 @@ export class BuilderInspectorComponent {
   }
 
   rule(target: RuleTarget): ConditionalRule | null {
-    const f = this.fieldNode();
-    if (!f) return null;
-    return f.props[target] ?? null;
+    return this.rulesService.rule(this.fieldNode(), target);
   }
 
   initRule(target: RuleTarget): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    const next: ConditionalRule = {
-      dependsOnKey: '',
-      operator: 'truthy',
-    };
-    this.store.updateNodeProps(f.id, { [target]: next });
+    this.rulesService.initRule(this.store, this.fieldNode(), target);
     if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
     else this.enabledRuleKeyQuery.set('');
   }
 
   clearRule(target: RuleTarget): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    this.store.updateNodeProps(f.id, { [target]: undefined });
+    this.rulesService.clearRule(this.store, this.fieldNode(), target);
     if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
     else this.enabledRuleKeyQuery.set('');
   }
 
   updateRule(target: RuleTarget, patch: Partial<ConditionalRule>): void {
-    const f = this.fieldNode();
-    if (!f) return;
-    const current = f.props[target];
-    const next: ConditionalRule = {
-      dependsOnKey: current?.dependsOnKey ?? '',
-      operator: current?.operator ?? 'truthy',
-      value: current?.value,
-      ...patch,
-    };
-    this.store.updateNodePropsGrouped(f.id, { [target]: next }, `${f.id}:${target}`);
+    this.rulesService.updateRule(this.store, this.fieldNode(), target, patch);
+  }
+
+  ruleExpression(target: RuleExpressionTarget): string {
+    return this.rulesService.ruleExpression(this.fieldNode(), target);
+  }
+
+  setRuleExpression(target: RuleExpressionTarget, value: string): void {
+    this.rulesService.setRuleExpression(this.store, this.fieldNode(), target, value);
   }
 
   operatorNeedsValue(op?: RuleOperator): boolean {
-    if (!op) return false;
-    return op !== 'truthy' && op !== 'falsy';
+    return ruleOperatorNeedsValue(op);
+  }
+
+  customValidationEnabled(): boolean {
+    return this.validationService.customValidationEnabled(this.fieldNode());
+  }
+
+  setCustomValidationEnabled(enabled: boolean): void {
+    this.validationService.setCustomValidationEnabled(this.store, this.fieldNode(), enabled);
+  }
+
+  customValidationExpression(): string {
+    return this.validationService.customValidationExpression(this.fieldNode());
+  }
+  customValidationMessage(): string {
+    return this.validationService.customValidationMessage(this.fieldNode());
+  }
+
+  setCustomValidationExpression(value: string): void {
+    this.validationService.setCustomValidationExpression(this.store, this.fieldNode(), value);
+  }
+
+  setCustomValidationMessage(value: string): void {
+    this.validationService.setCustomValidationMessage(this.store, this.fieldNode(), value);
   }
 
   addOption(): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    const next = [
-      ...(f.props.options ?? []),
-      { label: `Option ${(f.props.options?.length ?? 0) + 1}`, value: `option_${(f.props.options?.length ?? 0) + 1}` },
-    ];
-    this.store.updateNodeProps(f.id, { options: next });
+    this.dataService.addOption(this.store, this.fieldNode(), this.isChoiceField());
   }
 
   updateOption(index: number, patch: Partial<OptionItem>): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    if (!current[index]) return;
-    current[index] = { ...current[index], ...patch };
-    this.store.updateNodePropsGrouped(f.id, { options: current }, `${f.id}:options`);
+    this.dataService.updateOption(this.store, this.fieldNode(), this.isChoiceField(), index, patch);
   }
 
   removeOption(index: number): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    if (!current[index]) return;
-    current.splice(index, 1);
-    this.store.updateNodeProps(f.id, { options: current });
+    this.dataService.removeOption(this.store, this.fieldNode(), this.isChoiceField(), index);
   }
 
   moveOption(index: number, direction: -1 | 1): void {
-    const f = this.fieldNode();
-    if (!f || !this.isChoiceField()) return;
-    const current = [...(f.props.options ?? [])];
-    const nextIndex = index + direction;
-    if (!current[index] || nextIndex < 0 || nextIndex >= current.length) return;
-    const tmp = current[index];
-    current[index] = current[nextIndex];
-    current[nextIndex] = tmp;
-    this.store.updateNodeProps(f.id, { options: current });
+    this.dataService.moveOption(this.store, this.fieldNode(), this.isChoiceField(), index, direction);
   }
 
   setProp(key: string, value: unknown): void {

@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+﻿import { FormlyFieldConfig } from '@ngx-formly/core';
 import {
   AsyncUniqueValidator,
   ConditionalRule,
@@ -51,43 +51,8 @@ export function toValidators(field: FormlyFieldConfig): FieldNode['validators'] 
   const props = fieldPropsOf(field);
   const validators: FieldNode['validators'] = {};
 
-  const required = toBooleanOrUndefined(props['required']);
-  if (required !== undefined) validators.required = required;
-
-  const minLength = toNumberOrUndefined(props['minLength']);
-  if (minLength !== undefined) validators.minLength = minLength;
-
-  const maxLength = toNumberOrUndefined(props['maxLength']);
-  if (maxLength !== undefined) validators.maxLength = maxLength;
-
-  const min = toNumberOrUndefined(props['min']);
-  if (min !== undefined) validators.min = min;
-
-  const max = toNumberOrUndefined(props['max']);
-  if (max !== undefined) validators.max = max;
-
-  const pattern = toStringOrUndefined(props['pattern']);
-  if (pattern !== undefined) validators.pattern = pattern;
-
-  const inputType = String(props['type'] ?? '').toLowerCase();
-  if (inputType === 'email') validators.email = true;
-
-  const asyncUnique = toAsyncUniqueValidator(props['asyncUnique']);
-  if (asyncUnique) validators.asyncUnique = asyncUnique;
-
-  if (isRecord(field.validators)) {
-    const vMinLength = toNumberOrUndefined(field.validators['minLength']);
-    if (vMinLength !== undefined) validators.minLength = vMinLength;
-
-    const vMaxLength = toNumberOrUndefined(field.validators['maxLength']);
-    if (vMaxLength !== undefined) validators.maxLength = vMaxLength;
-
-    const vPattern = toStringOrUndefined(field.validators['pattern']);
-    if (vPattern !== undefined) validators.pattern = vPattern;
-
-    const email = toBooleanOrUndefined(field.validators['email']);
-    if (email !== undefined) validators.email = email;
-  }
+  applyValidatorsFromProps(validators, props);
+  applyValidatorsFromFieldConfig(validators, field);
 
   return validators;
 }
@@ -118,6 +83,12 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
 
   const enabledRule = toConditionalRule(props['enabledRule']);
   if (enabledRule) mapped.enabledRule = enabledRule;
+
+  const visibleExpression = toStringOrUndefined(props['visibleExpression']);
+  if (visibleExpression) mapped.visibleExpression = visibleExpression;
+
+  const enabledExpression = toStringOrUndefined(props['enabledExpression']);
+  if (enabledExpression) mapped.enabledExpression = enabledExpression;
 
   const searchable = toBooleanOrUndefined(props['searchable']);
   if (searchable !== undefined) mapped.searchable = searchable;
@@ -183,6 +154,14 @@ function toAsyncUniqueValidator(value: unknown): AsyncUniqueValidator | null {
   };
 }
 
+function toCustomValidation(value: unknown): { expression?: string; message?: string } {
+  if (!isRecord(value)) return {};
+  return {
+    expression: toStringOrUndefined(value['expression']),
+    message: toStringOrUndefined(value['message']),
+  };
+}
+
 function toRepeaterTemplate(field: FormlyFieldConfig): { itemLabel?: string; itemPlaceholder?: string } {
   const fieldArray = isRecord(field.fieldArray) ? (field.fieldArray as FormlyFieldConfig) : null;
   if (!fieldArray) return {};
@@ -192,4 +171,50 @@ function toRepeaterTemplate(field: FormlyFieldConfig): { itemLabel?: string; ite
     itemLabel: toStringOrUndefined(arrayProps['label']),
     itemPlaceholder: toStringOrUndefined(arrayProps['placeholder']),
   };
+}
+
+function applyValidatorsFromProps(validators: FieldNode['validators'], props: Record<string, unknown>): void {
+  const required = toBooleanOrUndefined(props['required']);
+  if (required !== undefined) validators.required = required;
+
+  const minLength = toNumberOrUndefined(props['minLength']);
+  if (minLength !== undefined) validators.minLength = minLength;
+
+  const maxLength = toNumberOrUndefined(props['maxLength']);
+  if (maxLength !== undefined) validators.maxLength = maxLength;
+
+  const min = toNumberOrUndefined(props['min']);
+  if (min !== undefined) validators.min = min;
+
+  const max = toNumberOrUndefined(props['max']);
+  if (max !== undefined) validators.max = max;
+
+  const pattern = toStringOrUndefined(props['pattern']);
+  if (pattern !== undefined) validators.pattern = pattern;
+
+  const inputType = String(props['type'] ?? '').toLowerCase();
+  if (inputType === 'email') validators.email = true;
+
+  const asyncUnique = toAsyncUniqueValidator(props['asyncUnique']);
+  if (asyncUnique) validators.asyncUnique = asyncUnique;
+
+  const customValidation = toCustomValidation(props['customValidation']);
+  if (customValidation.expression) validators.customExpression = customValidation.expression;
+  if (customValidation.message) validators.customExpressionMessage = customValidation.message;
+}
+
+function applyValidatorsFromFieldConfig(validators: FieldNode['validators'], field: FormlyFieldConfig): void {
+  if (!isRecord(field.validators)) return;
+
+  const vMinLength = toNumberOrUndefined(field.validators['minLength']);
+  if (vMinLength !== undefined) validators.minLength = vMinLength;
+
+  const vMaxLength = toNumberOrUndefined(field.validators['maxLength']);
+  if (vMaxLength !== undefined) validators.maxLength = vMaxLength;
+
+  const vPattern = toStringOrUndefined(field.validators['pattern']);
+  if (vPattern !== undefined) validators.pattern = vPattern;
+
+  const email = toBooleanOrUndefined(field.validators['email']);
+  if (email !== undefined) validators.email = email;
 }

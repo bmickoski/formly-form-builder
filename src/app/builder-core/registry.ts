@@ -1,23 +1,30 @@
+import { InjectionToken } from '@angular/core';
 import { BuilderNodeType, BuilderValidators, ContainerProps, FieldKind, FieldProps } from './model';
 import { defaultValidatorsForFieldKind } from './validation-presets';
 
+export const DEFAULT_PALETTE_CATEGORIES = {
+  common: 'Common Fields',
+  advanced: 'Advanced Fields',
+  layout: 'Layout',
+} as const;
+
 export interface PaletteItem {
   id: string;
-  category: 'Basic Fields' | 'Layout';
+  category: string;
   title: string;
   nodeType: BuilderNodeType;
   fieldKind?: FieldKind;
   defaults: {
     props: FieldProps | ContainerProps;
     validators?: BuilderValidators;
-    childrenTemplate?: BuilderNodeType[];
+    childrenTemplate?: string[];
   };
 }
 
 export const PALETTE: PaletteItem[] = [
   {
     id: 'input',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Input',
     nodeType: 'field',
     fieldKind: 'input',
@@ -25,7 +32,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'email',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Email',
     nodeType: 'field',
     fieldKind: 'email',
@@ -36,7 +43,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'password',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Password',
     nodeType: 'field',
     fieldKind: 'password',
@@ -47,7 +54,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'tel',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Phone',
     nodeType: 'field',
     fieldKind: 'tel',
@@ -58,7 +65,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'url',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'URL',
     nodeType: 'field',
     fieldKind: 'url',
@@ -69,7 +76,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'file',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.advanced,
     title: 'File',
     nodeType: 'field',
     fieldKind: 'file',
@@ -77,7 +84,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'multiselect',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.advanced,
     title: 'Multi-select',
     nodeType: 'field',
     fieldKind: 'multiselect',
@@ -97,7 +104,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'repeater',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.advanced,
     title: 'Repeater',
     nodeType: 'field',
     fieldKind: 'repeater',
@@ -112,7 +119,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'textarea',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Textarea',
     nodeType: 'field',
     fieldKind: 'textarea',
@@ -120,7 +127,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'checkbox',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Checkbox',
     nodeType: 'field',
     fieldKind: 'checkbox',
@@ -128,7 +135,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'radio',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Radio',
     nodeType: 'field',
     fieldKind: 'radio',
@@ -145,7 +152,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'select',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Select',
     nodeType: 'field',
     fieldKind: 'select',
@@ -163,7 +170,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'date',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Date',
     nodeType: 'field',
     fieldKind: 'date',
@@ -171,7 +178,7 @@ export const PALETTE: PaletteItem[] = [
   },
   {
     id: 'number',
-    category: 'Basic Fields',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Number',
     nodeType: 'field',
     fieldKind: 'number',
@@ -180,23 +187,32 @@ export const PALETTE: PaletteItem[] = [
 
   {
     id: 'panel',
-    category: 'Layout',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Panel',
     nodeType: 'panel',
     defaults: { props: { title: 'Panel' }, childrenTemplate: ['row'] },
   },
   {
     id: 'row',
-    category: 'Layout',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Row',
     nodeType: 'row',
     defaults: { props: {}, childrenTemplate: ['col', 'col'] },
   },
   {
     id: 'col',
-    category: 'Layout',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Column',
     nodeType: 'col',
     defaults: { props: { colSpan: 6 }, childrenTemplate: [] },
   },
 ];
+
+export const BUILDER_PALETTE = new InjectionToken<readonly PaletteItem[]>('BUILDER_PALETTE', {
+  providedIn: 'root',
+  factory: () => PALETTE,
+});
+
+export function paletteListIdForCategory(category: string): string {
+  return `palette_${category.replace(/\s+/g, '_').toLowerCase()}`;
+}

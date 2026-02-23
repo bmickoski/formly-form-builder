@@ -1,4 +1,4 @@
-# Formly Form Builder (Angular 21 + ngx-formly v7)
+﻿# Formly Form Builder (Angular 21 + ngx-formly v7)
 
 Production-oriented visual builder with a strict domain model and renderer-aware Formly export.
 
@@ -9,9 +9,9 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 
 ## What this app does
 
-- Left panel: draggable palette (fields + layout).
+- Left panel: draggable palette grouped into `Common Fields`, `Advanced Fields`, and `Layout`.
 - Center panel: placeholder canvas with nested layout editing.
-- Right panel: inspector for props, validators, and layout controls.
+- Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
 - Preview: real Formly render (Material or Bootstrap).
 - Default preview renderer: Bootstrap.
 
@@ -61,6 +61,92 @@ npm run docs
 - `Import Builder JSON`: restores builder document.
 - `Import Formly JSON`: maps Formly config into builder model.
 
+## Palette customization
+
+- Default palette ships with:
+  - `Common Fields`
+  - `Advanced Fields`
+  - `Layout`
+- You can provide your own palette via Angular DI token `BUILDER_PALETTE`.
+- Runtime demo actions in top bar:
+  - `Load Palette JSON`
+  - `Reset Palette`
+- Imported palette JSON is validated before apply:
+  - required shape (`id/category/title/nodeType/defaults.props`)
+  - unique ids
+  - valid node/field kinds
+  - valid `childrenTemplate` references
+  - row templates can only include column items
+- Sample palette JSON (works with `Load Palette JSON`):
+
+```json
+[
+  {
+    "id": "input",
+    "category": "Common Fields",
+    "title": "Input",
+    "nodeType": "field",
+    "fieldKind": "input",
+    "defaults": { "props": { "label": "Input", "placeholder": "Enter value" } }
+  },
+  {
+    "id": "textarea",
+    "category": "Common Fields",
+    "title": "Textarea",
+    "nodeType": "field",
+    "fieldKind": "textarea",
+    "defaults": { "props": { "label": "Textarea", "placeholder": "Enter details" } }
+  },
+  {
+    "id": "rating",
+    "category": "Advanced Fields",
+    "title": "Rating (1-5)",
+    "nodeType": "field",
+    "fieldKind": "number",
+    "defaults": {
+      "props": { "label": "Rating", "placeholder": "1 to 5" },
+      "validators": { "min": 1, "max": 5 }
+    }
+  },
+  {
+    "id": "row",
+    "category": "Layout",
+    "title": "Row",
+    "nodeType": "row",
+    "defaults": { "props": {}, "childrenTemplate": ["col", "col"] }
+  },
+  {
+    "id": "col",
+    "category": "Layout",
+    "title": "Column",
+    "nodeType": "col",
+    "defaults": { "props": { "colSpan": 6 } }
+  },
+  {
+    "id": "panel",
+    "category": "Layout",
+    "title": "Panel",
+    "nodeType": "panel",
+    "defaults": { "props": { "title": "Panel" }, "childrenTemplate": ["row"] }
+  }
+]
+```
+
+- Example (`src/app/app.config.ts`):
+
+```ts
+import { BUILDER_PALETTE, type PaletteItem } from './builder-core/registry';
+
+const CUSTOM_PALETTE: PaletteItem[] = [
+  // Keep ids unique across the list.
+  // For row/panel templates, childrenTemplate references palette item ids.
+];
+
+export const appConfig: ApplicationConfig = {
+  providers: [{ provide: BUILDER_PALETTE, useValue: CUSTOM_PALETTE }],
+};
+```
+
 ## Layout behavior
 
 - Default row creates 2 columns (`6/6`).
@@ -70,6 +156,9 @@ npm run docs
   - `Add column` (row)
   - `Rebalance columns` (row)
   - `Split x2/x3` (column)
+- Starter presets include `Advanced Logic Form` with predefined examples for:
+  - visibility/enabled expressions
+  - custom validation expressions/messages
 
 ## Documentation
 
@@ -82,3 +171,16 @@ npm run docs
 - docs/RELEASE.md: release and hotfix process.
 - SECURITY.md: security reporting policy.
 - CODE_OF_CONDUCT.md: expected contributor behavior.
+
+## Advanced Logic
+
+- Display rules support both simple rule-builder mode and advanced expressions.
+- `Visible expression` / `Enabled expression` override simple `dependsOn` rules when present.
+- Expression context supports `model`, `data`, and `value`.
+- Examples:
+  - Visible expression: `model?.status === 'approved'`
+  - Enabled expression: `model?.role !== 'readonly' && !!model?.canEdit`
+- Validation supports custom expression mode:
+  - Expression must assign `valid` to `true`, `false`, or an error-message string.
+  - Example: `valid = value === 'Joe' ? true : 'Name must be Joe';`
+- Async uniqueness can be combined with custom validation.
