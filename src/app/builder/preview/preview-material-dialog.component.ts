@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -25,6 +25,7 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
       ...withFormlyMaterial(),
       { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
       { types: [{ name: 'repeat', component: FbRepeatTypeComponent }] },
+      { validators: [{ name: 'email', validation: Validators.email }] },
       { validationMessages: PREVIEW_VALIDATION_MESSAGES as any },
     ]),
   ],

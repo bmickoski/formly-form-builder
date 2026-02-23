@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatAutocompleteSelectedEvent, MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -7,6 +8,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BuilderStore } from '../../builder-core/store';
 import {
@@ -22,14 +25,22 @@ import {
 } from '../../builder-core/model';
 import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+import { HELP_TEXT, HelpKey } from './help-text';
 
 type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
+type RuleTarget = 'visibleRule' | 'enabledRule';
 
+interface DependencyKeyOption {
+  key: string;
+  label: string;
+  fieldKind: string;
+}
 @Component({
   selector: 'app-builder-inspector',
   standalone: true,
   imports: [
     FormsModule,
+    MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
     MatSlideToggleModule,
@@ -37,6 +48,8 @@ type AsyncTestState = 'idle' | 'loading' | 'success' | 'error';
     MatButtonModule,
     MatSelectModule,
     MatTabsModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './builder-inspector.component.html',
   styleUrl: './builder-inspector.component.scss',
@@ -75,6 +88,26 @@ export class BuilderInspectorComponent {
   readonly asyncUniqueTestState = signal<AsyncTestState>('idle');
   readonly asyncUniqueTestMessage = signal('');
 
+  readonly visibleRuleKeyQuery = signal('');
+  readonly enabledRuleKeyQuery = signal('');
+
+  readonly dependencyKeyOptions = computed<DependencyKeyOption[]>(() => {
+    const selectedNodeId = this.fieldNode()?.id;
+    const out: DependencyKeyOption[] = [];
+    const seen = new Set<string>();
+
+    for (const node of Object.values(this.store.nodes())) {
+      if (!isFieldNode(node)) continue;
+      if (node.id === selectedNodeId) continue;
+      const key = (node.props.key ?? '').trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push({ key, label: node.props.label ?? key, fieldKind: node.fieldKind });
+    }
+
+    return out.sort((a, b) => a.label.localeCompare(b.label));
+  });
+
   readonly optionsSourceTypes: Array<{ value: OptionsSourceType; label: string }> = [
     { value: 'static', label: 'Static options' },
     { value: 'lookup', label: 'Lookup key' },
@@ -96,6 +129,36 @@ export class BuilderInspectorComponent {
 
   onSelectedTabChange(index: number): void {
     this.tabByNodeType.update((state) => (this.isField() ? { ...state, field: index } : { ...state, layout: index }));
+  }
+
+  helpText(key: HelpKey): string {
+    return HELP_TEXT[key];
+  }
+
+  filteredDependencyKeyOptions(target: RuleTarget): DependencyKeyOption[] {
+    const query = (target === 'visibleRule' ? this.visibleRuleKeyQuery() : this.enabledRuleKeyQuery())
+      .trim()
+      .toLowerCase();
+    if (!query) return this.dependencyKeyOptions();
+    return this.dependencyKeyOptions().filter(
+      (option) =>
+        option.key.toLowerCase().includes(query) ||
+        option.label.toLowerCase().includes(query) ||
+        option.fieldKind.toLowerCase().includes(query),
+    );
+  }
+
+  onDependsOnKeyInput(target: RuleTarget, value: string): void {
+    if (target === 'visibleRule') this.visibleRuleKeyQuery.set(value ?? '');
+    else this.enabledRuleKeyQuery.set(value ?? '');
+    this.updateRule(target, { dependsOnKey: value ?? '' });
+  }
+
+  onDependsOnKeySelected(target: RuleTarget, event: MatAutocompleteSelectedEvent): void {
+    const key = String(event.option.value ?? '');
+    if (target === 'visibleRule') this.visibleRuleKeyQuery.set(key);
+    else this.enabledRuleKeyQuery.set(key);
+    this.updateRule(target, { dependsOnKey: key });
   }
 
   isPanel(): boolean {
@@ -277,13 +340,13 @@ export class BuilderInspectorComponent {
     this.asyncUniqueTestMessage.set('');
   }
 
-  rule(target: 'visibleRule' | 'enabledRule'): ConditionalRule | null {
+  rule(target: RuleTarget): ConditionalRule | null {
     const f = this.fieldNode();
     if (!f) return null;
     return f.props[target] ?? null;
   }
 
-  initRule(target: 'visibleRule' | 'enabledRule'): void {
+  initRule(target: RuleTarget): void {
     const f = this.fieldNode();
     if (!f) return;
     const next: ConditionalRule = {
@@ -291,15 +354,19 @@ export class BuilderInspectorComponent {
       operator: 'truthy',
     };
     this.store.updateNodeProps(f.id, { [target]: next });
+    if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
+    else this.enabledRuleKeyQuery.set('');
   }
 
-  clearRule(target: 'visibleRule' | 'enabledRule'): void {
+  clearRule(target: RuleTarget): void {
     const f = this.fieldNode();
     if (!f) return;
     this.store.updateNodeProps(f.id, { [target]: undefined });
+    if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
+    else this.enabledRuleKeyQuery.set('');
   }
 
-  updateRule(target: 'visibleRule' | 'enabledRule', patch: Partial<ConditionalRule>): void {
+  updateRule(target: RuleTarget, patch: Partial<ConditionalRule>): void {
     const f = this.fieldNode();
     if (!f) return;
     const current = f.props[target];

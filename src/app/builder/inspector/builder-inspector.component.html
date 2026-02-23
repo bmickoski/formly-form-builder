@@ -18,12 +18,32 @@
           <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Label</mat-label>
             <input matInput [ngModel]="n.props?.label" (ngModelChange)="setProp('label', $event)" />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              tabindex="-1"
+              class="fb-help-icon"
+              [matTooltip]="helpText('label')"
+            >
+              <mat-icon>help_outline</mat-icon>
+            </button>
           </mat-form-field>
 
           @if (isPanel()) {
             <mat-form-field appearance="outline" class="fb-field">
               <mat-label>Panel title</mat-label>
               <input matInput [ngModel]="c?.props?.title" (ngModelChange)="setProp('title', $event)" />
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                tabindex="-1"
+                class="fb-help-icon"
+                [matTooltip]="helpText('panelTitle')"
+              >
+                <mat-icon>help_outline</mat-icon>
+              </button>
             </mat-form-field>
           }
 
@@ -31,23 +51,59 @@
             <mat-form-field appearance="outline" class="fb-field">
               <mat-label>Key</mat-label>
               <input matInput [ngModel]="f?.props?.key" (ngModelChange)="setProp('key', $event)" />
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                tabindex="-1"
+                class="fb-help-icon"
+                [matTooltip]="helpText('key')"
+              >
+                <mat-icon>help_outline</mat-icon>
+              </button>
             </mat-form-field>
           }
 
           <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Placeholder</mat-label>
             <input matInput [ngModel]="n.props?.placeholder" (ngModelChange)="setProp('placeholder', $event)" />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              tabindex="-1"
+              class="fb-help-icon"
+              [matTooltip]="helpText('placeholder')"
+            >
+              <mat-icon>help_outline</mat-icon>
+            </button>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Description</mat-label>
             <input matInput [ngModel]="n.props?.description" (ngModelChange)="setProp('description', $event)" />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              tabindex="-1"
+              class="fb-help-icon"
+              [matTooltip]="helpText('description')"
+            >
+              <mat-icon>help_outline</mat-icon>
+            </button>
           </mat-form-field>
 
-          <mat-slide-toggle [ngModel]="!!n.props?.hidden" (ngModelChange)="setProp('hidden', $event)"
+          <mat-slide-toggle
+            [ngModel]="!!n.props?.hidden"
+            (ngModelChange)="setProp('hidden', $event)"
+            [matTooltip]="helpText('hidden')"
             >Hidden</mat-slide-toggle
           >
-          <mat-slide-toggle [ngModel]="!!n.props?.disabled" (ngModelChange)="setProp('disabled', $event)"
+          <mat-slide-toggle
+            [ngModel]="!!n.props?.disabled"
+            (ngModelChange)="setProp('disabled', $event)"
+            [matTooltip]="helpText('disabled')"
             >Disabled</mat-slide-toggle
           >
 
@@ -71,8 +127,30 @@
                 <input
                   matInput
                   [ngModel]="rule('visibleRule')?.dependsOnKey"
-                  (ngModelChange)="updateRule('visibleRule', { dependsOnKey: $event })"
+                  (ngModelChange)="onDependsOnKeyInput('visibleRule', $event)"
+                  [matAutocomplete]="visibleRuleKeysAuto"
                 />
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  tabindex="-1"
+                  class="fb-help-icon"
+                  [matTooltip]="helpText('dependsOnKey')"
+                >
+                  <mat-icon>help_outline</mat-icon>
+                </button>
+                <mat-autocomplete
+                  #visibleRuleKeysAuto="matAutocomplete"
+                  (optionSelected)="onDependsOnKeySelected('visibleRule', $event)"
+                >
+                  @for (option of filteredDependencyKeyOptions('visibleRule'); track option.key) {
+                    <mat-option [value]="option.key">{{ option.label }} ({{ option.key }})</mat-option>
+                  }
+                  @if (filteredDependencyKeyOptions('visibleRule').length === 0) {
+                    <mat-option disabled>No keys found</mat-option>
+                  }
+                </mat-autocomplete>
               </mat-form-field>
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Operator</mat-label>
@@ -84,6 +162,16 @@
                     <mat-option [value]="op.value">{{ op.label }}</mat-option>
                   }
                 </mat-select>
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  tabindex="-1"
+                  class="fb-help-icon"
+                  [matTooltip]="helpText('operator')"
+                >
+                  <mat-icon>help_outline</mat-icon>
+                </button>
               </mat-form-field>
               @if (operatorNeedsValue(rule('visibleRule')?.operator)) {
                 <mat-form-field appearance="outline" class="fb-field">
@@ -93,6 +181,16 @@
                     [ngModel]="rule('visibleRule')?.value"
                     (ngModelChange)="updateRule('visibleRule', { value: $event })"
                   />
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    tabindex="-1"
+                    class="fb-help-icon"
+                    [matTooltip]="helpText('ruleValue')"
+                  >
+                    <mat-icon>help_outline</mat-icon>
+                  </button>
                 </mat-form-field>
               }
             }
@@ -111,8 +209,30 @@
                 <input
                   matInput
                   [ngModel]="rule('enabledRule')?.dependsOnKey"
-                  (ngModelChange)="updateRule('enabledRule', { dependsOnKey: $event })"
+                  (ngModelChange)="onDependsOnKeyInput('enabledRule', $event)"
+                  [matAutocomplete]="enabledRuleKeysAuto"
                 />
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  tabindex="-1"
+                  class="fb-help-icon"
+                  [matTooltip]="helpText('dependsOnKey')"
+                >
+                  <mat-icon>help_outline</mat-icon>
+                </button>
+                <mat-autocomplete
+                  #enabledRuleKeysAuto="matAutocomplete"
+                  (optionSelected)="onDependsOnKeySelected('enabledRule', $event)"
+                >
+                  @for (option of filteredDependencyKeyOptions('enabledRule'); track option.key) {
+                    <mat-option [value]="option.key">{{ option.label }} ({{ option.key }})</mat-option>
+                  }
+                  @if (filteredDependencyKeyOptions('enabledRule').length === 0) {
+                    <mat-option disabled>No keys found</mat-option>
+                  }
+                </mat-autocomplete>
               </mat-form-field>
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Operator</mat-label>
@@ -124,6 +244,16 @@
                     <mat-option [value]="op.value">{{ op.label }}</mat-option>
                   }
                 </mat-select>
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  tabindex="-1"
+                  class="fb-help-icon"
+                  [matTooltip]="helpText('operator')"
+                >
+                  <mat-icon>help_outline</mat-icon>
+                </button>
               </mat-form-field>
               @if (operatorNeedsValue(rule('enabledRule')?.operator)) {
                 <mat-form-field appearance="outline" class="fb-field">
@@ -133,6 +263,16 @@
                     [ngModel]="rule('enabledRule')?.value"
                     (ngModelChange)="updateRule('enabledRule', { value: $event })"
                   />
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    tabindex="-1"
+                    class="fb-help-icon"
+                    [matTooltip]="helpText('ruleValue')"
+                  >
+                    <mat-icon>help_outline</mat-icon>
+                  </button>
                 </mat-form-field>
               }
             }
@@ -171,13 +311,19 @@
       <mat-tab label="Validation">
         <div class="fb-tab-content">
           @if (isField()) {
-            <mat-slide-toggle [ngModel]="!!f?.validators?.required" (ngModelChange)="setVal('required', $event)"
+            <mat-slide-toggle
+              [ngModel]="!!f?.validators?.required"
+              (ngModelChange)="setVal('required', $event)"
+              [matTooltip]="helpText('required')"
               >Required</mat-slide-toggle
             >
 
             @if (supportsEmailValidator()) {
-              <mat-slide-toggle [ngModel]="!!f?.validators?.email" (ngModelChange)="setVal('email', $event)">
-                Email format</mat-slide-toggle
+              <mat-slide-toggle
+                [ngModel]="!!f?.validators?.email"
+                (ngModelChange)="setVal('email', $event)"
+                [matTooltip]="helpText('email')"
+                >Email format</mat-slide-toggle
               >
             }
 
@@ -225,11 +371,26 @@
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Pattern (regex)</mat-label>
                 <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  tabindex="-1"
+                  class="fb-help-icon"
+                  [matTooltip]="helpText('pattern')"
+                >
+                  <mat-icon>help_outline</mat-icon>
+                </button>
               </mat-form-field>
             </div>
 
             <mat-divider class="fb-inspector-divider"></mat-divider>
-            <div class="fb-section-title">Async uniqueness</div>
+            <div class="fb-inline-row fb-inline-row-align-center fb-inline-row-gap-sm">
+              <div class="fb-section-title fb-section-title-no-margin">Async uniqueness</div>
+              <button mat-icon-button type="button" class="fb-help-icon-inline" [matTooltip]="helpText('asyncUnique')">
+                <mat-icon>help_outline</mat-icon>
+              </button>
+            </div>
             <mat-slide-toggle [ngModel]="!!asyncUnique()" (ngModelChange)="enableAsyncUnique($event)"
               >Enable unique check</mat-slide-toggle
             >

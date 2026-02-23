@@ -26,11 +26,11 @@ export const PREVIEW_VALIDATION_MESSAGES = [
   { name: 'required', message: 'This field is required.' },
   { name: 'email', message: 'Please enter a valid email address.' },
   {
-    name: 'minlength',
+    name: 'minLength',
     message: (_: unknown, field: FormlyFieldConfig) => `Minimum length is ${field.props?.['minLength']}.`,
   },
   {
-    name: 'maxlength',
+    name: 'maxLength',
     message: (_: unknown, field: FormlyFieldConfig) => `Maximum length is ${field.props?.['maxLength']}.`,
   },
   { name: 'min', message: (_: unknown, field: FormlyFieldConfig) => `Minimum value is ${field.props?.['min']}.` },
