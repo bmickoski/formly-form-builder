@@ -13,6 +13,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Center panel: placeholder canvas with nested layout editing.
 - Right panel: inspector for props, validators, and layout controls.
 - Preview: real Formly render (Material or Bootstrap).
+- Default preview renderer: Bootstrap.
 
 ## Core guarantees
 

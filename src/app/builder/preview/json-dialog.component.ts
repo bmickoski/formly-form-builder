@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-json-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, NgIf],
+  imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule],
   templateUrl: './json-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
