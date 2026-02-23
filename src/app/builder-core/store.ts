@@ -2,9 +2,9 @@ import { computed, Injectable, signal } from '@angular/core';
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
 import { PALETTE, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
-import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import {
   addColumnToRowCommand,
   addFromPaletteCommand,
@@ -80,7 +80,7 @@ export class BuilderStore {
   });
 
   /** Updates the active preview renderer. */
-  setRenderer(renderer: 'bootstrap' | 'bootstrap'): void {
+  setRenderer(renderer: 'material' | 'bootstrap'): void {
     this.apply((doc) => ({ ...doc, renderer }));
   }
 

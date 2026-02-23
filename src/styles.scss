@@ -324,3 +324,16 @@ body {
 .fb-form .form-control {
   width: 100%;
 }
+
+.fb-repeat {
+  display: grid;
+  gap: 8px;
+}
+
+.fb-repeat-item {
+  border: 1px solid #e2e2f0;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}

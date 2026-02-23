@@ -13,13 +13,18 @@ import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-optio
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
+import { FbRepeatTypeComponent } from './fb-repeat.type.component';
 
 @Component({
   selector: 'app-preview-material-dialog',
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, ReactiveFormsModule, FormlyModule, FormlyMaterialModule, JsonPipe],
   providers: [
-    provideFormlyCore([...withFormlyMaterial(), { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] }]),
+    provideFormlyCore([
+      ...withFormlyMaterial(),
+      { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
+      { types: [{ name: 'repeat', component: FbRepeatTypeComponent }] },
+    ]),
   ],
   templateUrl: './preview-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

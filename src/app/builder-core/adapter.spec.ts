@@ -203,3 +203,85 @@ describe('builder/formly adapters: field library v2 batch 1', () => {
     expect(kinds).toEqual(['email', 'password', 'tel', 'url', 'file']);
   });
 });
+
+describe('builder/formly adapters: field library v2 batch 2', () => {
+  it('exports multiselect as select with multiple=true', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('multiselect', { containerId: store.rootId(), index: 0 });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.type).toBe('select');
+    expect(first.props?.['multiple']).toBeTrue();
+    expect(Array.isArray(first.props?.['options'])).toBeTrue();
+  });
+
+  it('imports select multiple=true as multiselect fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        type: 'select',
+        key: 'tags',
+        props: {
+          label: 'Tags',
+          multiple: true,
+          options: [
+            { label: 'A', value: 'a' },
+            { label: 'B', value: 'b' },
+          ],
+        },
+      },
+    ];
+
+    const doc = formlyToBuilder(fields, 'bootstrap');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = doc.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+
+    expect(node.fieldKind).toBe('multiselect');
+    expect(node.props.multiple).toBeTrue();
+  });
+
+  it('exports repeater with repeat type and fieldArray', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('repeater', { containerId: store.rootId(), index: 0 });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.type).toBe('repeat');
+    expect(first.fieldArray).toBeDefined();
+    expect((first.fieldArray as FormlyFieldConfig).type).toBe('input');
+    expect(Array.isArray(first.defaultValue)).toBeTrue();
+  });
+
+  it('imports repeat type as repeater fieldKind', () => {
+    const fields: FormlyFieldConfig[] = [
+      {
+        type: 'repeat',
+        key: 'contacts',
+        props: { label: 'Contacts' },
+        fieldArray: {
+          type: 'input',
+          key: 'value',
+          props: { label: 'Contact', placeholder: 'Enter contact' },
+        },
+      },
+    ];
+
+    const doc = formlyToBuilder(fields, 'material');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = doc.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+
+    expect(node.fieldKind).toBe('repeater');
+    expect(node.props.repeaterItemLabel).toBe('Contact');
+    expect(node.props.repeaterItemPlaceholder).toBe('Enter contact');
+  });
+});

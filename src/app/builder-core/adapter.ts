@@ -33,6 +33,9 @@ interface FormlyFieldProps {
   minLength?: number;
   maxLength?: number;
   pattern?: string;
+  email?: boolean;
+  multiple?: boolean;
+  addText?: string;
 }
 
 function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
@@ -44,7 +47,10 @@ function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
     case 'radio':
       return 'radio';
     case 'select':
+    case 'multiselect':
       return 'select';
+    case 'repeater':
+      return 'repeat';
     default:
       return 'input';
   }
@@ -64,16 +70,19 @@ function fieldProps(node: FieldNode): FormlyFieldProps {
   applyTypeProps(node, props);
   applyValidatorProps(node, props);
   applyAsyncValidatorProps(node, props);
+  applyRepeaterProps(node, props);
   return props;
 }
 
 function applyChoiceProps(node: FieldNode, props: FormlyFieldProps): void {
-  if (node.fieldKind !== 'select' && node.fieldKind !== 'radio') return;
+  if (node.fieldKind !== 'select' && node.fieldKind !== 'radio' && node.fieldKind !== 'multiselect') return;
 
   props.options = (node.props.options ?? []).map((option) => ({
     label: option.label,
     value: option.value,
   }));
+
+  if (node.fieldKind === 'multiselect') props.multiple = true;
 
   const source = node.props.optionsSource;
   if (!source || source.type === 'static') return;
@@ -130,11 +139,28 @@ function applyValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
   if (node.validators.minLength != null) props.minLength = node.validators.minLength;
   if (node.validators.maxLength != null) props.maxLength = node.validators.maxLength;
   if (node.validators.pattern) props.pattern = node.validators.pattern;
+  if (node.validators.email) props.email = true;
 }
 
 function applyAsyncValidatorProps(node: FieldNode, props: FormlyFieldProps): void {
   if (!node.validators.asyncUnique) return;
   props.asyncUnique = { ...node.validators.asyncUnique };
+}
+
+function applyRepeaterProps(node: FieldNode, props: FormlyFieldProps): void {
+  if (node.fieldKind !== 'repeater') return;
+  props.addText = `Add ${node.props.label ?? 'item'}`;
+}
+
+function repeaterFieldArray(node: FieldNode): FormlyFieldConfig {
+  return {
+    type: 'input',
+    key: 'value',
+    props: {
+      label: node.props.repeaterItemLabel ?? 'Item',
+      placeholder: node.props.repeaterItemPlaceholder ?? 'Enter value',
+    },
+  };
 }
 
 function ruleConditionExpression(rule: ConditionalRule): string | null {
@@ -170,31 +196,36 @@ function colClass(renderer: BuilderDocument['renderer'], span: number): string {
   return renderer === 'bootstrap' ? `col-${span}` : `fb-col fb-col-${span}`;
 }
 
-function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<string>): FormlyFieldConfig[] {
-  if (visited.has(node.id)) return [];
-  visited.add(node.id);
+function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
+  const expressions: Record<string, string> = {};
+  const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
+  if (visibleExpr) expressions['hide'] = `!(${visibleExpr})`;
 
-  if (isFieldNode(node)) {
-    const expressions: Record<string, string> = {};
-    const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
-    if (visibleExpr) expressions['hide'] = `!(${visibleExpr})`;
+  const enabledExpr = node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null;
+  if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
 
-    const enabledExpr = node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null;
-    if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
+  const mapped: FormlyFieldConfig = {
+    key: node.props.key ?? node.id,
+    type: toFormlyType(node.fieldKind),
+    props: fieldProps(node),
+    hide: !!node.props.hidden,
+    defaultValue: node.props.defaultValue,
+    ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
+  };
 
-    return [
-      {
-        key: node.props.key ?? node.id,
-        type: toFormlyType(node.fieldKind),
-        props: fieldProps(node),
-        hide: !!node.props.hidden,
-        defaultValue: node.props.defaultValue,
-        ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
-      },
-    ];
+  if (node.fieldKind === 'repeater') {
+    mapped.fieldArray = repeaterFieldArray(node);
+    if (!Array.isArray(mapped.defaultValue)) mapped.defaultValue = [];
   }
 
-  const container = node as ContainerNode;
+  return mapped;
+}
+
+function containerNodeToFormly(
+  doc: BuilderDocument,
+  container: ContainerNode,
+  visited: Set<string>,
+): FormlyFieldConfig[] {
   const childrenFields = container.children.flatMap((childId) => {
     const child = doc.nodes[childId];
     return child ? nodeToFormly(doc, child, visited) : [];
@@ -217,12 +248,16 @@ function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<stri
     return [{ fieldGroup: childrenFields, fieldGroupClassName: rowClass(doc.renderer) }];
   }
 
-  if (container.type === 'col') {
-    const span = Math.max(1, Math.min(12, container.props.colSpan ?? 12));
-    return [{ fieldGroup: childrenFields, className: colClass(doc.renderer, span) }];
-  }
+  const span = Math.max(1, Math.min(12, container.props.colSpan ?? 12));
+  return [{ fieldGroup: childrenFields, className: colClass(doc.renderer, span) }];
+}
 
-  return childrenFields;
+function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<string>): FormlyFieldConfig[] {
+  if (visited.has(node.id)) return [];
+  visited.add(node.id);
+
+  if (isFieldNode(node)) return [fieldNodeToFormly(node)];
+  return containerNodeToFormly(doc, node as ContainerNode, visited);
 }
 
 /**

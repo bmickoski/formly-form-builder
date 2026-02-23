@@ -14,7 +14,9 @@ export type FieldKind =
   | 'password'
   | 'tel'
   | 'url'
-  | 'file';
+  | 'file'
+  | 'multiselect'
+  | 'repeater';
 
 export type AsyncUniqueSourceType = 'url' | 'lookup';
 
@@ -77,6 +79,9 @@ export interface FieldProps extends CommonProps {
   defaultValue?: unknown;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
+  multiple?: boolean;
+  repeaterItemLabel?: string;
+  repeaterItemPlaceholder?: string;
   visibleRule?: ConditionalRule;
   enabledRule?: ConditionalRule;
 }

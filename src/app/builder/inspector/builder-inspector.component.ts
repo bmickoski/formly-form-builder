@@ -58,7 +58,7 @@ export class BuilderInspectorComponent {
   });
   readonly isChoiceField = computed(() => {
     const f = this.fieldNode();
-    return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio');
+    return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio' || f.fieldKind === 'multiselect');
   });
 
   private readonly tabByNodeType = signal<{ field: number; layout: number }>({ field: 0, layout: 0 });
