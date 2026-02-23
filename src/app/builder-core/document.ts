@@ -10,7 +10,7 @@ function isObject(v: unknown): v is Record<string, unknown> {
 }
 
 function toRenderer(v: unknown): PreviewRenderer {
-  return v === 'bootstrap' ? 'bootstrap' : 'material';
+  return v === 'material' ? 'material' : 'bootstrap';
 }
 
 function toStringArray(v: unknown): string[] {

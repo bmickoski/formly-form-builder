@@ -39,7 +39,7 @@ function createRoot(): BuilderDocument {
     rootId: ROOT_ID,
     nodes: { [ROOT_ID]: root },
     selectedId: null,
-    renderer: 'material',
+    renderer: 'bootstrap',
   };
 }
 
@@ -61,7 +61,7 @@ export class BuilderStore {
   readonly selectedId = computed(() => this._doc().selectedId);
   readonly canUndo = computed(() => this._past().length > 0);
   readonly canRedo = computed(() => this._future().length > 0);
-  readonly renderer = computed(() => this._doc().renderer ?? 'material');
+  readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
 
   readonly selectedNode = computed(() => {
@@ -80,7 +80,7 @@ export class BuilderStore {
   });
 
   /** Updates the active preview renderer. */
-  setRenderer(renderer: 'material' | 'bootstrap'): void {
+  setRenderer(renderer: 'bootstrap' | 'bootstrap'): void {
     this.apply((doc) => ({ ...doc, renderer }));
   }
 
