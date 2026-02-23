@@ -1,3 +1,7 @@
+.fb-section {
+  overflow-x: hidden;
+}
+
 .fb-inspector-title {
   font-weight: 700;
   margin-bottom: 6px;
@@ -9,6 +13,7 @@
 
 .fb-tab-content {
   padding-top: 10px;
+  overflow-x: hidden;
 }
 
 .fb-inspector-divider {
@@ -79,6 +84,24 @@
 
 .fb-field-no-margin {
   margin: 0;
+}
+
+.fb-help-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.fb-help-icon .mat-icon,
+.fb-help-icon-inline .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.fb-help-icon-inline {
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
 }
 
 .fb-async-test-status {

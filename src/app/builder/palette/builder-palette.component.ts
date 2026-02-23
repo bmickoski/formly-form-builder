@@ -20,10 +20,11 @@ export class BuilderPaletteComponent {
   readonly connectedDropLists = computed(() => {
     const ids: string[] = [];
     const nodes = this.store.nodes();
+    const rootId = this.store.rootId();
     for (const node of Object.values(nodes)) {
       if (node.type === 'panel' || node.type === 'row' || node.type === 'col') {
         ids.push(`drop_${node.id}`);
-        if (node.type !== 'row') ids.push(`drop_append_${node.id}`);
+        if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
       }
     }
     return ids;

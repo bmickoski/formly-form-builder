@@ -9,10 +9,10 @@
     <div class="fb-preview-actions">
       @if (isBootstrap) {
         <button class="btn btn-primary" type="submit">Submit</button>
-        <button class="btn btn-outline-secondary" type="button" (click)="form.reset(); model = {}">Reset</button>
+        <button class="btn btn-outline-secondary" type="button" (click)="reset()">Reset</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Submit</button>
-        <button mat-button type="button" (click)="form.reset(); model = {}">Reset</button>
+        <button mat-button type="button" (click)="reset()">Reset</button>
       }
     </div>
 

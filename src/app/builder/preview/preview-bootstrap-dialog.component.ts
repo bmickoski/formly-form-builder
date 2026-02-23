@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -14,6 +14,7 @@ import { resolveAsyncValidatorsForFields } from '../../builder-core/async-valida
 import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
+import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
 
 @Component({
   selector: 'app-preview-bootstrap-dialog',
@@ -24,6 +25,8 @@ import { FbRepeatTypeComponent } from './fb-repeat.type.component';
       ...withFormlyBootstrap(),
       { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
       { types: [{ name: 'repeat', component: FbRepeatTypeComponent }] },
+      { validators: [{ name: 'email', validation: Validators.email }] },
+      { validationMessages: PREVIEW_VALIDATION_MESSAGES as any },
     ]),
   ],
   templateUrl: './preview-dialog.component.html',
@@ -37,7 +40,7 @@ export class PreviewBootstrapDialogComponent {
 
   readonly form = new FormGroup({});
   model: any = {};
-  readonly options: FormlyFormOptions = {};
+  readonly options: FormlyFormOptions = createPreviewOptions();
   fields = builderToFormly(this.store.doc());
 
   constructor() {
@@ -53,7 +56,19 @@ export class PreviewBootstrapDialogComponent {
   }
 
   submit(): void {
+    const formState = this.options.formState as { submitted?: boolean };
+    formState.submitted = true;
+    this.form.markAllAsTouched();
+    this.form.updateValueAndValidity();
+    if (this.form.invalid) return;
     alert(JSON.stringify(this.model, null, 2));
+  }
+
+  reset(): void {
+    this.form.reset();
+    this.model = {};
+    const formState = this.options.formState as { submitted?: boolean };
+    formState.submitted = false;
   }
 
   async loadDynamicOptions(): Promise<void> {

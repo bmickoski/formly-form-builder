@@ -196,7 +196,15 @@ function colClass(renderer: BuilderDocument['renderer'], span: number): string {
   return renderer === 'bootstrap' ? `col-${span}` : `fb-col fb-col-${span}`;
 }
 
+function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | undefined {
+  const validation: string[] = [];
+  if (node.validators.email) validation.push('email');
+  return validation.length > 0 ? { validation } : undefined;
+}
+
 function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
+  const safeKey =
+    typeof node.props.key === 'string' && node.props.key.trim().length > 0 ? node.props.key.trim() : node.id;
   const expressions: Record<string, string> = {};
   const visibleExpr = node.props.visibleRule ? ruleConditionExpression(node.props.visibleRule) : null;
   if (visibleExpr) expressions['hide'] = `!(${visibleExpr})`;
@@ -205,12 +213,13 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
   if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
 
   const mapped: FormlyFieldConfig = {
-    key: node.props.key ?? node.id,
+    key: safeKey,
     type: toFormlyType(node.fieldKind),
     props: fieldProps(node),
     hide: !!node.props.hidden,
     defaultValue: node.props.defaultValue,
     ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
+    ...(formlyValidators(node) ? { validators: formlyValidators(node) } : {}),
   };
 
   if (node.fieldKind === 'repeater') {
