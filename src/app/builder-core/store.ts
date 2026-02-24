@@ -3,6 +3,14 @@ import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNod
 import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 import { buildDiagnostics } from './diagnostics';
+import { BUILDER_LOOKUP_REGISTRY, DEFAULT_LOOKUP_REGISTRY } from './lookup-registry';
+import {
+  BuilderPlugin,
+  composeLookupRegistry,
+  composePalette,
+  composeValidatorPresetDefinitions,
+  composeValidatorPresets,
+} from './plugins';
 import {
   BUILDER_VALIDATOR_PRESET_DEFINITIONS,
   BUILDER_VALIDATOR_PRESETS,
@@ -58,9 +66,13 @@ function createRoot(): BuilderDocument {
 @Injectable({ providedIn: 'root' })
 export class BuilderStore {
   private readonly defaultPalette = resolveDefaultPalette();
-  private readonly validatorPresets = resolveValidatorPresets();
-  private readonly validatorPresetDefinitions = resolveValidatorPresetDefinitions();
+  private readonly defaultLookupRegistry = resolveLookupRegistry();
+  private readonly defaultValidatorPresets = resolveValidatorPresets();
+  private readonly defaultValidatorPresetDefinitions = resolveValidatorPresetDefinitions();
   private readonly palette: WritableSignal<readonly PaletteItem[]>;
+  private readonly _lookupRegistry = signal(this.defaultLookupRegistry);
+  private readonly _validatorPresets = signal(this.defaultValidatorPresets);
+  private readonly _validatorPresetDefinitions = signal(this.defaultValidatorPresetDefinitions);
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
@@ -80,9 +92,11 @@ export class BuilderStore {
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
   readonly paletteItems = computed(() => this.palette());
+  readonly lookupRegistry = this._lookupRegistry.asReadonly();
+  readonly validatorPresetDefinitions = this._validatorPresetDefinitions.asReadonly();
   readonly diagnostics = computed(() =>
     buildDiagnostics(this._doc(), {
-      knownValidatorPresetIds: new Set(this.validatorPresetDefinitions.map((item) => item.id)),
+      knownValidatorPresetIds: new Set(this._validatorPresetDefinitions().map((item) => item.id)),
     }),
   );
 
@@ -228,6 +242,28 @@ export class BuilderStore {
     this.palette.set([...this.defaultPalette]);
   }
 
+  /** Applies runtime plugin/palette extensions for embeddable component scenarios. */
+  configureRuntimeExtensions(
+    options: { plugins?: readonly BuilderPlugin[]; palette?: readonly PaletteItem[] } = {},
+  ): void {
+    const plugins = options.plugins ?? [];
+    const palette = options.palette ? [...options.palette] : composePalette(PALETTE, plugins);
+    this.palette.set(palette);
+    this._lookupRegistry.set(composeLookupRegistry(DEFAULT_LOOKUP_REGISTRY, plugins));
+    this._validatorPresets.set(composeValidatorPresets(DEFAULT_FIELD_VALIDATION_PRESETS, plugins));
+    this._validatorPresetDefinitions.set(
+      composeValidatorPresetDefinitions(DEFAULT_VALIDATOR_PRESET_DEFINITIONS, plugins),
+    );
+  }
+
+  /** Restores runtime extensions back to DI/default-resolved values. */
+  resetRuntimeExtensions(): void {
+    this.palette.set([...this.defaultPalette]);
+    this._lookupRegistry.set(this.defaultLookupRegistry);
+    this._validatorPresets.set(this.defaultValidatorPresets);
+    this._validatorPresetDefinitions.set(this.defaultValidatorPresetDefinitions);
+  }
+
   /** Moves existing node between containers/reorder targets. */
   moveNode(nodeId: string, to: DropLocation): void {
     this.apply((doc) => moveNodeCommand(doc, nodeId, to));
@@ -332,7 +368,7 @@ export class BuilderStore {
   }
 
   private defaultValidatorsForFieldKind(fieldKind: FieldNode['fieldKind']) {
-    return defaultValidatorsForFieldKind(fieldKind, this.validatorPresets);
+    return defaultValidatorsForFieldKind(fieldKind, this._validatorPresets());
   }
 }
 
@@ -358,5 +394,13 @@ function resolveValidatorPresetDefinitions() {
     return inject(BUILDER_VALIDATOR_PRESET_DEFINITIONS, { optional: true }) ?? DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
   } catch {
     return DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
+  }
+}
+
+function resolveLookupRegistry() {
+  try {
+    return inject(BUILDER_LOOKUP_REGISTRY, { optional: true }) ?? DEFAULT_LOOKUP_REGISTRY;
+  } catch {
+    return DEFAULT_LOOKUP_REGISTRY;
   }
 }

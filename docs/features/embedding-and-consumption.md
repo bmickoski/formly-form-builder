@@ -26,3 +26,16 @@
    - `BUILDER_PALETTE`
 2. Register plugins at app config level.
 3. Mount one or more `BuilderPageComponent` instances as needed.
+
+## Embeddable Inputs/Outputs
+
+- Selector: `formly-builder`
+- Inputs:
+  - `config: BuilderDocument | null` (initial/imported document)
+  - `plugins: BuilderPlugin[]` (runtime palette/lookup/validator extensions)
+  - `palette: PaletteItem[] | null` (explicit palette override)
+  - `autosave: boolean` (enables localStorage persistence)
+  - `autosaveKey: string` (storage key)
+- Outputs:
+  - `configChange` (fires on each document update)
+  - `diagnosticsChange` (fires on each diagnostics update)

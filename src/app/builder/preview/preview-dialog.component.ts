@@ -8,7 +8,7 @@ import { FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { BuilderStore } from '../../builder-core/store';
 import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
-import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+import { BuilderDocument, OptionItem } from '../../builder-core/model';
 
 @Component({
   selector: 'app-preview-dialog',
@@ -22,13 +22,17 @@ export class PreviewDialogComponent {
   readonly store = inject(BuilderStore);
   readonly ref = inject(MatDialogRef<PreviewDialogComponent>);
   readonly cdr = inject(ChangeDetectorRef);
-  readonly data = inject(MAT_DIALOG_DATA);
-  readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
+  readonly data = inject(MAT_DIALOG_DATA) as {
+    renderer?: 'material' | 'bootstrap';
+    lookupRegistry?: Record<string, OptionItem[]>;
+    doc?: BuilderDocument;
+  };
+  readonly lookupRegistry = this.data?.lookupRegistry ?? this.store.lookupRegistry();
 
   readonly form = new FormGroup({});
   model: any = {};
   readonly options: FormlyFormOptions = {};
-  fields = builderToFormly(this.store.doc());
+  fields = builderToFormly(this.data?.doc ?? this.store.doc());
 
   constructor() {
     void this.loadDynamicOptions();

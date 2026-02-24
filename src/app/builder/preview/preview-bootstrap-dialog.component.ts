@@ -12,7 +12,7 @@ import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { resolveCustomValidatorsForFields } from '../../builder-core/custom-validators';
-import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+import { BuilderDocument, OptionItem } from '../../builder-core/model';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
@@ -37,13 +37,17 @@ export class PreviewBootstrapDialogComponent {
   readonly store = inject(BuilderStore);
   readonly ref = inject(MatDialogRef<PreviewBootstrapDialogComponent>);
   readonly cdr = inject(ChangeDetectorRef);
-  readonly data = inject(MAT_DIALOG_DATA) as { renderer?: 'material' | 'bootstrap' };
-  readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
+  readonly data = inject(MAT_DIALOG_DATA) as {
+    renderer?: 'material' | 'bootstrap';
+    lookupRegistry?: Record<string, OptionItem[]>;
+    doc?: BuilderDocument;
+  };
+  readonly lookupRegistry = this.data?.lookupRegistry ?? this.store.lookupRegistry();
 
   readonly form = new FormGroup({});
   model: any = {};
   readonly options: FormlyFormOptions = createPreviewOptions();
-  fields = builderToFormly(this.store.doc());
+  fields = builderToFormly(this.data?.doc ?? this.store.doc());
 
   constructor() {
     void this.loadDynamicOptions();

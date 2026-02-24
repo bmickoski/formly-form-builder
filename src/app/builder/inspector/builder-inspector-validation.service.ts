@@ -1,12 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
-import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { AsyncUniqueSourceType, AsyncUniqueValidator, FieldNode } from '../../builder-core/model';
 import { BuilderStore } from '../../builder-core/store';
 import {
   applyValidatorPreset,
-  BUILDER_VALIDATOR_PRESET_DEFINITIONS,
   defaultParamsForValidatorPreset,
   ValidatorPresetDefinition,
   validatorPresetDefinitionsForFieldKind,
@@ -15,9 +13,6 @@ import { AsyncTestState } from './builder-inspector.constants';
 
 @Injectable({ providedIn: 'root' })
 export class BuilderInspectorValidationService {
-  private readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
-  private readonly presetDefinitions = inject(BUILDER_VALIDATOR_PRESET_DEFINITIONS);
-
   asyncUnique(field: FieldNode | null): AsyncUniqueValidator | null {
     return field?.validators.asyncUnique ?? null;
   }
@@ -54,10 +49,11 @@ export class BuilderInspectorValidationService {
   async runAsyncUniqueTest(
     config: AsyncUniqueValidator,
     sample: string,
+    lookupRegistry: Record<string, { label: string; value: string }[]>,
   ): Promise<{ state: AsyncTestState; message: string }> {
     const value = sample.trim();
     if (!value) return { state: 'error', message: 'Enter a sample value to test.' };
-    const result = await checkAsyncUniqueValue(config, value, { lookupRegistry: this.lookupRegistry });
+    const result = await checkAsyncUniqueValue(config, value, { lookupRegistry });
     if (result.reason === 'duplicate') return { state: 'error', message: 'Duplicate found in source.' };
     if (result.reason === 'source-error') {
       return { state: 'error', message: 'Could not validate source. Check URL/lookup settings.' };
@@ -103,9 +99,12 @@ export class BuilderInspectorValidationService {
     );
   }
 
-  validatorPresetDefinitionsForField(field: FieldNode | null): ValidatorPresetDefinition[] {
+  validatorPresetDefinitionsForField(
+    field: FieldNode | null,
+    definitions: readonly ValidatorPresetDefinition[],
+  ): ValidatorPresetDefinition[] {
     if (!field) return [];
-    return validatorPresetDefinitionsForFieldKind(field.fieldKind, this.presetDefinitions);
+    return validatorPresetDefinitionsForFieldKind(field.fieldKind, definitions);
   }
 
   selectedValidatorPresetId(field: FieldNode | null): string {
@@ -124,7 +123,9 @@ export class BuilderInspectorValidationService {
       return;
     }
 
-    const definition = this.validatorPresetDefinitionsForField(field).find((item) => item.id === trimmed);
+    const definition = this.validatorPresetDefinitionsForField(field, store.validatorPresetDefinitions()).find(
+      (item) => item.id === trimmed,
+    );
     if (!definition) return;
 
     const params = defaultParamsForValidatorPreset(definition);
@@ -146,7 +147,9 @@ export class BuilderInspectorValidationService {
     const presetId = field.validators.presetId?.trim();
     if (!presetId) return;
 
-    const definition = this.validatorPresetDefinitionsForField(field).find((item) => item.id === presetId);
+    const definition = this.validatorPresetDefinitionsForField(field, store.validatorPresetDefinitions()).find(
+      (item) => item.id === presetId,
+    );
     if (!definition) return;
 
     const nextParams = { ...(field.validators.presetParams ?? {}) };
