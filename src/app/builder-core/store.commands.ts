@@ -1,8 +1,10 @@
 import {
   BuilderDocument,
   BuilderNode,
+  BuilderValidators,
   ContainerNode,
   DropLocation,
+  FieldKind,
   FieldNode,
   isContainerNode,
   isFieldNode,
@@ -72,6 +74,7 @@ export function addFromPaletteCommand(
   paletteId: string,
   loc: DropLocation,
   palette: readonly PaletteItem[] = PALETTE,
+  validatorsForFieldKind?: (fieldKind: FieldKind) => BuilderValidators,
 ): BuilderDocument {
   const item = palette.find((candidate) => candidate.id === paletteId);
   if (!item) return doc;
@@ -81,7 +84,7 @@ export function addFromPaletteCommand(
   if (!target || !isContainerNode(target)) return doc;
   if (target.type === 'row' && item.nodeType !== 'col') return doc;
 
-  const created = createNodeFromPalette(item, loc.containerId, palette);
+  const created = createNodeFromPalette(item, loc.containerId, palette, validatorsForFieldKind);
   const children = [...target.children];
   const index = clampIndex(loc.index, children.length);
   children.splice(index, 0, created.id);
@@ -215,19 +218,24 @@ function createNodeFromPalette(
   item: PaletteItem,
   parentId: string,
   palette: readonly PaletteItem[],
+  validatorsForFieldKind?: (fieldKind: FieldKind) => BuilderValidators,
 ): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
   const id = uid(item.nodeType === 'field' ? 'f' : 'c');
   const extraNodes: BuilderNode[] = [];
 
   if (item.nodeType === 'field') {
+    const fieldKind = item.fieldKind as FieldNode['fieldKind'];
     const node: FieldNode = {
       id,
       type: 'field',
       parentId,
       children: [],
-      fieldKind: item.fieldKind as FieldNode['fieldKind'],
+      fieldKind,
       props: { ...(item.defaults.props as any), key: toFieldKey(id) },
-      validators: { ...(item.defaults.validators ?? {}) },
+      validators: {
+        ...(validatorsForFieldKind ? validatorsForFieldKind(fieldKind) : {}),
+        ...(item.defaults.validators ?? {}),
+      },
     };
     return { id, node, extraNodes };
   }
@@ -244,7 +252,7 @@ function createNodeFromPalette(
   for (const childType of template) {
     const childItem = palette.find((paletteItem) => paletteItem.id === childType);
     if (!childItem) continue;
-    const createdChild = createNodeFromPalette(childItem, id, palette);
+    const createdChild = createNodeFromPalette(childItem, id, palette, validatorsForFieldKind);
     node.children.push(createdChild.id);
     extraNodes.push(createdChild.node, ...createdChild.extraNodes);
   }
