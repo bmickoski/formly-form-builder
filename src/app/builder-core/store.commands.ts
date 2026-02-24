@@ -49,9 +49,9 @@ export function updateNodePropsCommand(
 
   const nodes = { ...doc.nodes };
   if (isFieldNode(node)) {
-    nodes[id] = { ...node, props: { ...node.props, ...(patch as any) } };
+    nodes[id] = { ...node, props: { ...node.props, ...(patch as Partial<FieldNode['props']>) } };
   } else {
-    nodes[id] = { ...node, props: { ...(node as ContainerNode).props, ...(patch as any) } };
+    nodes[id] = { ...node, props: { ...node.props, ...(patch as Partial<ContainerNode['props']>) } };
   }
   return { ...doc, nodes };
 }
@@ -65,7 +65,7 @@ export function updateNodeValidatorsCommand(
   if (!node || !isFieldNode(node)) return doc;
 
   const nodes = { ...doc.nodes };
-  nodes[id] = { ...node, validators: { ...node.validators, ...(patch as any) } };
+  nodes[id] = { ...node, validators: { ...node.validators, ...(patch as Partial<BuilderValidators>) } };
   return { ...doc, nodes };
 }
 

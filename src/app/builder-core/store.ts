@@ -293,11 +293,13 @@ export class BuilderStore {
   ): ContainerNode {
     const id = uid('c');
     const node: ContainerNode = { id, type, parentId, children: [], props: { ...props } };
-    doc.nodes[id] = node;
+
+    const nodes: BuilderDocument['nodes'] = { ...doc.nodes, [id]: node };
     const parent = doc.nodes[parentId];
     if (parent && isContainerNode(parent)) {
-      doc.nodes[parentId] = { ...parent, children: [...parent.children, id] };
+      nodes[parentId] = { ...parent, children: [...parent.children, id] };
     }
+    doc.nodes = nodes;
     return node;
   }
 
@@ -319,11 +321,13 @@ export class BuilderStore {
       props: { ...props, key },
       validators: { ...validators },
     };
-    doc.nodes[id] = node;
+
+    const nodes: BuilderDocument['nodes'] = { ...doc.nodes, [id]: node };
     const parent = doc.nodes[parentId];
     if (parent && isContainerNode(parent)) {
-      doc.nodes[parentId] = { ...parent, children: [...parent.children, id] };
+      nodes[parentId] = { ...parent, children: [...parent.children, id] };
     }
+    doc.nodes = nodes;
     return node;
   }
 
