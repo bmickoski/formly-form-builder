@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 ## Domain model (source of truth)
 
@@ -22,6 +22,14 @@ Why flat map + ids:
 - efficient immutable updates
 - easy subtree operations (move/delete)
 
+Palette model:
+
+- `PaletteItem[]` with category/title/node defaults
+- Default categories: `Common Fields`, `Advanced Fields`, `Layout`
+- Extensible via DI token `BUILDER_PALETTE`
+- Runtime overrides supported by store commands (`setPalette`, `resetPalette`)
+- Imported runtime palette configs are validated in `src/app/builder-core/palette-config.ts`
+
 ## Store
 
 Main store: `src/app/builder-core/store.ts`
@@ -34,6 +42,7 @@ Key command categories:
 - Deletion: `removeNode`, `removeSelected`
 - Layout commands: `addColumnToRow`, `rebalanceRowColumns`, `splitColumn`
 - Persistence: `exportDocument`, `importDocument`
+- Palette selectors: `paletteItems`, `paletteByCategory`, `paletteDropListIds`
 
 Constraint rules are enforced in store-level commands:
 
@@ -66,6 +75,13 @@ Notes:
   - Bootstrap: `row`, `col-*`
   - Material preview/internal: `fb-row`, `fb-col fb-col-*`
 - Import supports both `props` and legacy `templateOptions`.
+- Conditional logic precedence:
+  - advanced visible/enabled expressions win over simple `dependsOn` rules when provided
+  - simple rules are used only when advanced expressions are empty
+- Custom validation expression contract:
+  - expression runs with access to `form`, `model`, `data`, `row`, `field`, `control`, and `value`
+  - expression must assign `valid` to `true`, `false`, or a string message
+  - fallback message is used when expression returns `false`
 
 ## UI layers
 

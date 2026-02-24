@@ -4,7 +4,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { BuilderStore } from '../../../builder-core/store';
 import { BuilderNode, BuilderNodeType, isContainerNode, isFieldNode } from '../../../builder-core/model';
-import { PALETTE } from '../../../builder-core/registry';
 
 type DragData = { kind: 'palette'; paletteId: string } | { kind: 'node'; nodeId: string };
 
@@ -34,7 +33,7 @@ export class NodeRendererComponent {
   readonly selected = computed(() => this.store.selectedId() === this.nodeId);
   readonly isRoot = computed(() => this.nodeId === this.store.rootId());
   readonly connectedDropLists = computed(() => {
-    const ids = ['palette_basic_fields', 'palette_layout'] as string[];
+    const ids = [...this.store.paletteDropListIds()] as string[];
     const nodes = this.store.nodes();
     const rootId = this.store.rootId();
     for (const node of Object.values(nodes)) {
@@ -174,7 +173,7 @@ export class NodeRendererComponent {
 
   private getDraggedNodeType(data: DragData): BuilderNodeType | null {
     if (data.kind === 'palette') {
-      return PALETTE.find((p) => p.id === data.paletteId)?.nodeType ?? null;
+      return this.store.getPaletteItem(data.paletteId)?.nodeType ?? null;
     }
     return this.store.nodes()[data.nodeId]?.type ?? null;
   }

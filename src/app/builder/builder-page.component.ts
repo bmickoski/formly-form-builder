@@ -15,8 +15,65 @@ import { PreviewBootstrapDialogComponent } from './preview/preview-bootstrap-dia
 import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
+import { parsePaletteConfig } from '../builder-core/palette-config';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
 import type { BuilderPresetId } from '../builder-core/store';
+import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
+
+const SAMPLE_PALETTE_JSON = JSON.stringify(
+  [
+    {
+      id: 'input',
+      category: 'Common Fields',
+      title: 'Input',
+      nodeType: 'field',
+      fieldKind: 'input',
+      defaults: { props: { label: 'Input', placeholder: 'Enter value' } },
+    },
+    {
+      id: 'textarea',
+      category: 'Common Fields',
+      title: 'Textarea',
+      nodeType: 'field',
+      fieldKind: 'textarea',
+      defaults: { props: { label: 'Textarea', placeholder: 'Enter details' } },
+    },
+    {
+      id: 'rating',
+      category: 'Advanced Fields',
+      title: 'Rating (1-5)',
+      nodeType: 'field',
+      fieldKind: 'number',
+      defaults: {
+        props: { label: 'Rating', placeholder: '1 to 5' },
+        validators: { min: 1, max: 5 },
+      },
+    },
+    {
+      id: 'row',
+      category: 'Layout',
+      title: 'Row',
+      nodeType: 'row',
+      defaults: { props: {}, childrenTemplate: ['col', 'col'] },
+    },
+    {
+      id: 'col',
+      category: 'Layout',
+      title: 'Column',
+      nodeType: 'col',
+      defaults: { props: { colSpan: 6 } },
+    },
+    {
+      id: 'panel',
+      category: 'Layout',
+      title: 'Panel',
+      nodeType: 'panel',
+      defaults: { props: { title: 'Panel' }, childrenTemplate: ['row'] },
+    },
+  ],
+  null,
+  2,
+);
 
 @Component({
   selector: 'app-builder-page',
@@ -40,6 +97,7 @@ export class BuilderPageComponent {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
   presetToApply: BuilderPresetId = 'simple';
+  diagnosticsOpen = false;
 
   get selectedPreset() {
     const fallback = this.store.presets[0]!;
@@ -56,6 +114,7 @@ export class BuilderPageComponent {
   }
 
   openExport(): void {
+    if (!this.canExport()) return;
     const formlyJson = JSON.stringify(builderToFormly(this.store.doc()), null, 2);
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
@@ -65,6 +124,7 @@ export class BuilderPageComponent {
   }
 
   openExportBuilder(): void {
+    if (!this.canExport()) return;
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
@@ -108,6 +168,43 @@ export class BuilderPageComponent {
       });
   }
 
+  openImportPalette(): void {
+    this.dialog
+      .open(JsonDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data: { mode: 'importPalette', json: SAMPLE_PALETTE_JSON },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (!res?.json) return;
+        const parsed = parsePaletteConfig(res.json);
+        if (!parsed.ok) {
+          alert(`Invalid palette configuration:\n\n- ${parsed.errors.join('\n- ')}`);
+          return;
+        }
+        this.store.setPalette(parsed.palette);
+      });
+  }
+
+  resetPalette(): void {
+    this.store.resetPalette();
+  }
+
+  toggleDiagnostics(): void {
+    this.diagnosticsOpen = !this.diagnosticsOpen;
+  }
+
+  diagnosticsSummary(): string {
+    const report = this.store.diagnostics();
+    if (report.errorCount === 0 && report.warningCount === 0) return 'No issues';
+    return `${report.errorCount} errors, ${report.warningCount} warnings`;
+  }
+
+  firstDiagnostics(max = 12) {
+    return this.store.diagnostics().diagnostics.slice(0, max);
+  }
+
   clear(): void {
     if (confirm('Clear the builder?')) this.store.clear();
   }
@@ -115,6 +212,22 @@ export class BuilderPageComponent {
   applyPreset(): void {
     if (!confirm(`Apply "${this.presetToApply}" preset? Current canvas will be replaced.`)) return;
     this.store.applyPreset(this.presetToApply);
+  }
+
+  private canExport(): boolean {
+    const report = this.store.diagnostics();
+    if (report.errorCount === 0) return true;
+    alert(this.exportBlockedMessage(report));
+    this.diagnosticsOpen = true;
+    return false;
+  }
+
+  private exportBlockedMessage(report: BuilderDiagnosticsReport): string {
+    const lines = report.diagnostics
+      .filter((item) => item.severity === 'error')
+      .slice(0, 8)
+      .map((item) => `- ${item.message}${item.nodeId ? ` (node: ${item.nodeId})` : ''}`);
+    return `Export blocked: ${report.errorCount} diagnostics error(s).\n\n${lines.join('\n')}`;
   }
 
   @HostListener('document:keydown', ['$event'])

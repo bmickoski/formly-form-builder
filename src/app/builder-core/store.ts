@@ -1,7 +1,8 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
-import { PALETTE, PaletteItem } from './registry';
+import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
+import { buildDiagnostics } from './diagnostics';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
@@ -49,11 +50,17 @@ function createRoot(): BuilderDocument {
  */
 @Injectable({ providedIn: 'root' })
 export class BuilderStore {
+  private readonly defaultPalette = resolveDefaultPalette();
+  private readonly palette: WritableSignal<readonly PaletteItem[]>;
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
   private readonly maxHistory = 100;
   private historyGroup: HistoryGroupState | null = null;
+
+  constructor() {
+    this.palette = signal<readonly PaletteItem[]>(this.defaultPalette);
+  }
 
   readonly doc = this._doc.asReadonly();
   readonly nodes = computed(() => this._doc().nodes);
@@ -63,6 +70,8 @@ export class BuilderStore {
   readonly canRedo = computed(() => this._future().length > 0);
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
+  readonly paletteItems = computed(() => this.palette());
+  readonly diagnostics = computed(() => buildDiagnostics(this._doc()));
 
   readonly selectedNode = computed(() => {
     const id = this._doc().selectedId;
@@ -71,13 +80,16 @@ export class BuilderStore {
 
   readonly paletteByCategory = computed(() => {
     const map = new Map<string, PaletteItem[]>();
-    for (const item of PALETTE) {
+    for (const item of this.paletteItems()) {
       const arr = map.get(item.category) ?? [];
       arr.push(item);
       map.set(item.category, arr);
     }
     return map;
   });
+  readonly paletteDropListIds = computed(() =>
+    Array.from(this.paletteByCategory().keys()).map((category) => paletteListIdForCategory(category)),
+  );
 
   /** Updates the active preview renderer. */
   setRenderer(renderer: 'material' | 'bootstrap'): void {
@@ -184,7 +196,19 @@ export class BuilderStore {
 
   /** Adds a new palette item instance at drop location. */
   addFromPalette(paletteId: string, loc: DropLocation): void {
-    this.apply((doc) => addFromPaletteCommand(doc, paletteId, loc));
+    this.apply((doc) => addFromPaletteCommand(doc, paletteId, loc, this.paletteItems()));
+  }
+
+  getPaletteItem(paletteId: string): PaletteItem | null {
+    return this.paletteItems().find((candidate) => candidate.id === paletteId) ?? null;
+  }
+
+  setPalette(items: readonly PaletteItem[]): void {
+    this.palette.set([...items]);
+  }
+
+  resetPalette(): void {
+    this.palette.set([...this.defaultPalette]);
   }
 
   /** Moves existing node between containers/reorder targets. */
@@ -284,5 +308,14 @@ export class BuilderStore {
       doc.nodes[parentId] = { ...parent, children: [...parent.children, id] };
     }
     return node;
+  }
+}
+
+function resolveDefaultPalette(): readonly PaletteItem[] {
+  try {
+    return inject(BUILDER_PALETTE, { optional: true }) ?? PALETTE;
+  } catch {
+    // Allows direct `new BuilderStore()` in unit tests where no DI context exists.
+    return PALETTE;
   }
 }

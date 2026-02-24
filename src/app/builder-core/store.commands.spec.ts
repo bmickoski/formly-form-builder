@@ -9,6 +9,7 @@ import {
 } from './store.commands';
 import { BuilderDocument, ContainerNode } from './model';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
+import { PaletteItem } from './registry';
 
 function createDoc(): BuilderDocument {
   const root: ContainerNode = { id: 'root', type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
@@ -118,5 +119,37 @@ describe('store.commands', () => {
     expect(nestedRow?.type).toBe('row');
     if (!nestedRow || nestedRow.type !== 'row') return;
     expect(nestedRow.children.length).toBe(2);
+  });
+
+  it('supports custom palette collections for creation templates', () => {
+    const doc = createDoc();
+    const customPalette: PaletteItem[] = [
+      {
+        id: 'custom-row',
+        category: 'Layout',
+        title: 'Custom Row',
+        nodeType: 'row',
+        defaults: { props: {}, childrenTemplate: ['custom-col', 'custom-col'] },
+      },
+      {
+        id: 'custom-col',
+        category: 'Layout',
+        title: 'Custom Column',
+        nodeType: 'col',
+        defaults: { props: { colSpan: 6 }, childrenTemplate: [] },
+      },
+    ];
+
+    const out = addFromPaletteCommand(doc, 'custom-row', { containerId: 'root', index: 0 }, customPalette);
+    const root = out.nodes['root'];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const row = out.nodes[root.children[0]];
+    expect(row?.type).toBe('row');
+    if (!row || row.type !== 'row') return;
+    expect(row.children.length).toBe(2);
+    expect(out.nodes[row.children[0]]?.type).toBe('col');
+    expect(out.nodes[row.children[1]]?.type).toBe('col');
   });
 });

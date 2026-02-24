@@ -3,7 +3,7 @@ import { applyStarterLayout } from './helpers';
 
 test('loads app shell and canvas @smoke', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Search fields')).toBeVisible();
+  await expect(page.getByText('Search palette')).toBeVisible();
   await expect(page.getByText('Drop fields here')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Preview' })).toBeVisible();
 });

@@ -1,6 +1,6 @@
 import { BuilderDocument, ContainerNode, FieldNode } from './model';
 
-export type BuilderPresetId = 'simple' | 'complex' | 'advanced';
+export type BuilderPresetId = 'simple' | 'complex' | 'advanced' | 'advancedLogic';
 
 export interface BuilderPresetMeta {
   id: BuilderPresetId;
@@ -31,6 +31,13 @@ export const BUILDER_PRESETS: ReadonlyArray<BuilderPresetMeta> = [
     description: 'Nested layout with grouped sections.',
     highlights: ['Nested rows', 'Metadata column', 'Panel grouping'],
     thumbnailRows: [100, 72, 100],
+  },
+  {
+    id: 'advancedLogic',
+    title: 'Advanced Logic Form',
+    description: 'Starter with conditional expressions and custom validation examples.',
+    highlights: ['Conditional visibility', 'Conditional enablement', 'Custom validation'],
+    thumbnailRows: [100, 88, 100],
   },
 ];
 
@@ -68,6 +75,9 @@ export function applyPresetToDocument(
       break;
     case 'advanced':
       buildAdvancedPreset(doc, factory);
+      break;
+    case 'advancedLogic':
+      buildAdvancedLogicPreset(doc, factory);
       break;
   }
 }
@@ -180,5 +190,72 @@ function buildAdvancedPreset(doc: BuilderDocument, factory: PresetNodeFactory): 
   factory.addFieldNode(doc, 'textarea', bottomPanel.id, {
     label: 'Internal notes',
     placeholder: 'Visible to administrators',
+  });
+}
+
+function buildAdvancedLogicPreset(doc: BuilderDocument, factory: PresetNodeFactory): void {
+  const panel = factory.addContainerNode(doc, 'panel', doc.rootId, { title: 'Access Request' });
+  factory.addFieldNode(
+    doc,
+    'input',
+    panel.id,
+    { key: 'requesterName', label: 'Requester name', placeholder: 'Jane Doe' },
+    { required: true },
+  );
+  factory.addFieldNode(doc, 'checkbox', panel.id, {
+    key: 'isContractor',
+    label: 'Requester is contractor',
+    defaultValue: false,
+  });
+  factory.addFieldNode(doc, 'number', panel.id, {
+    key: 'contractLengthMonths',
+    label: 'Contract length (months)',
+    visibleExpression: 'model?.isContractor === true',
+    enabledExpression: 'model?.requesterName?.trim()?.length > 0',
+  });
+  factory.addFieldNode(doc, 'input', panel.id, {
+    key: 'managerEmail',
+    label: 'Manager email',
+    placeholder: 'manager@company.com',
+    visibleRule: { dependsOnKey: 'isContractor', operator: 'truthy' },
+  });
+  factory.addFieldNode(
+    doc,
+    'input',
+    panel.id,
+    {
+      key: 'costCenter',
+      label: 'Cost center',
+      placeholder: 'CC-1234',
+    },
+    {
+      customExpression: "valid = /^CC-\\d{4}$/.test(String(value ?? '')) ? true : 'Use format CC-1234';",
+      customExpressionMessage: 'Cost center format is invalid.',
+    },
+  );
+  factory.addFieldNode(
+    doc,
+    'textarea',
+    panel.id,
+    {
+      key: 'justification',
+      label: 'Justification',
+      placeholder: 'Explain why this access is required',
+    },
+    {
+      required: true,
+      customExpression: "valid = String(value ?? '').trim().length >= 20 ? true : 'Provide at least 20 characters.';",
+      customExpressionMessage: 'Justification is too short.',
+    },
+  );
+  factory.addFieldNode(doc, 'select', panel.id, {
+    key: 'accessLevel',
+    label: 'Access level',
+    options: [
+      { label: 'Read', value: 'read' },
+      { label: 'Write', value: 'write' },
+      { label: 'Admin', value: 'admin' },
+    ],
+    enabledExpression: 'model?.requesterName?.trim()?.length > 0 && !!model?.costCenter',
   });
 }
