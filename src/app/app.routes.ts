@@ -1,4 +1,8 @@
 import { Routes } from '@angular/router';
-import { BuilderPageComponent } from './builder/builder-page.component';
 
-export const appRoutes: Routes = [{ path: '', component: BuilderPageComponent }];
+export const appRoutes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./builder/builder-page.component').then((m) => m.BuilderPageComponent),
+  },
+];

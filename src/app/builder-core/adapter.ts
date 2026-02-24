@@ -272,6 +272,7 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
     normalizedAdvancedExpression(node.props.enabledExpression) ??
     (node.props.enabledRule ? ruleConditionExpression(node.props.enabledRule) : null);
   if (enabledExpr) expressions['props.disabled'] = `!(${enabledExpr})`;
+  const validators = formlyValidators(node);
 
   const mapped: FormlyFieldConfig = {
     key: safeKey,
@@ -280,7 +281,7 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
     hide: !!node.props.hidden,
     defaultValue: node.props.defaultValue,
     ...(Object.keys(expressions).length > 0 ? { expressions } : {}),
-    ...(formlyValidators(node) ? { validators: formlyValidators(node) } : {}),
+    ...(validators ? { validators } : {}),
   };
 
   if (node.fieldKind === 'repeater') {

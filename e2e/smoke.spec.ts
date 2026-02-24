@@ -23,9 +23,9 @@ test('opens preview and renders starter layout fields @smoke', async ({ page }) 
   await page.goto('/');
   await applyStarterLayout(page);
   await page.getByRole('button', { name: 'Preview' }).click();
-  const previewDialog = page.locator('mat-dialog-container');
+  const previewDialog = page.locator('mat-dialog-container').last();
   await expect(previewDialog.getByRole('heading', { name: 'Preview' })).toBeVisible();
-  await expect(previewDialog.locator('formly-form')).toBeVisible();
-  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(previewDialog.getByRole('button', { name: 'Submit' })).toBeVisible();
+  await previewDialog.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('heading', { name: 'Preview' })).toHaveCount(0);
 });

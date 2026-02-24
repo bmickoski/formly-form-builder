@@ -35,7 +35,7 @@
 
     <mat-form-field appearance="outline" class="fb-starter-layout-field">
       <mat-label>Starter layout</mat-label>
-      <mat-select [(value)]="presetToApply">
+      <mat-select [value]="presetToApply()" (selectionChange)="presetToApply.set($event.value)">
         @for (preset of store.presets; track preset.id) {
           <mat-option [value]="preset.id">{{ preset.title }}</mat-option>
         }
@@ -90,7 +90,7 @@
     </button>
   </div>
 
-  @if (diagnosticsOpen) {
+  @if (diagnosticsOpen()) {
     <div class="fb-diagnostics">
       <div class="fb-diagnostics-title">Diagnostics</div>
       @if (store.diagnostics().diagnostics.length === 0) {

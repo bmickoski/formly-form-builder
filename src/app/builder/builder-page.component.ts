@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { firstValueFrom } from 'rxjs';
 
 import { BuilderStore } from '../builder-core/store';
 import { BuilderPaletteComponent } from './palette/builder-palette.component';
@@ -18,62 +20,8 @@ import { builderToFormly } from '../builder-core/adapter';
 import { parsePaletteConfig } from '../builder-core/palette-config';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
 import type { BuilderPresetId } from '../builder-core/store';
-import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
-
-const SAMPLE_PALETTE_JSON = JSON.stringify(
-  [
-    {
-      id: 'input',
-      category: 'Common Fields',
-      title: 'Input',
-      nodeType: 'field',
-      fieldKind: 'input',
-      defaults: { props: { label: 'Input', placeholder: 'Enter value' } },
-    },
-    {
-      id: 'textarea',
-      category: 'Common Fields',
-      title: 'Textarea',
-      nodeType: 'field',
-      fieldKind: 'textarea',
-      defaults: { props: { label: 'Textarea', placeholder: 'Enter details' } },
-    },
-    {
-      id: 'rating',
-      category: 'Advanced Fields',
-      title: 'Rating (1-5)',
-      nodeType: 'field',
-      fieldKind: 'number',
-      defaults: {
-        props: { label: 'Rating', placeholder: '1 to 5' },
-        validators: { min: 1, max: 5 },
-      },
-    },
-    {
-      id: 'row',
-      category: 'Layout',
-      title: 'Row',
-      nodeType: 'row',
-      defaults: { props: {}, childrenTemplate: ['col', 'col'] },
-    },
-    {
-      id: 'col',
-      category: 'Layout',
-      title: 'Column',
-      nodeType: 'col',
-      defaults: { props: { colSpan: 6 } },
-    },
-    {
-      id: 'panel',
-      category: 'Layout',
-      title: 'Panel',
-      nodeType: 'panel',
-      defaults: { props: { title: 'Panel' }, childrenTemplate: ['row'] },
-    },
-  ],
-  null,
-  2,
-);
+import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
+import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
 
 @Component({
   selector: 'app-builder-page',
@@ -82,6 +30,7 @@ const SAMPLE_PALETTE_JSON = JSON.stringify(
     MatButtonModule,
     MatIconModule,
     MatDialogModule,
+    MatSnackBarModule,
     MatFormFieldModule,
     MatSelectModule,
     DragDropModule,
@@ -89,6 +38,7 @@ const SAMPLE_PALETTE_JSON = JSON.stringify(
     BuilderCanvasComponent,
     BuilderInspectorComponent,
   ],
+  providers: [BuilderStore],
   templateUrl: './builder-page.component.html',
   styleUrl: './builder-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,12 +46,13 @@ const SAMPLE_PALETTE_JSON = JSON.stringify(
 export class BuilderPageComponent {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
-  presetToApply: BuilderPresetId = 'simple';
-  diagnosticsOpen = false;
+  private readonly snackBar = inject(MatSnackBar);
+  readonly presetToApply = signal<BuilderPresetId>('simple');
+  readonly diagnosticsOpen = signal(false);
 
   get selectedPreset() {
     const fallback = this.store.presets[0]!;
-    return this.store.presets.find((preset) => preset.id === this.presetToApply) ?? fallback;
+    return this.store.presets.find((preset) => preset.id === this.presetToApply()) ?? fallback;
   }
 
   openPreview(): void {
@@ -143,7 +94,7 @@ export class BuilderPageComponent {
       .subscribe((res) => {
         if (!res?.json) return;
         const out = this.store.importDocument(res.json);
-        if (!out.ok) alert(out.error);
+        if (!out.ok) this.notifyError(out.error);
       });
   }
 
@@ -161,9 +112,9 @@ export class BuilderPageComponent {
           const fields = JSON.parse(res.json) as FormlyFieldConfig[];
           const doc = formlyToBuilder(fields, this.store.renderer());
           const result = this.store.importDocument(JSON.stringify(doc));
-          if (!result.ok) alert(result.error);
+          if (!result.ok) this.notifyError(result.error);
         } catch (e) {
-          alert((e as Error).message);
+          this.notifyError((e as Error).message);
         }
       });
   }
@@ -180,7 +131,7 @@ export class BuilderPageComponent {
         if (!res?.json) return;
         const parsed = parsePaletteConfig(res.json);
         if (!parsed.ok) {
-          alert(`Invalid palette configuration:\n\n- ${parsed.errors.join('\n- ')}`);
+          this.notifyError(`Invalid palette configuration: ${parsed.errors[0] ?? 'unknown error'}`);
           return;
         }
         this.store.setPalette(parsed.palette);
@@ -192,7 +143,7 @@ export class BuilderPageComponent {
   }
 
   toggleDiagnostics(): void {
-    this.diagnosticsOpen = !this.diagnosticsOpen;
+    this.diagnosticsOpen.update((value) => !value);
   }
 
   diagnosticsSummary(): string {
@@ -205,29 +156,50 @@ export class BuilderPageComponent {
     return this.store.diagnostics().diagnostics.slice(0, max);
   }
 
-  clear(): void {
-    if (confirm('Clear the builder?')) this.store.clear();
+  async clear(): Promise<void> {
+    if (await this.confirmAction('Clear the builder?', 'Clear builder', 'Clear')) {
+      this.store.clear();
+    }
   }
 
-  applyPreset(): void {
-    if (!confirm(`Apply "${this.presetToApply}" preset? Current canvas will be replaced.`)) return;
-    this.store.applyPreset(this.presetToApply);
+  async applyPreset(): Promise<void> {
+    const presetId = this.presetToApply();
+    const confirmed = await this.confirmAction(
+      `Apply "${presetId}" preset? Current canvas will be replaced.`,
+      'Apply starter layout',
+      'Apply',
+    );
+    if (!confirmed) return;
+    this.store.applyPreset(presetId);
   }
 
   private canExport(): boolean {
     const report = this.store.diagnostics();
     if (report.errorCount === 0) return true;
-    alert(this.exportBlockedMessage(report));
-    this.diagnosticsOpen = true;
+    this.notifyError(`Export blocked: ${report.errorCount} diagnostics error(s). Open Diagnostics for details.`);
+    this.diagnosticsOpen.set(true);
     return false;
   }
 
-  private exportBlockedMessage(report: BuilderDiagnosticsReport): string {
-    const lines = report.diagnostics
-      .filter((item) => item.severity === 'error')
-      .slice(0, 8)
-      .map((item) => `- ${item.message}${item.nodeId ? ` (node: ${item.nodeId})` : ''}`);
-    return `Export blocked: ${report.errorCount} diagnostics error(s).\n\n${lines.join('\n')}`;
+  private notifyError(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 7000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
+  }
+
+  private async confirmAction(message: string, title: string, confirmText: string): Promise<boolean> {
+    const out = await firstValueFrom(
+      this.dialog
+        .open(ConfirmDialogComponent, {
+          width: '420px',
+          maxWidth: '95vw',
+          data: { title, message, confirmText, cancelText: 'Cancel' },
+        })
+        .afterClosed(),
+    );
+    return !!out;
   }
 
   @HostListener('document:keydown', ['$event'])

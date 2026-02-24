@@ -16,6 +16,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
 - Preview: real Formly render (Material or Bootstrap).
 - Default preview renderer: Bootstrap.
+- Root route uses lazy `loadComponent` for the builder page.
 
 ## Core guarantees
 
@@ -219,6 +220,7 @@ export const appConfig: ApplicationConfig = {
 ## Documentation
 
 - docs/FEATURES.md: product-focused features, usage patterns, and examples.
+- docs/features/embedding-and-consumption.md: embedding, multi-instance scope, and reusable API surface.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
 - CONTRIBUTING.md: coding/testing workflow and rules.
 - TROUBLESHOOTING.md: common runtime and DnD issues.
@@ -241,3 +243,13 @@ export const appConfig: ApplicationConfig = {
   - Expression must assign `valid` to `true`, `false`, or an error-message string.
   - Example: `valid = value === 'Joe' ? true : 'Name must be Joe';`
 - Async uniqueness can be combined with custom validation.
+
+## Reusable API Surface
+
+- `src/public-api.ts` exports a stable integration surface for host apps and future packaging.
+- `src/app/builder-core/index.ts` is the core barrel behind that surface.
+- Example imports for host integration:
+
+```ts
+import { BUILDER_PALETTE, BUILDER_PLUGINS, type BuilderPlugin } from './src/public-api';
+```
