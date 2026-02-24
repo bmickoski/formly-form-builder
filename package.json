@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,html,scss,css,md,json,yml,yaml}\"",
-    "docs": "compodoc -p tsconfig.app.json -d docs/compodoc --disableGraph",
+    "docs": "node -e \"require('fs').rmSync('docs/compodoc',{recursive:true,force:true})\" && compodoc -p tsconfig.app.json -d docs/compodoc --disableGraph --disableOverview --disableRoutesGraph --disableCoverage",
     "docs:serve": "compodoc -s -d docs/compodoc",
     "prepare": "husky",
     "build:pages": "ng build --configuration production --base-href /formly-form-builder/",
