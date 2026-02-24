@@ -1,4 +1,7 @@
+import { inject, InjectionToken } from '@angular/core';
+
 import { BuilderValidators, FieldKind } from './model';
+import { BUILDER_PLUGINS, composeValidatorPresets } from './plugins';
 
 /**
  * Default validation presets for field kinds.
@@ -9,13 +12,25 @@ export const FIELD_VALIDATION_PATTERNS = {
   url: '^https?:\\/\\/.+',
 } as const;
 
-const FIELD_VALIDATION_PRESETS: Partial<Record<FieldKind, BuilderValidators>> = {
+export const DEFAULT_FIELD_VALIDATION_PRESETS: Partial<Record<FieldKind, BuilderValidators>> = {
   email: { email: true },
   password: { minLength: 8 },
   tel: { pattern: FIELD_VALIDATION_PATTERNS.tel },
   url: { pattern: FIELD_VALIDATION_PATTERNS.url },
 };
 
-export function defaultValidatorsForFieldKind(fieldKind: FieldKind): BuilderValidators {
-  return { ...(FIELD_VALIDATION_PRESETS[fieldKind] ?? {}) };
+export const BUILDER_VALIDATOR_PRESETS = new InjectionToken<Partial<Record<FieldKind, BuilderValidators>>>(
+  'BUILDER_VALIDATOR_PRESETS',
+  {
+    providedIn: 'root',
+    factory: () =>
+      composeValidatorPresets(DEFAULT_FIELD_VALIDATION_PRESETS, inject(BUILDER_PLUGINS, { optional: true }) ?? []),
+  },
+);
+
+export function defaultValidatorsForFieldKind(
+  fieldKind: FieldKind,
+  presets: Partial<Record<FieldKind, BuilderValidators>> = DEFAULT_FIELD_VALIDATION_PRESETS,
+): BuilderValidators {
+  return { ...(presets[fieldKind] ?? {}) };
 }

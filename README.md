@@ -5,6 +5,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 ## Live Demo
 
 - Demo URL: https://bmickoski.github.io/formly-form-builder/
+- Documentation URL: https://bmickoski.github.io/formly-form-builder/docs/
 - Deployed automatically by `.github/workflows/pages.yml` on push to `master`.
 
 ## What this app does
@@ -68,6 +69,46 @@ npm run docs
   - `Advanced Fields`
   - `Layout`
 - You can provide your own palette via Angular DI token `BUILDER_PALETTE`.
+- Plugin API foundation is available via `BUILDER_PLUGINS`:
+  - `paletteItems` extensions/overrides
+  - `lookupRegistry` extensions/overrides
+  - `validatorPresets` extensions (for custom field defaults)
+- Plugin example (`src/app/app.config.ts`):
+
+```ts
+import { BUILDER_PLUGINS, type BuilderPlugin } from './builder-core/plugins';
+
+const CRM_PLUGIN: BuilderPlugin = {
+  id: 'crm',
+  paletteItems: [
+    {
+      id: 'crm-customer-id',
+      category: 'Common Fields',
+      title: 'Customer ID',
+      nodeType: 'field',
+      fieldKind: 'input',
+      defaults: {
+        props: { label: 'Customer ID', placeholder: 'CUST-0001' },
+      },
+    },
+  ],
+  lookupRegistry: {
+    customerTiers: [
+      { label: 'Bronze', value: 'bronze' },
+      { label: 'Gold', value: 'gold' },
+    ],
+  },
+  validatorPresets: {
+    input: { minLength: 2 },
+  },
+};
+
+export const appConfig: ApplicationConfig = {
+  providers: [{ provide: BUILDER_PLUGINS, useValue: [CRM_PLUGIN] }],
+};
+```
+
+- `validatorPresets` are applied when adding fields from palette.
 - Runtime demo actions in top bar:
   - `Load Palette JSON`
   - `Reset Palette`

@@ -27,6 +27,10 @@ Palette model:
 - `PaletteItem[]` with category/title/node defaults
 - Default categories: `Common Fields`, `Advanced Fields`, `Layout`
 - Extensible via DI token `BUILDER_PALETTE`
+- Plugin extensions via `BUILDER_PLUGINS` (`src/app/builder-core/plugins.ts`)
+  - `paletteItems` for palette extension/override
+  - `lookupRegistry` for dynamic-options/async-unique sources
+  - `validatorPresets` for field-kind default validators on palette add
 - Runtime overrides supported by store commands (`setPalette`, `resetPalette`)
 - Imported runtime palette configs are validated in `src/app/builder-core/palette-config.ts`
 

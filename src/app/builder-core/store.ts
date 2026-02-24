@@ -3,6 +3,11 @@ import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNod
 import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 import { buildDiagnostics } from './diagnostics';
+import {
+  BUILDER_VALIDATOR_PRESETS,
+  defaultValidatorsForFieldKind,
+  DEFAULT_FIELD_VALIDATION_PRESETS,
+} from './validation-presets';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
@@ -51,6 +56,7 @@ function createRoot(): BuilderDocument {
 @Injectable({ providedIn: 'root' })
 export class BuilderStore {
   private readonly defaultPalette = resolveDefaultPalette();
+  private readonly validatorPresets = resolveValidatorPresets();
   private readonly palette: WritableSignal<readonly PaletteItem[]>;
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
@@ -196,7 +202,9 @@ export class BuilderStore {
 
   /** Adds a new palette item instance at drop location. */
   addFromPalette(paletteId: string, loc: DropLocation): void {
-    this.apply((doc) => addFromPaletteCommand(doc, paletteId, loc, this.paletteItems()));
+    this.apply((doc) =>
+      addFromPaletteCommand(doc, paletteId, loc, this.paletteItems(), this.defaultValidatorsForFieldKind.bind(this)),
+    );
   }
 
   getPaletteItem(paletteId: string): PaletteItem | null {
@@ -309,6 +317,10 @@ export class BuilderStore {
     }
     return node;
   }
+
+  private defaultValidatorsForFieldKind(fieldKind: FieldNode['fieldKind']) {
+    return defaultValidatorsForFieldKind(fieldKind, this.validatorPresets);
+  }
 }
 
 function resolveDefaultPalette(): readonly PaletteItem[] {
@@ -317,5 +329,13 @@ function resolveDefaultPalette(): readonly PaletteItem[] {
   } catch {
     // Allows direct `new BuilderStore()` in unit tests where no DI context exists.
     return PALETTE;
+  }
+}
+
+function resolveValidatorPresets() {
+  try {
+    return inject(BUILDER_VALIDATOR_PRESETS, { optional: true }) ?? DEFAULT_FIELD_VALIDATION_PRESETS;
+  } catch {
+    return DEFAULT_FIELD_VALIDATION_PRESETS;
   }
 }
