@@ -33,4 +33,30 @@ export class JsonDialogComponent {
   copy(): void {
     navigator.clipboard.writeText(this.json()).catch(() => {});
   }
+
+  download(): void {
+    const blob = new Blob([this.json()], { type: 'application/json;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = this.fileName();
+    a.click();
+    URL.revokeObjectURL(href);
+  }
+
+  private fileName(): string {
+    switch (this.data.mode) {
+      case 'exportFormly':
+        return 'formly-export.json';
+      case 'exportBuilder':
+        return `builder-export.v${this.data.schemaVersion ?? 'x'}.json`;
+      case 'importFormly':
+        return 'formly-import.json';
+      case 'importPalette':
+        return 'palette-import.json';
+      case 'import':
+      default:
+        return 'builder-import.json';
+    }
+  }
 }

@@ -34,6 +34,7 @@
   @if (data.mode === 'exportFormly' || data.mode === 'exportBuilder') {
     <button mat-button (click)="copy()">Copy</button>
   }
+  <button mat-button (click)="download()">Download</button>
   <button mat-button (click)="close()">Close</button>
   <button mat-raised-button color="primary" (click)="done()">
     {{ data.mode === 'import' || data.mode === 'importFormly' || data.mode === 'importPalette' ? 'Import' : 'Done' }}
