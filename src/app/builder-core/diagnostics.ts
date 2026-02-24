@@ -15,11 +15,18 @@ export interface BuilderDiagnosticsReport {
   warningCount: number;
 }
 
+export interface BuildDiagnosticsOptions {
+  knownValidatorPresetIds?: ReadonlySet<string>;
+}
+
 const FORBIDDEN_EXPRESSION_TOKENS =
   /\b(window|document|globalThis|Function|eval|constructor|prototype|__proto__|process|require|import|fetch|XMLHttpRequest)\b/;
 const RULE_VALUE_OPERATORS = new Set<RuleOperator>(['eq', 'ne', 'contains', 'gt', 'lt']);
 
-export function buildDiagnostics(doc: BuilderDocument): BuilderDiagnosticsReport {
+export function buildDiagnostics(
+  doc: BuilderDocument,
+  options: BuildDiagnosticsOptions = {},
+): BuilderDiagnosticsReport {
   const diagnostics: BuilderDiagnostic[] = [];
   const fields = Object.values(doc.nodes).filter((node): node is FieldNode => isFieldNode(node));
   const fieldsByKey = indexFieldsByKey(fields);
@@ -27,12 +34,33 @@ export function buildDiagnostics(doc: BuilderDocument): BuilderDiagnosticsReport
   diagnostics.push(...duplicateKeyDiagnostics(fieldsByKey));
   diagnostics.push(...ruleDiagnostics(fields, fieldsByKey));
   diagnostics.push(...expressionDiagnostics(fields));
+  diagnostics.push(...validatorPresetDiagnostics(fields, options.knownValidatorPresetIds));
 
   return {
     diagnostics,
     errorCount: diagnostics.filter((item) => item.severity === 'error').length,
     warningCount: diagnostics.filter((item) => item.severity === 'warning').length,
   };
+}
+
+function validatorPresetDiagnostics(
+  fields: FieldNode[],
+  knownValidatorPresetIds: ReadonlySet<string> | undefined,
+): BuilderDiagnostic[] {
+  if (!knownValidatorPresetIds) return [];
+  const diagnostics: BuilderDiagnostic[] = [];
+  for (const field of fields) {
+    const presetId = (field.validators.presetId ?? '').trim();
+    if (!presetId) continue;
+    if (knownValidatorPresetIds.has(presetId)) continue;
+    diagnostics.push({
+      severity: 'warning',
+      code: 'validator-preset-missing',
+      nodeId: field.id,
+      message: `Validator preset "${presetId}" is not registered in current runtime.`,
+    });
+  }
+  return diagnostics;
 }
 
 function indexFieldsByKey(fields: FieldNode[]): Map<string, FieldNode[]> {

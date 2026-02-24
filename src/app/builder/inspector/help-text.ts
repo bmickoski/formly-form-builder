@@ -20,6 +20,7 @@ export type HelpKey =
   | 'required'
   | 'email'
   | 'pattern'
+  | 'validatorPreset'
   | 'customValidation'
   | 'customValidationMessage'
   | 'asyncUnique';
@@ -41,6 +42,7 @@ export const HELP_TEXT: Record<HelpKey, string> = {
   required: 'Forces user input before submit.',
   email: 'Validates the value as a valid email format.',
   pattern: 'Regular expression pattern the value must match.',
+  validatorPreset: 'Named preset that applies and tracks reusable validation rules with optional parameters.',
   customValidation:
     "Custom expression must assign `valid` to true, false, or an error message string. Example: valid = value > 0 ? true : 'Value must be greater than 0';",
   customValidationMessage: 'Fallback message shown when expression returns false.',

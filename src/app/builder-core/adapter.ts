@@ -34,6 +34,10 @@ interface FormlyFieldProps {
   visibleExpression?: string;
   enabledExpression?: string;
   customValidation?: CustomValidationConfig;
+  validatorPreset?: {
+    id?: string;
+    params?: Record<string, string | number | boolean>;
+  };
   asyncUnique?: AsyncUniqueValidator;
   type?: string;
   min?: number;
@@ -79,6 +83,7 @@ function fieldProps(node: FieldNode): FormlyFieldProps {
   applyValidatorProps(node, props);
   applyAsyncValidatorProps(node, props);
   applyCustomValidatorProps(node, props);
+  applyValidatorPresetProps(node, props);
   applyRepeaterProps(node, props);
   return props;
 }
@@ -165,6 +170,15 @@ function applyCustomValidatorProps(node: FieldNode, props: FormlyFieldProps): vo
   props.customValidation = {
     expression,
     ...(node.validators.customExpressionMessage ? { message: node.validators.customExpressionMessage } : {}),
+  };
+}
+
+function applyValidatorPresetProps(node: FieldNode, props: FormlyFieldProps): void {
+  const presetId = node.validators.presetId?.trim();
+  if (!presetId) return;
+  props.validatorPreset = {
+    id: presetId,
+    ...(node.validators.presetParams ? { params: { ...node.validators.presetParams } } : {}),
   };
 }
 

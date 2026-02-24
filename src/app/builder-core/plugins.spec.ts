@@ -1,5 +1,10 @@
 import { PaletteItem } from './registry';
-import { composeLookupRegistry, composePalette, composeValidatorPresets } from './plugins';
+import {
+  composeLookupRegistry,
+  composePalette,
+  composeValidatorPresetDefinitions,
+  composeValidatorPresets,
+} from './plugins';
 
 describe('builder plugin composition', () => {
   it('composes palette items by appending and overriding by id', () => {
@@ -62,5 +67,38 @@ describe('builder plugin composition', () => {
     ]);
     expect(validators.input?.required).toBeFalse();
     expect(validators.input?.minLength).toBe(3);
+  });
+
+  it('composes named validator preset definitions with override-by-id', () => {
+    const out = composeValidatorPresetDefinitions(
+      [
+        {
+          id: 'length-range',
+          label: 'Length range',
+          resolve: () => ({ minLength: 1, maxLength: 255 }),
+        },
+      ],
+      [
+        {
+          id: 'plugin-a',
+          validatorPresetDefinitions: [
+            {
+              id: 'length-range',
+              label: 'Plugin length range',
+              resolve: () => ({ minLength: 2, maxLength: 64 }),
+            },
+            {
+              id: 'numeric-range',
+              label: 'Numeric range',
+              resolve: () => ({ min: 0, max: 10 }),
+            },
+          ],
+        },
+      ],
+    );
+
+    expect(out.length).toBe(2);
+    expect(out.find((item) => item.id === 'length-range')?.label).toBe('Plugin length range');
+    expect(out.find((item) => item.id === 'numeric-range')).toBeDefined();
   });
 });

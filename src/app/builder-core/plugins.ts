@@ -2,6 +2,7 @@ import { InjectionToken } from '@angular/core';
 
 import type { BuilderValidators, FieldKind, OptionItem } from './model';
 import type { PaletteItem } from './registry';
+import type { ValidatorPresetDefinition } from './validation-presets';
 
 /**
  * Product extension contract for builder capabilities.
@@ -12,6 +13,7 @@ export interface BuilderPlugin {
   paletteItems?: readonly PaletteItem[];
   lookupRegistry?: Record<string, OptionItem[]>;
   validatorPresets?: Partial<Record<FieldKind, BuilderValidators>>;
+  validatorPresetDefinitions?: readonly ValidatorPresetDefinition[];
 }
 
 /** Multi-plugin injection token used to compose runtime extensions. */
@@ -65,5 +67,28 @@ export function composeValidatorPresets(
       out[fieldKind as FieldKind] = { ...(out[fieldKind as FieldKind] ?? {}), ...(preset ?? {}) };
     }
   }
+  return out;
+}
+
+/** Composes named validator preset definitions (override by id, stable order). */
+export function composeValidatorPresetDefinitions(
+  base: readonly ValidatorPresetDefinition[],
+  plugins: readonly BuilderPlugin[],
+): ValidatorPresetDefinition[] {
+  const out = [...base];
+  const indexById = new Map<string, number>(out.map((item, index) => [item.id, index]));
+
+  for (const plugin of plugins) {
+    for (const definition of plugin.validatorPresetDefinitions ?? []) {
+      const existingIndex = indexById.get(definition.id);
+      if (existingIndex == null) {
+        indexById.set(definition.id, out.length);
+        out.push({ ...definition });
+      } else {
+        out[existingIndex] = { ...definition };
+      }
+    }
+  }
+
   return out;
 }

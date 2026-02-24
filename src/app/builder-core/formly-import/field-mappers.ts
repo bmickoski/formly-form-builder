@@ -162,6 +162,22 @@ function toCustomValidation(value: unknown): { expression?: string; message?: st
   };
 }
 
+function toValidatorPreset(value: unknown): { id?: string; params?: Record<string, string | number | boolean> } {
+  if (!isRecord(value)) return {};
+  const id = toStringOrUndefined(value['id']);
+  if (!id?.trim()) return {};
+  const paramsRaw = value['params'];
+  const params: Record<string, string | number | boolean> = {};
+  if (isRecord(paramsRaw)) {
+    for (const [key, paramValue] of Object.entries(paramsRaw)) {
+      if (typeof paramValue === 'string' || typeof paramValue === 'number' || typeof paramValue === 'boolean') {
+        params[key] = paramValue;
+      }
+    }
+  }
+  return { id: id.trim(), ...(Object.keys(params).length > 0 ? { params } : {}) };
+}
+
 function toRepeaterTemplate(field: FormlyFieldConfig): { itemLabel?: string; itemPlaceholder?: string } {
   const fieldArray = isRecord(field.fieldArray) ? (field.fieldArray as FormlyFieldConfig) : null;
   if (!fieldArray) return {};
@@ -201,6 +217,10 @@ function applyValidatorsFromProps(validators: FieldNode['validators'], props: Re
   const customValidation = toCustomValidation(props['customValidation']);
   if (customValidation.expression) validators.customExpression = customValidation.expression;
   if (customValidation.message) validators.customExpressionMessage = customValidation.message;
+
+  const preset = toValidatorPreset(props['validatorPreset']);
+  if (preset.id) validators.presetId = preset.id;
+  if (preset.params) validators.presetParams = preset.params;
 }
 
 function applyValidatorsFromFieldConfig(validators: FieldNode['validators'], field: FormlyFieldConfig): void {
