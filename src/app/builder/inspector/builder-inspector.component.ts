@@ -206,7 +206,11 @@ export class BuilderInspectorComponent {
     if (!config) return;
     this.asyncUniqueTestState.set('loading');
     this.asyncUniqueTestMessage.set('Checking...');
-    const out = await this.validationService.runAsyncUniqueTest(config, this.asyncUniqueSampleValue());
+    const out = await this.validationService.runAsyncUniqueTest(
+      config,
+      this.asyncUniqueSampleValue(),
+      this.store.lookupRegistry(),
+    );
     this.asyncUniqueTestState.set(out.state);
     this.asyncUniqueTestMessage.set(out.message);
   }
@@ -272,7 +276,10 @@ export class BuilderInspectorComponent {
   }
 
   validatorPresetDefinitions(): ValidatorPresetDefinition[] {
-    return this.validationService.validatorPresetDefinitionsForField(this.fieldNode());
+    return this.validationService.validatorPresetDefinitionsForField(
+      this.fieldNode(),
+      this.store.validatorPresetDefinitions(),
+    );
   }
 
   validatorPresetId(): string {

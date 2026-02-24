@@ -5,3 +5,4 @@
  */
 export * from './app/builder-core';
 export * from './app/builder/builder-page.component';
+export { BuilderPageComponent as FormlyBuilderComponent } from './app/builder/builder-page.component';

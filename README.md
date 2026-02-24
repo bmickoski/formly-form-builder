@@ -248,8 +248,22 @@ export const appConfig: ApplicationConfig = {
 
 - `src/public-api.ts` exports a stable integration surface for host apps and future packaging.
 - `src/app/builder-core/index.ts` is the core barrel behind that surface.
+- Embeddable component selector: `formly-builder`.
 - Example imports for host integration:
 
 ```ts
-import { BUILDER_PALETTE, BUILDER_PLUGINS, type BuilderPlugin } from './src/public-api';
+import { FormlyBuilderComponent, type BuilderDocument, type BuilderPlugin } from './src/public-api';
+```
+
+- Embedding example:
+
+```html
+<formly-builder
+  [config]="builderConfig"
+  [plugins]="plugins"
+  [autosave]="true"
+  autosaveKey="my-product:builder:draft"
+  (configChange)="builderConfig = $event"
+  (diagnosticsChange)="onDiagnostics($event)"
+/>
 ```

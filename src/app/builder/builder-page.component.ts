@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -22,9 +35,13 @@ import type { FormlyFieldConfig } from '@ngx-formly/core';
 import type { BuilderPresetId } from '../builder-core/store';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
+import type { BuilderDocument } from '../builder-core/model';
+import type { BuilderPlugin } from '../builder-core/plugins';
+import type { PaletteItem } from '../builder-core/registry';
+import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
 
 @Component({
-  selector: 'app-builder-page',
+  selector: 'app-builder-page, formly-builder',
   standalone: true,
   imports: [
     MatButtonModule,
@@ -43,12 +60,57 @@ import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
   styleUrl: './builder-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BuilderPageComponent {
+export class BuilderPageComponent implements OnInit, OnChanges {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   readonly presetToApply = signal<BuilderPresetId>('simple');
   readonly diagnosticsOpen = signal(false);
+  private readonly ready = signal(false);
+  private hasRestoredAutosave = false;
+  private isApplyingInputConfig = false;
+
+  @Input() config: BuilderDocument | null = null;
+  @Input() plugins: readonly BuilderPlugin[] = [];
+  @Input() palette: readonly PaletteItem[] | null = null;
+  @Input() autosave = false;
+  @Input() autosaveKey = 'formly-builder:draft';
+  @Output() readonly configChange = new EventEmitter<BuilderDocument>();
+  @Output() readonly diagnosticsChange = new EventEmitter<BuilderDiagnosticsReport>();
+
+  constructor() {
+    effect(() => {
+      const isReady = this.ready();
+      const doc = this.store.doc();
+      const diagnostics = this.store.diagnostics();
+      if (!isReady) return;
+      if (!this.isApplyingInputConfig) this.configChange.emit(doc);
+      this.diagnosticsChange.emit(diagnostics);
+      if (this.autosave) this.saveToAutosave();
+    });
+  }
+
+  ngOnInit(): void {
+    this.applyRuntimeExtensions();
+    if (this.config) {
+      this.applyExternalConfig(this.config);
+    } else if (this.autosave) {
+      this.restoreFromAutosave();
+    }
+    this.ready.set(true);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['plugins'] || changes['palette']) this.applyRuntimeExtensions();
+
+    if (changes['config'] && !changes['config'].firstChange && this.config) {
+      this.applyExternalConfig(this.config);
+    }
+
+    if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) {
+      this.restoreFromAutosave();
+    }
+  }
 
   get selectedPreset() {
     const fallback = this.store.presets[0]!;
@@ -60,7 +122,7 @@ export class BuilderPageComponent {
     this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { renderer },
+      data: { renderer, lookupRegistry: this.store.lookupRegistry(), doc: this.store.doc() },
     });
   }
 
@@ -225,5 +287,48 @@ export class BuilderPageComponent {
     }
     if (e.key === 'Escape') this.store.select(null);
     if (e.key === 'Delete' || e.key === 'Backspace') this.store.removeSelected();
+  }
+
+  private applyRuntimeExtensions(): void {
+    if (this.plugins.length > 0 || this.palette?.length) {
+      this.store.configureRuntimeExtensions({ plugins: this.plugins, palette: this.palette ?? undefined });
+      return;
+    }
+    this.store.resetRuntimeExtensions();
+  }
+
+  private applyExternalConfig(config: BuilderDocument): void {
+    this.isApplyingInputConfig = true;
+    try {
+      const result = this.store.importDocument(JSON.stringify(config));
+      if (!result.ok) this.notifyError(result.error);
+    } finally {
+      this.isApplyingInputConfig = false;
+    }
+  }
+
+  private saveToAutosave(): void {
+    if (!this.autosave || !this.autosaveKey) return;
+    try {
+      localStorage.setItem(this.autosaveKey, this.store.exportDocument());
+    } catch {
+      // Ignore storage errors (quota/privacy mode).
+    }
+  }
+
+  private restoreFromAutosave(): void {
+    if (!this.autosave || !this.autosaveKey || this.hasRestoredAutosave) return;
+    this.hasRestoredAutosave = true;
+    try {
+      const saved = localStorage.getItem(this.autosaveKey);
+      if (!saved) return;
+      const out = this.store.importDocument(saved);
+      if (!out.ok) {
+        localStorage.removeItem(this.autosaveKey);
+        this.notifyError('Stored draft was invalid and has been cleared.');
+      }
+    } catch {
+      // Ignore restore errors.
+    }
   }
 }
