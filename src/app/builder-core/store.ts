@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal, WritableSignal } from '@angular/c
 import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
 import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
+import { buildDiagnostics } from './diagnostics';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
@@ -70,6 +71,7 @@ export class BuilderStore {
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
   readonly paletteItems = computed(() => this.palette());
+  readonly diagnostics = computed(() => buildDiagnostics(this._doc()));
 
   readonly selectedNode = computed(() => {
     const id = this._doc().selectedId;

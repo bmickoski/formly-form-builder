@@ -26,3 +26,30 @@
   font-size: 10px;
   color: #8c8ca2;
 }
+
+.fb-diagnostics {
+  margin: 8px 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #dadce8;
+  border-radius: 10px;
+  background: #f8f9fc;
+}
+
+.fb-diagnostics-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.fb-diagnostics-item {
+  font-size: 12px;
+  color: #4a4a5f;
+  margin-bottom: 4px;
+}
+
+.fb-diagnostics-item-error {
+  color: #b3261e;
+}
+
+.fb-diagnostics-node {
+  color: #7b7b92;
+}
