@@ -38,10 +38,12 @@ jobs:
       - name: Build documentation
         run: npm run docs
 
-      - name: Publish docs under /docs
+      - name: Publish docs site under /docs and Compodoc under /docs/api
         run: |
           mkdir -p dist/formly-form-builder/browser/docs
-          cp -r docs/compodoc/* dist/formly-form-builder/browser/docs/
+          mkdir -p dist/formly-form-builder/browser/docs/api
+          cp docs/site/index.html dist/formly-form-builder/browser/docs/index.html
+          cp -r docs/compodoc/* dist/formly-form-builder/browser/docs/api/
 
       - name: SPA fallback
         run: cp dist/formly-form-builder/browser/index.html dist/formly-form-builder/browser/404.html

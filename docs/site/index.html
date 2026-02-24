@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Formly Form Builder Documentation</title>
+    <style>
+      body {
+        margin: 0;
+        font-family:
+          Segoe UI,
+          Arial,
+          sans-serif;
+        background: #f6f7fb;
+        color: #1f2333;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 34px;
+      }
+      p {
+        margin: 0 0 14px;
+        line-height: 1.45;
+      }
+      .grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        margin-top: 22px;
+      }
+      .card {
+        border: 1px solid #d9dce8;
+        border-radius: 12px;
+        background: #fff;
+        padding: 16px;
+      }
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .card a {
+        color: #1856d2;
+        text-decoration: none;
+      }
+      .card a:hover {
+        text-decoration: underline;
+      }
+      .muted {
+        color: #59607a;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Formly Form Builder Docs</h1>
+      <p class="muted">
+        Product guides and architecture notes live in markdown docs. API reference is generated with Compodoc.
+      </p>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Product Feature Guide</h2>
+          <p>Overview of palette, plugins, logic, validation, import/export, and migration behaviors.</p>
+          <a href="https://github.com/bmickoski/formly-form-builder/blob/master/docs/FEATURES.md">Open FEATURES.md</a>
+        </article>
+
+        <article class="card">
+          <h2>Architecture</h2>
+          <p>Domain model, store commands, adapters, diagnostics, and migration design details.</p>
+          <a href="https://github.com/bmickoski/formly-form-builder/blob/master/ARCHITECTURE.md"
+            >Open ARCHITECTURE.md</a
+          >
+        </article>
+
+        <article class="card">
+          <h2>API Reference</h2>
+          <p>Generated source-level API docs for services, models, and components.</p>
+          <a href="./api/index.html">Open Compodoc API</a>
+        </article>
+
+        <article class="card">
+          <h2>Live Builder App</h2>
+          <p>Open the deployed visual builder application.</p>
+          <a href="https://bmickoski.github.io/formly-form-builder/">Open App</a>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
