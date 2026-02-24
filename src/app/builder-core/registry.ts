@@ -22,6 +22,7 @@ export interface PaletteItem {
   };
 }
 
+/** Built-in palette used when no custom plugin or DI override is provided. */
 export const PALETTE: PaletteItem[] = [
   {
     id: 'input',
@@ -209,11 +210,13 @@ export const PALETTE: PaletteItem[] = [
   },
 ];
 
+/** Runtime palette token. Default value composes built-in palette with `BUILDER_PLUGINS` palette items. */
 export const BUILDER_PALETTE = new InjectionToken<readonly PaletteItem[]>('BUILDER_PALETTE', {
   providedIn: 'root',
   factory: () => composePalette(PALETTE, inject(BUILDER_PLUGINS, { optional: true }) ?? []),
 });
 
+/** Normalizes a palette category into deterministic CDK drop-list id. */
 export function paletteListIdForCategory(category: string): string {
   return `palette_${category.replace(/\s+/g, '_').toLowerCase()}`;
 }

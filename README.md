@@ -203,6 +203,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Documentation
 
+- docs/FEATURES.md: product-focused features, usage patterns, and examples.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
 - CONTRIBUTING.md: coding/testing workflow and rules.
 - TROUBLESHOOTING.md: common runtime and DnD issues.
