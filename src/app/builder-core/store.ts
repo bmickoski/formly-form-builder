@@ -211,10 +211,12 @@ export class BuilderStore {
     return this.paletteItems().find((candidate) => candidate.id === paletteId) ?? null;
   }
 
+  /** Replaces runtime palette with a validated custom collection. */
   setPalette(items: readonly PaletteItem[]): void {
     this.palette.set([...items]);
   }
 
+  /** Restores runtime palette back to DI/default composed palette. */
   resetPalette(): void {
     this.palette.set([...this.defaultPalette]);
   }

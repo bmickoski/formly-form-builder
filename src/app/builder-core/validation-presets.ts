@@ -12,6 +12,7 @@ export const FIELD_VALIDATION_PATTERNS = {
   url: '^https?:\\/\\/.+',
 } as const;
 
+/** Baseline validator presets for built-in field kinds. */
 export const DEFAULT_FIELD_VALIDATION_PRESETS: Partial<Record<FieldKind, BuilderValidators>> = {
   email: { email: true },
   password: { minLength: 8 },
@@ -19,6 +20,7 @@ export const DEFAULT_FIELD_VALIDATION_PRESETS: Partial<Record<FieldKind, Builder
   url: { pattern: FIELD_VALIDATION_PATTERNS.url },
 };
 
+/** Runtime validator preset token composed from built-ins and plugin contributions. */
 export const BUILDER_VALIDATOR_PRESETS = new InjectionToken<Partial<Record<FieldKind, BuilderValidators>>>(
   'BUILDER_VALIDATOR_PRESETS',
   {
@@ -28,6 +30,7 @@ export const BUILDER_VALIDATOR_PRESETS = new InjectionToken<Partial<Record<Field
   },
 );
 
+/** Returns default validators for a given field kind using provided (or default) preset map. */
 export function defaultValidatorsForFieldKind(
   fieldKind: FieldKind,
   presets: Partial<Record<FieldKind, BuilderValidators>> = DEFAULT_FIELD_VALIDATION_PRESETS,

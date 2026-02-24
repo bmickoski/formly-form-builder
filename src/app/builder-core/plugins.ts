@@ -3,6 +3,10 @@ import { InjectionToken } from '@angular/core';
 import type { BuilderValidators, FieldKind, OptionItem } from './model';
 import type { PaletteItem } from './registry';
 
+/**
+ * Product extension contract for builder capabilities.
+ * Plugins can contribute palette entries, lookup datasets, and validator presets.
+ */
 export interface BuilderPlugin {
   id: string;
   paletteItems?: readonly PaletteItem[];
@@ -10,11 +14,13 @@ export interface BuilderPlugin {
   validatorPresets?: Partial<Record<FieldKind, BuilderValidators>>;
 }
 
+/** Multi-plugin injection token used to compose runtime extensions. */
 export const BUILDER_PLUGINS = new InjectionToken<readonly BuilderPlugin[]>('BUILDER_PLUGINS', {
   providedIn: 'root',
   factory: () => [],
 });
 
+/** Composes base palette with plugin palette contributions (override by `id`, otherwise append). */
 export function composePalette(base: readonly PaletteItem[], plugins: readonly BuilderPlugin[]): PaletteItem[] {
   const ordered = [...base];
   const indexById = new Map<string, number>(ordered.map((item, index) => [item.id, index]));
@@ -32,6 +38,7 @@ export function composePalette(base: readonly PaletteItem[], plugins: readonly B
   return ordered;
 }
 
+/** Composes base lookup registry with plugin lookup contributions (override by key). */
 export function composeLookupRegistry(
   base: Record<string, OptionItem[]>,
   plugins: readonly BuilderPlugin[],
@@ -47,6 +54,7 @@ export function composeLookupRegistry(
   return out;
 }
 
+/** Composes validator presets by field kind (shallow merge by field kind key). */
 export function composeValidatorPresets(
   base: Partial<Record<FieldKind, BuilderValidators>>,
   plugins: readonly BuilderPlugin[],
