@@ -43,7 +43,7 @@ describe('document parsing and migration', () => {
     if (col.type === 'col') expect(col.props.colSpan).toBe(12);
   });
 
-  it('migrates legacy document without schemaVersion', () => {
+  it('migrates legacy document without schemaVersion through explicit migration pipeline', () => {
     const out = parseBuilderDocumentObject({
       rootId: 'root',
       renderer: 'material',
@@ -56,6 +56,7 @@ describe('document parsing and migration', () => {
     expect(out.ok).toBeTrue();
     if (!out.ok) return;
     expect(out.doc.schemaVersion).toBe(CURRENT_BUILDER_SCHEMA_VERSION);
-    expect(out.warnings.some((w) => w.includes('Migrated builder document schema'))).toBeTrue();
+    expect(out.warnings.some((w) => w.includes('v0 to v1'))).toBeTrue();
+    expect(out.warnings.some((w) => w.includes('v1 to v2'))).toBeTrue();
   });
 });
