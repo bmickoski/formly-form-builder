@@ -40,6 +40,8 @@ App runs at `http://localhost:4201`.
 ```bash
 npm start
 npm run build
+npm run build:lib
+npm run pack:lib
 npm run build:pages
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run e2e
@@ -249,6 +251,7 @@ export const appConfig: ApplicationConfig = {
 - `src/public-api.ts` exports a stable integration surface for host apps and future packaging.
 - `src/app/builder-core/index.ts` is the core barrel behind that surface.
 - Embeddable component selector: `formly-builder`.
+- Library package build output: `dist/formly-builder` (via `npm run build:lib`).
 - Example imports for host integration:
 
 ```ts
