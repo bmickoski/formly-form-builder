@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
-import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { AsyncUniqueSourceType, AsyncUniqueValidator, FieldNode } from '../../builder-core/model';
 import { BuilderStore } from '../../builder-core/store';
 import { AsyncTestState } from './builder-inspector.constants';
 
 @Injectable({ providedIn: 'root' })
 export class BuilderInspectorValidationService {
+  private readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
+
   asyncUnique(field: FieldNode | null): AsyncUniqueValidator | null {
     return field?.validators.asyncUnique ?? null;
   }
@@ -47,7 +49,7 @@ export class BuilderInspectorValidationService {
   ): Promise<{ state: AsyncTestState; message: string }> {
     const value = sample.trim();
     if (!value) return { state: 'error', message: 'Enter a sample value to test.' };
-    const result = await checkAsyncUniqueValue(config, value, { lookupRegistry: DEFAULT_LOOKUP_REGISTRY });
+    const result = await checkAsyncUniqueValue(config, value, { lookupRegistry: this.lookupRegistry });
     if (result.reason === 'duplicate') return { state: 'error', message: 'Duplicate found in source.' };
     if (result.reason === 'source-error') {
       return { state: 'error', message: 'Could not validate source. Check URL/lookup settings.' };

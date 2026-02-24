@@ -68,6 +68,10 @@ npm run docs
   - `Advanced Fields`
   - `Layout`
 - You can provide your own palette via Angular DI token `BUILDER_PALETTE`.
+- Plugin API foundation is available via `BUILDER_PLUGINS`:
+  - `paletteItems` extensions/overrides
+  - `lookupRegistry` extensions/overrides
+  - `validatorPresets` extensions (for custom field defaults)
 - Runtime demo actions in top bar:
   - `Load Palette JSON`
   - `Reset Palette`

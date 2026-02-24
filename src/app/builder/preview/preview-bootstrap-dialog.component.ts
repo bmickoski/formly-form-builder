@@ -12,7 +12,7 @@ import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { resolveCustomValidatorsForFields } from '../../builder-core/custom-validators';
-import { DEFAULT_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
+import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
@@ -38,6 +38,7 @@ export class PreviewBootstrapDialogComponent {
   readonly ref = inject(MatDialogRef<PreviewBootstrapDialogComponent>);
   readonly cdr = inject(ChangeDetectorRef);
   readonly data = inject(MAT_DIALOG_DATA) as { renderer?: 'material' | 'bootstrap' };
+  readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
 
   readonly form = new FormGroup({});
   model: any = {};
@@ -74,10 +75,10 @@ export class PreviewBootstrapDialogComponent {
 
   async loadDynamicOptions(): Promise<void> {
     await resolveDynamicOptionsForFields(this.fields, {
-      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
+      lookupRegistry: this.lookupRegistry,
     });
     resolveAsyncValidatorsForFields(this.fields, {
-      lookupRegistry: DEFAULT_LOOKUP_REGISTRY,
+      lookupRegistry: this.lookupRegistry,
     });
     resolveCustomValidatorsForFields(this.fields);
     this.fields = [...this.fields];

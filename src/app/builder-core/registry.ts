@@ -1,5 +1,6 @@
-import { InjectionToken } from '@angular/core';
+import { inject, InjectionToken } from '@angular/core';
 import { BuilderNodeType, BuilderValidators, ContainerProps, FieldKind, FieldProps } from './model';
+import { BUILDER_PLUGINS, composePalette } from './plugins';
 import { defaultValidatorsForFieldKind } from './validation-presets';
 
 export const DEFAULT_PALETTE_CATEGORIES = {
@@ -210,7 +211,7 @@ export const PALETTE: PaletteItem[] = [
 
 export const BUILDER_PALETTE = new InjectionToken<readonly PaletteItem[]>('BUILDER_PALETTE', {
   providedIn: 'root',
-  factory: () => PALETTE,
+  factory: () => composePalette(PALETTE, inject(BUILDER_PLUGINS, { optional: true }) ?? []),
 });
 
 export function paletteListIdForCategory(category: string): string {
