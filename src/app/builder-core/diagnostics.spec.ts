@@ -57,4 +57,15 @@ describe('buildDiagnostics', () => {
     expect(report.diagnostics.some((item) => item.code === 'expression-unsafe-token')).toBeTrue();
     expect(report.diagnostics.some((item) => item.code === 'custom-expression-no-valid-assignment')).toBeTrue();
   });
+
+  it('reports unknown validator preset ids', () => {
+    const f1 = field('f1', 'name');
+    f1.validators.presetId = 'missing-preset';
+
+    const report = buildDiagnostics(createDoc([f1]), {
+      knownValidatorPresetIds: new Set(['email-format']),
+    });
+
+    expect(report.diagnostics.some((item) => item.code === 'validator-preset-missing')).toBeTrue();
+  });
 });

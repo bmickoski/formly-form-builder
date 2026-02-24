@@ -37,6 +37,7 @@ import {
 import { BuilderInspectorRulesService } from './builder-inspector-rules.service';
 import { BuilderInspectorValidationService } from './builder-inspector-validation.service';
 import { BuilderInspectorDataService } from './builder-inspector-data.service';
+import { ValidatorPresetDefinition } from '../../builder-core/validation-presets';
 @Component({
   selector: 'app-builder-inspector',
   standalone: true,
@@ -268,6 +269,26 @@ export class BuilderInspectorComponent {
 
   setCustomValidationMessage(value: string): void {
     this.validationService.setCustomValidationMessage(this.store, this.fieldNode(), value);
+  }
+
+  validatorPresetDefinitions(): ValidatorPresetDefinition[] {
+    return this.validationService.validatorPresetDefinitionsForField(this.fieldNode());
+  }
+
+  validatorPresetId(): string {
+    return this.validationService.selectedValidatorPresetId(this.fieldNode());
+  }
+
+  setValidatorPreset(value: string): void {
+    this.validationService.setValidatorPreset(this.store, this.fieldNode(), value);
+  }
+
+  validatorPresetParamValue(key: string): string | number | boolean | '' {
+    return this.validationService.validatorPresetParamValue(this.fieldNode(), key);
+  }
+
+  setValidatorPresetParam(param: { key: string; type: 'string' | 'number' | 'boolean' }, value: unknown): void {
+    this.validationService.setValidatorPresetParam(this.store, this.fieldNode(), param, value);
   }
 
   addOption(): void {

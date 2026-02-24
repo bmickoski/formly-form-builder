@@ -152,6 +152,37 @@ describe('builder/formly adapters: rules + async validators', () => {
     expect(node.validators.customExpression).toContain('Name must be Joe');
     expect(node.validators.customExpressionMessage).toBe('Name is invalid');
   });
+
+  it('round-trips validator preset metadata through Formly props', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
+    const fieldId = store.selectedId() as string;
+
+    store.updateNodeValidators(fieldId, {
+      presetId: 'length-range',
+      presetParams: { minLength: 3, maxLength: 12 },
+      minLength: 3,
+      maxLength: 12,
+    });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.props?.['validatorPreset']).toEqual({
+      id: 'length-range',
+      params: { minLength: 3, maxLength: 12 },
+    });
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+    expect(node.validators.presetId).toBe('length-range');
+    expect(node.validators.presetParams).toEqual({ minLength: 3, maxLength: 12 });
+  });
 });
 
 describe('builder/formly adapters: field library v2 batch 1', () => {

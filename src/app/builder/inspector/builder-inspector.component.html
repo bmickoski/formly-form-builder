@@ -361,6 +361,51 @@
       <mat-tab label="Validation">
         <div class="fb-tab-content">
           @if (isField()) {
+            <mat-form-field appearance="outline" class="fb-field">
+              <mat-label>Validator preset</mat-label>
+              <mat-select [ngModel]="validatorPresetId()" (ngModelChange)="setValidatorPreset($event)">
+                <mat-option value="">None</mat-option>
+                @for (preset of validatorPresetDefinitions(); track preset.id) {
+                  <mat-option [value]="preset.id">{{ preset.label }}</mat-option>
+                }
+              </mat-select>
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                tabindex="-1"
+                class="fb-help-icon"
+                [matTooltip]="helpText('validatorPreset')"
+              >
+                <mat-icon>help_outline</mat-icon>
+              </button>
+            </mat-form-field>
+
+            @for (preset of validatorPresetDefinitions(); track preset.id) {
+              @if (validatorPresetId() === preset.id) {
+                @for (param of preset.params ?? []; track param.key) {
+                  @if (param.type === 'boolean') {
+                    <mat-slide-toggle
+                      [ngModel]="!!validatorPresetParamValue(param.key)"
+                      (ngModelChange)="setValidatorPresetParam(param, $event)"
+                    >
+                      {{ param.label }}
+                    </mat-slide-toggle>
+                  } @else {
+                    <mat-form-field appearance="outline" class="fb-field">
+                      <mat-label>{{ param.label }}</mat-label>
+                      <input
+                        matInput
+                        [type]="param.type === 'number' ? 'number' : 'text'"
+                        [ngModel]="validatorPresetParamValue(param.key)"
+                        (ngModelChange)="setValidatorPresetParam(param, $event)"
+                      />
+                    </mat-form-field>
+                  }
+                }
+              }
+            }
+
             <mat-slide-toggle
               [ngModel]="!!f?.validators?.required"
               (ngModelChange)="setVal('required', $event)"

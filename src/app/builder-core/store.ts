@@ -4,7 +4,9 @@ import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from 
 import { parseBuilderDocument } from './document';
 import { buildDiagnostics } from './diagnostics';
 import {
+  BUILDER_VALIDATOR_PRESET_DEFINITIONS,
   BUILDER_VALIDATOR_PRESETS,
+  DEFAULT_VALIDATOR_PRESET_DEFINITIONS,
   defaultValidatorsForFieldKind,
   DEFAULT_FIELD_VALIDATION_PRESETS,
 } from './validation-presets';
@@ -57,6 +59,7 @@ function createRoot(): BuilderDocument {
 export class BuilderStore {
   private readonly defaultPalette = resolveDefaultPalette();
   private readonly validatorPresets = resolveValidatorPresets();
+  private readonly validatorPresetDefinitions = resolveValidatorPresetDefinitions();
   private readonly palette: WritableSignal<readonly PaletteItem[]>;
   private readonly _doc = signal<BuilderDocument>(createRoot());
   private readonly _past = signal<BuilderDocument[]>([]);
@@ -77,7 +80,11 @@ export class BuilderStore {
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
   readonly paletteItems = computed(() => this.palette());
-  readonly diagnostics = computed(() => buildDiagnostics(this._doc()));
+  readonly diagnostics = computed(() =>
+    buildDiagnostics(this._doc(), {
+      knownValidatorPresetIds: new Set(this.validatorPresetDefinitions.map((item) => item.id)),
+    }),
+  );
 
   readonly selectedNode = computed(() => {
     const id = this._doc().selectedId;
@@ -339,5 +346,13 @@ function resolveValidatorPresets() {
     return inject(BUILDER_VALIDATOR_PRESETS, { optional: true }) ?? DEFAULT_FIELD_VALIDATION_PRESETS;
   } catch {
     return DEFAULT_FIELD_VALIDATION_PRESETS;
+  }
+}
+
+function resolveValidatorPresetDefinitions() {
+  try {
+    return inject(BUILDER_VALIDATOR_PRESET_DEFINITIONS, { optional: true }) ?? DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
+  } catch {
+    return DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
   }
 }

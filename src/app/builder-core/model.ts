@@ -19,6 +19,8 @@ export type FieldKind =
   | 'repeater';
 
 export type AsyncUniqueSourceType = 'url' | 'lookup';
+export type ValidatorPresetParamType = 'string' | 'number' | 'boolean';
+export type ValidatorPresetParamValue = string | number | boolean;
 
 export interface AsyncUniqueValidator {
   sourceType: AsyncUniqueSourceType;
@@ -41,6 +43,8 @@ export interface BuilderValidators {
   asyncUnique?: AsyncUniqueValidator;
   customExpression?: string;
   customExpressionMessage?: string;
+  presetId?: string;
+  presetParams?: Record<string, ValidatorPresetParamValue>;
 }
 
 export interface OptionItem {

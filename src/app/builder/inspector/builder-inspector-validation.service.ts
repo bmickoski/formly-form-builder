@@ -4,11 +4,19 @@ import { checkAsyncUniqueValue } from '../../builder-core/async-validators';
 import { BUILDER_LOOKUP_REGISTRY } from '../../builder-core/lookup-registry';
 import { AsyncUniqueSourceType, AsyncUniqueValidator, FieldNode } from '../../builder-core/model';
 import { BuilderStore } from '../../builder-core/store';
+import {
+  applyValidatorPreset,
+  BUILDER_VALIDATOR_PRESET_DEFINITIONS,
+  defaultParamsForValidatorPreset,
+  ValidatorPresetDefinition,
+  validatorPresetDefinitionsForFieldKind,
+} from '../../builder-core/validation-presets';
 import { AsyncTestState } from './builder-inspector.constants';
 
 @Injectable({ providedIn: 'root' })
 export class BuilderInspectorValidationService {
   private readonly lookupRegistry = inject(BUILDER_LOOKUP_REGISTRY);
+  private readonly presetDefinitions = inject(BUILDER_VALIDATOR_PRESET_DEFINITIONS);
 
   asyncUnique(field: FieldNode | null): AsyncUniqueValidator | null {
     return field?.validators.asyncUnique ?? null;
@@ -93,5 +101,82 @@ export class BuilderInspectorValidationService {
       { customExpressionMessage: value },
       `${field.id}:customExpressionMessage`,
     );
+  }
+
+  validatorPresetDefinitionsForField(field: FieldNode | null): ValidatorPresetDefinition[] {
+    if (!field) return [];
+    return validatorPresetDefinitionsForFieldKind(field.fieldKind, this.presetDefinitions);
+  }
+
+  selectedValidatorPresetId(field: FieldNode | null): string {
+    return field?.validators.presetId ?? '';
+  }
+
+  validatorPresetParamValue(field: FieldNode | null, key: string): string | number | boolean | '' {
+    return field?.validators.presetParams?.[key] ?? '';
+  }
+
+  setValidatorPreset(store: BuilderStore, field: FieldNode | null, presetId: string): void {
+    if (!field) return;
+    const trimmed = presetId.trim();
+    if (!trimmed) {
+      store.updateNodeValidators(field.id, { presetId: undefined, presetParams: undefined });
+      return;
+    }
+
+    const definition = this.validatorPresetDefinitionsForField(field).find((item) => item.id === trimmed);
+    if (!definition) return;
+
+    const params = defaultParamsForValidatorPreset(definition);
+    const resolved = applyValidatorPreset(definition, params);
+    store.updateNodeValidators(field.id, {
+      ...resolved,
+      presetId: definition.id,
+      presetParams: params,
+    });
+  }
+
+  setValidatorPresetParam(
+    store: BuilderStore,
+    field: FieldNode | null,
+    param: { key: string; type: 'string' | 'number' | 'boolean' },
+    value: unknown,
+  ): void {
+    if (!field) return;
+    const presetId = field.validators.presetId?.trim();
+    if (!presetId) return;
+
+    const definition = this.validatorPresetDefinitionsForField(field).find((item) => item.id === presetId);
+    if (!definition) return;
+
+    const nextParams = { ...(field.validators.presetParams ?? {}) };
+    const coerced = this.coercePresetParamValue(param.type, value);
+    if (coerced === undefined) delete nextParams[param.key];
+    else nextParams[param.key] = coerced;
+
+    const resolved = applyValidatorPreset(definition, nextParams);
+    store.updateNodeValidatorsGrouped(
+      field.id,
+      {
+        ...resolved,
+        presetId,
+        presetParams: nextParams,
+      },
+      `${field.id}:validatorPreset:${param.key}`,
+    );
+  }
+
+  private coercePresetParamValue(
+    type: 'string' | 'number' | 'boolean',
+    value: unknown,
+  ): string | number | boolean | undefined {
+    if (type === 'boolean') return !!value;
+    if (type === 'number') {
+      if (value === '' || value === null || value === undefined) return undefined;
+      const num = Number(value);
+      return Number.isFinite(num) ? num : undefined;
+    }
+    const text = String(value ?? '').trim();
+    return text.length > 0 ? text : undefined;
   }
 }

@@ -74,6 +74,7 @@ npm run docs
   - `paletteItems` extensions/overrides
   - `lookupRegistry` extensions/overrides
   - `validatorPresets` extensions (for custom field defaults)
+  - `validatorPresetDefinitions` extensions/overrides (for inspector-selectable named presets)
 - Plugin example (`src/app/app.config.ts`):
 
 ```ts
@@ -102,6 +103,18 @@ const CRM_PLUGIN: BuilderPlugin = {
   validatorPresets: {
     input: { minLength: 2 },
   },
+  validatorPresetDefinitions: [
+    {
+      id: 'crm-customer-id',
+      label: 'CRM Customer ID',
+      fieldKinds: ['input'],
+      params: [{ key: 'prefix', label: 'Prefix', type: 'string', defaultValue: 'CUST-' }],
+      resolve: (params) => ({
+        pattern: `^${String(params['prefix'] ?? 'CUST-')}\\d+$`,
+        minLength: 6,
+      }),
+    },
+  ],
 };
 
 export const appConfig: ApplicationConfig = {
@@ -110,6 +123,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 - `validatorPresets` are applied when adding fields from palette.
+- `validatorPresetDefinitions` appear in Inspector > Validation and round-trip in Formly export/import under `props.validatorPreset`.
 - Runtime demo actions in top bar:
   - `Load Palette JSON`
   - `Reset Palette`
