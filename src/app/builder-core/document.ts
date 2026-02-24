@@ -1,5 +1,6 @@
 import { BuilderDocument, BuilderNode, ContainerNode, FieldKind, FieldNode, PreviewRenderer } from './model';
-import { CURRENT_BUILDER_SCHEMA_VERSION, LEGACY_BUILDER_SCHEMA_VERSION } from './schema';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
+import { migrateBuilderSchema } from './migrations';
 
 const DEFAULT_ROOT_ID = 'root';
 const VALID_FIELD_KINDS = new Set<FieldKind>([
@@ -32,35 +33,6 @@ function toRenderer(v: unknown): PreviewRenderer {
 function toStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return [];
   return v.filter((x): x is string => typeof x === 'string');
-}
-
-function toSchemaVersion(v: unknown): number {
-  const num = Number(v);
-  if (!Number.isFinite(num) || num <= 0) return LEGACY_BUILDER_SCHEMA_VERSION;
-  return Math.trunc(num);
-}
-
-function migrateRawDocument(rawDoc: Record<string, unknown>): {
-  migrated: Record<string, unknown>;
-  warnings: string[];
-} {
-  const warnings: string[] = [];
-  let out = { ...rawDoc };
-  const fromVersion = toSchemaVersion(rawDoc['schemaVersion']);
-
-  if (fromVersion < CURRENT_BUILDER_SCHEMA_VERSION) {
-    warnings.push(`Migrated builder document schema v${fromVersion} to v${CURRENT_BUILDER_SCHEMA_VERSION}.`);
-    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
-  } else if (fromVersion > CURRENT_BUILDER_SCHEMA_VERSION) {
-    warnings.push(
-      `Document schema v${fromVersion} is newer than supported v${CURRENT_BUILDER_SCHEMA_VERSION}; imported in compatibility mode.`,
-    );
-    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
-  } else {
-    out = { ...out, schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION };
-  }
-
-  return { migrated: out, warnings };
 }
 
 function toFieldKind(rawFieldKind: unknown): FieldKind {
@@ -126,7 +98,7 @@ export function parseBuilderDocument(json: string): ParseResult {
 export function parseBuilderDocumentObject(rawDoc: unknown): ParseResult {
   if (!isObject(rawDoc)) return { ok: false, error: 'Invalid document: expected object' };
 
-  const migrated = migrateRawDocument(rawDoc);
+  const migrated = migrateBuilderSchema(rawDoc);
   const source = migrated.migrated;
   if (!isObject(source['nodes'])) return { ok: false, error: 'Invalid document: nodes must be an object map' };
 

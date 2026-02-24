@@ -53,10 +53,12 @@ Constraint rules are enforced in store-level commands:
 ## Validation and migration
 
 Parser/sanitizer: `src/app/builder-core/document.ts`
+Versioned migrations: `src/app/builder-core/migrations.ts`
 
 Used by `store.importDocument` to:
 
 - validate incoming shape
+- apply schema migrations step-by-step (`vN -> vN+1`)
 - recover from missing root
 - normalize renderer
 - clamp invalid column spans
