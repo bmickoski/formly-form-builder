@@ -18,6 +18,7 @@ import { builderToFormly } from '../builder-core/adapter';
 import { parsePaletteConfig } from '../builder-core/palette-config';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
 import type { BuilderPresetId } from '../builder-core/store';
+import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
 
 const SAMPLE_PALETTE_JSON = JSON.stringify(
   [
@@ -96,6 +97,7 @@ export class BuilderPageComponent {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
   presetToApply: BuilderPresetId = 'simple';
+  diagnosticsOpen = false;
 
   get selectedPreset() {
     const fallback = this.store.presets[0]!;
@@ -112,6 +114,7 @@ export class BuilderPageComponent {
   }
 
   openExport(): void {
+    if (!this.canExport()) return;
     const formlyJson = JSON.stringify(builderToFormly(this.store.doc()), null, 2);
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
@@ -121,6 +124,7 @@ export class BuilderPageComponent {
   }
 
   openExportBuilder(): void {
+    if (!this.canExport()) return;
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
@@ -187,6 +191,20 @@ export class BuilderPageComponent {
     this.store.resetPalette();
   }
 
+  toggleDiagnostics(): void {
+    this.diagnosticsOpen = !this.diagnosticsOpen;
+  }
+
+  diagnosticsSummary(): string {
+    const report = this.store.diagnostics();
+    if (report.errorCount === 0 && report.warningCount === 0) return 'No issues';
+    return `${report.errorCount} errors, ${report.warningCount} warnings`;
+  }
+
+  firstDiagnostics(max = 12) {
+    return this.store.diagnostics().diagnostics.slice(0, max);
+  }
+
   clear(): void {
     if (confirm('Clear the builder?')) this.store.clear();
   }
@@ -194,6 +212,22 @@ export class BuilderPageComponent {
   applyPreset(): void {
     if (!confirm(`Apply "${this.presetToApply}" preset? Current canvas will be replaced.`)) return;
     this.store.applyPreset(this.presetToApply);
+  }
+
+  private canExport(): boolean {
+    const report = this.store.diagnostics();
+    if (report.errorCount === 0) return true;
+    alert(this.exportBlockedMessage(report));
+    this.diagnosticsOpen = true;
+    return false;
+  }
+
+  private exportBlockedMessage(report: BuilderDiagnosticsReport): string {
+    const lines = report.diagnostics
+      .filter((item) => item.severity === 'error')
+      .slice(0, 8)
+      .map((item) => `- ${item.message}${item.nodeId ? ` (node: ${item.nodeId})` : ''}`);
+    return `Export blocked: ${report.errorCount} diagnostics error(s).\n\n${lines.join('\n')}`;
   }
 
   @HostListener('document:keydown', ['$event'])

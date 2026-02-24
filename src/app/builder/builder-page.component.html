@@ -69,6 +69,10 @@
       <mat-icon>redo</mat-icon>
       Redo
     </button>
+    <button mat-button (click)="toggleDiagnostics()">
+      <mat-icon>rule</mat-icon>
+      Diagnostics ({{ diagnosticsSummary() }})
+    </button>
 
     <mat-form-field appearance="outline" class="fb-preview-ui-field">
       <mat-label>Preview UI</mat-label>
@@ -85,6 +89,26 @@
       Clear
     </button>
   </div>
+
+  @if (diagnosticsOpen) {
+    <div class="fb-diagnostics">
+      <div class="fb-diagnostics-title">Diagnostics</div>
+      @if (store.diagnostics().diagnostics.length === 0) {
+        <div class="fb-hint">No issues found.</div>
+      } @else {
+        @for (item of firstDiagnostics(); track $index) {
+          <div class="fb-diagnostics-item" [class.fb-diagnostics-item-error]="item.severity === 'error'">
+            <strong>{{ item.severity.toUpperCase() }}</strong
+            >:
+            {{ item.message }}
+            @if (item.nodeId) {
+              <span class="fb-diagnostics-node">(node {{ item.nodeId }})</span>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
 
   <div class="fb-workspace" cdkDropListGroup>
     <div class="fb-panel">
