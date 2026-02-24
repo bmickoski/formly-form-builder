@@ -5,4 +5,5 @@
  */
 export * from './app/builder-core';
 export * from './app/builder/builder-page.component';
+export * from './app/builder/builder-templates.service';
 export { BuilderPageComponent as FormlyBuilderComponent } from './app/builder/builder-page.component';

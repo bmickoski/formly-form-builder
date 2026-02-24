@@ -24,7 +24,11 @@ import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './prese
 import {
   addColumnToRowCommand,
   addFromPaletteCommand,
+  copyNodeSnapshot,
+  duplicateNodeCommand,
   moveNodeCommand,
+  NodeClipboard,
+  pasteNodeCommand,
   rebalanceRowColumnsCommand,
   removeNodeCommand,
   reorderWithinCommand,
@@ -74,6 +78,7 @@ export class BuilderStore {
   private readonly _validatorPresets = signal(this.defaultValidatorPresets);
   private readonly _validatorPresetDefinitions = signal(this.defaultValidatorPresetDefinitions);
   private readonly _doc = signal<BuilderDocument>(createRoot());
+  private readonly _clipboard = signal<NodeClipboard | null>(null);
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
   private readonly maxHistory = 100;
@@ -89,6 +94,7 @@ export class BuilderStore {
   readonly selectedId = computed(() => this._doc().selectedId);
   readonly canUndo = computed(() => this._past().length > 0);
   readonly canRedo = computed(() => this._future().length > 0);
+  readonly hasClipboard = computed(() => !!this._clipboard());
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
   readonly paletteItems = computed(() => this.palette());
@@ -194,6 +200,55 @@ export class BuilderStore {
   /** Removes a node and all descendants. */
   removeNode(id: string): void {
     this.apply((doc) => removeNodeCommand(doc, id));
+  }
+
+  /** Copies node subtree into builder clipboard. */
+  copyNode(id: string): void {
+    const snapshot = copyNodeSnapshot(this._doc(), id);
+    this._clipboard.set(snapshot);
+  }
+
+  /** Copies currently selected node into builder clipboard. */
+  copySelected(): void {
+    const id = this._doc().selectedId;
+    if (!id || id === ROOT_ID) return;
+    this.copyNode(id);
+  }
+
+  /** Duplicates selected node subtree next to current node. */
+  duplicateSelected(): void {
+    const id = this._doc().selectedId;
+    if (!id || id === ROOT_ID) return;
+    this.apply((doc) => duplicateNodeCommand(doc, id));
+  }
+
+  /** Pastes clipboard subtree relative to current selection or root. */
+  pasteFromClipboard(): void {
+    const clipboard = this._clipboard();
+    if (!clipboard) return;
+
+    const selectedId = this._doc().selectedId;
+    const selected = selectedId ? this._doc().nodes[selectedId] : null;
+    if (selected && isContainerNode(selected)) {
+      this.apply((doc) =>
+        pasteNodeCommand(doc, clipboard, { containerId: selected.id, index: selected.children.length }),
+      );
+      return;
+    }
+
+    if (selected?.parentId) {
+      const parent = this._doc().nodes[selected.parentId];
+      if (parent && isContainerNode(parent)) {
+        const index = parent.children.indexOf(selected.id);
+        const at = index >= 0 ? index + 1 : parent.children.length;
+        this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: parent.id, index: at }));
+        return;
+      }
+    }
+
+    const root = this._doc().nodes[this._doc().rootId];
+    if (!root || !isContainerNode(root)) return;
+    this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: root.id, index: root.children.length }));
   }
 
   /** Applies partial props patch to a node. */

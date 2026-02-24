@@ -31,14 +31,15 @@ import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
 import { parsePaletteConfig } from '../builder-core/palette-config';
+import { PALETTE, PaletteItem } from '../builder-core/registry';
+import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
 import type { BuilderPresetId } from '../builder-core/store';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
-import type { BuilderDocument } from '../builder-core/model';
-import type { BuilderPlugin } from '../builder-core/plugins';
-import type { PaletteItem } from '../builder-core/registry';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
+import { isFieldNode, type BuilderDocument } from '../builder-core/model';
+import { BuilderTemplatesService } from './builder-templates.service';
 
 @Component({
   selector: 'app-builder-page, formly-builder',
@@ -64,8 +65,10 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly templates = inject(BuilderTemplatesService);
   readonly presetToApply = signal<BuilderPresetId>('simple');
   readonly diagnosticsOpen = signal(false);
+  private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
   private readonly ready = signal(false);
   private hasRestoredAutosave = false;
   private isApplyingInputConfig = false;
@@ -196,12 +199,63 @@ export class BuilderPageComponent implements OnInit, OnChanges {
           this.notifyError(`Invalid palette configuration: ${parsed.errors[0] ?? 'unknown error'}`);
           return;
         }
-        this.store.setPalette(parsed.palette);
+        this.paletteOverride.set(parsed.palette);
+        this.applyRuntimeExtensions();
       });
   }
 
   resetPalette(): void {
-    this.store.resetPalette();
+    this.paletteOverride.set(null);
+    this.applyRuntimeExtensions();
+  }
+
+  canSaveTemplate(): boolean {
+    const selected = this.store.selectedNode();
+    return !!selected && isFieldNode(selected);
+  }
+
+  saveSelectedAsTemplate(): void {
+    const selected = this.store.selectedNode();
+    if (!selected || !isFieldNode(selected)) return;
+    const title = this.templates.saveFieldTemplate(selected);
+    this.applyRuntimeExtensions();
+    this.snackBar.open(`Saved template "${title}".`, 'Close', {
+      duration: 4000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
+  }
+
+  openExportTemplates(): void {
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportTemplates', json: this.templates.exportJson() },
+    });
+  }
+
+  openImportTemplates(): void {
+    this.dialog
+      .open(JsonDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data: { mode: 'importTemplates', json: this.templates.exportJson() },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (!res?.json) return;
+        const out = this.templates.importJson(res.json);
+        if (!out.ok) {
+          this.notifyError(out.error);
+          return;
+        }
+        this.applyRuntimeExtensions();
+        this.snackBar.open(`Imported ${out.count} template(s).`, 'Close', {
+          duration: 4000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+      });
   }
 
   toggleDiagnostics(): void {
@@ -214,8 +268,21 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     return `${report.errorCount} errors, ${report.warningCount} warnings`;
   }
 
-  firstDiagnostics(max = 12) {
-    return this.store.diagnostics().diagnostics.slice(0, max);
+  canCopyOrDuplicate(): boolean {
+    const selected = this.store.selectedNode();
+    return !!selected && selected.id !== this.store.rootId();
+  }
+
+  copySelected(): void {
+    this.store.copySelected();
+  }
+
+  duplicateSelected(): void {
+    this.store.duplicateSelected();
+  }
+
+  pasteFromClipboard(): void {
+    this.store.pasteFromClipboard();
   }
 
   async clear(): Promise<void> {
@@ -274,27 +341,66 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
 
     const metaOrCtrl = e.ctrlKey || e.metaKey;
-    if (metaOrCtrl && e.key.toLowerCase() === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) this.store.redo();
-      else this.store.undo();
-      return;
-    }
-    if (metaOrCtrl && e.key.toLowerCase() === 'y') {
-      e.preventDefault();
-      this.store.redo();
-      return;
-    }
+    if (this.handleHistoryShortcut(e, metaOrCtrl)) return;
+    if (this.handleClipboardShortcut(e, metaOrCtrl)) return;
     if (e.key === 'Escape') this.store.select(null);
     if (e.key === 'Delete' || e.key === 'Backspace') this.store.removeSelected();
   }
 
-  private applyRuntimeExtensions(): void {
-    if (this.plugins.length > 0 || this.palette?.length) {
-      this.store.configureRuntimeExtensions({ plugins: this.plugins, palette: this.palette ?? undefined });
-      return;
+  private handleHistoryShortcut(e: KeyboardEvent, metaOrCtrl: boolean): boolean {
+    if (!metaOrCtrl) return false;
+    const key = e.key.toLowerCase();
+    if (key === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) this.store.redo();
+      else this.store.undo();
+      return true;
     }
-    this.store.resetRuntimeExtensions();
+    if (key !== 'y') return false;
+    e.preventDefault();
+    this.store.redo();
+    return true;
+  }
+
+  private handleClipboardShortcut(e: KeyboardEvent, metaOrCtrl: boolean): boolean {
+    if (!metaOrCtrl) return false;
+    const key = e.key.toLowerCase();
+    if (key === 'c') {
+      e.preventDefault();
+      this.copySelected();
+      return true;
+    }
+    if (key === 'v') {
+      e.preventDefault();
+      this.pasteFromClipboard();
+      return true;
+    }
+    if (key === 'd') {
+      e.preventDefault();
+      this.duplicateSelected();
+      return true;
+    }
+    return false;
+  }
+
+  private applyRuntimeExtensions(): void {
+    const basePalette =
+      this.paletteOverride() ?? (this.palette?.length ? [...this.palette] : composePalette(PALETTE, this.plugins));
+    this.store.configureRuntimeExtensions({
+      plugins: this.plugins,
+      palette: this.mergeById(basePalette, this.templates.toPaletteItems()),
+    });
+  }
+
+  private mergeById(base: readonly PaletteItem[], extra: readonly PaletteItem[]): PaletteItem[] {
+    const out = [...base];
+    const seen = new Set(out.map((item) => item.id));
+    for (const item of extra) {
+      if (seen.has(item.id)) continue;
+      out.push(item);
+      seen.add(item.id);
+    }
+    return out;
   }
 
   private applyExternalConfig(config: BuilderDocument): void {

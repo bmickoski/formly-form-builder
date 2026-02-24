@@ -3,8 +3,41 @@
 </h2>
 
 <mat-dialog-content class="fb-form">
+  <div class="fb-preview-viewports">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('desktop')"
+      [class.fb-preview-viewport-active]="viewport() === 'desktop'"
+    >
+      Desktop
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('tablet')"
+      [class.fb-preview-viewport-active]="viewport() === 'tablet'"
+    >
+      Tablet
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('mobile')"
+      [class.fb-preview-viewport-active]="viewport() === 'mobile'"
+    >
+      Mobile
+    </button>
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="submit()">
-    <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
+    <div
+      class="fb-preview-viewport"
+      [class.fb-preview-tablet]="viewport() === 'tablet'"
+      [class.fb-preview-mobile]="viewport() === 'mobile'"
+    >
+      <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
+    </div>
 
     <div class="fb-preview-actions">
       @if (isBootstrap) {

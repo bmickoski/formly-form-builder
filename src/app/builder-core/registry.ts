@@ -208,6 +208,27 @@ export const PALETTE: PaletteItem[] = [
     nodeType: 'col',
     defaults: { props: { colSpan: 6 }, childrenTemplate: [] },
   },
+  {
+    id: 'tabs',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Tabs',
+    nodeType: 'tabs',
+    defaults: { props: { title: 'Tabs' }, childrenTemplate: [] },
+  },
+  {
+    id: 'stepper',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Stepper',
+    nodeType: 'stepper',
+    defaults: { props: { title: 'Stepper' }, childrenTemplate: [] },
+  },
+  {
+    id: 'accordion',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Accordion',
+    nodeType: 'accordion',
+    defaults: { props: { title: 'Accordion' }, childrenTemplate: [] },
+  },
 ];
 
 /** Runtime palette token. Default value composes built-in palette with `BUILDER_PLUGINS` palette items. */

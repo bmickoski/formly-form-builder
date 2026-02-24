@@ -1,3 +1,29 @@
+.fb-preview-viewports {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fb-preview-viewport-active {
+  border-color: #7b7bf0;
+  color: #1f1f32;
+}
+
+.fb-preview-viewport {
+  width: 100%;
+  max-width: 100%;
+}
+
+.fb-preview-tablet {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.fb-preview-mobile {
+  max-width: 390px;
+  margin: 0 auto;
+}
+
 .fb-preview-actions {
   display: flex;
   gap: 8px;

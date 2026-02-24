@@ -8,7 +8,11 @@
           ? 'Import Formly JSON'
           : data.mode === 'importPalette'
             ? 'Import Palette JSON'
-            : 'Import Builder JSON'
+            : data.mode === 'exportTemplates'
+              ? 'Export Field Templates JSON'
+              : data.mode === 'importTemplates'
+                ? 'Import Field Templates JSON'
+                : 'Import Builder JSON'
   }}
 </h2>
 
@@ -23,20 +27,31 @@
         ? 'FormlyFieldConfig[] ready to use in an application.'
         : data.mode === 'exportBuilder'
           ? 'Builder document JSON (domain tree). Schema v' + (data.schemaVersion ?? '?') + '.'
-          : data.mode === 'importPalette'
-            ? 'Palette item array JSON. Must include unique ids and valid node definitions.'
-            : 'Builder document JSON (domain tree).'
+          : data.mode === 'exportTemplates'
+            ? 'Saved field template palette items.'
+            : data.mode === 'importPalette'
+              ? 'Palette item array JSON. Must include unique ids and valid node definitions.'
+              : data.mode === 'importTemplates'
+                ? 'Field template palette JSON. Field node templates only.'
+                : 'Builder document JSON (domain tree).'
     }}
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  @if (data.mode === 'exportFormly' || data.mode === 'exportBuilder') {
+  @if (data.mode === 'exportFormly' || data.mode === 'exportBuilder' || data.mode === 'exportTemplates') {
     <button mat-button (click)="copy()">Copy</button>
   }
   <button mat-button (click)="download()">Download</button>
   <button mat-button (click)="close()">Close</button>
   <button mat-raised-button color="primary" (click)="done()">
-    {{ data.mode === 'import' || data.mode === 'importFormly' || data.mode === 'importPalette' ? 'Import' : 'Done' }}
+    {{
+      data.mode === 'import' ||
+      data.mode === 'importFormly' ||
+      data.mode === 'importPalette' ||
+      data.mode === 'importTemplates'
+        ? 'Import'
+        : 'Done'
+    }}
   </button>
 </mat-dialog-actions>

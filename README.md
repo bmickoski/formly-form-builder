@@ -14,7 +14,9 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Left panel: draggable palette grouped into `Common Fields`, `Advanced Fields`, and `Layout`.
 - Center panel: placeholder canvas with nested layout editing.
 - Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
-- Preview: real Formly render (Material or Bootstrap).
+- Preview: real Formly render (Material or Bootstrap) with desktop/tablet/mobile viewport toggle.
+- Layout palette includes `Panel`, `Row`, `Column`, `Tabs`, `Stepper`, and `Accordion`.
+- Field templates can be saved from selected field and reused via the palette (`My Templates` category).
 - Default preview renderer: Bootstrap.
 - Root route uses lazy `loadComponent` for the builder page.
 
@@ -65,6 +67,8 @@ npm run docs
 - `Export Builder JSON`: internal builder document (round-trip format).
 - `Import Builder JSON`: restores builder document.
 - `Import Formly JSON`: maps Formly config into builder model.
+- `Export Templates JSON`: exports saved field templates.
+- `Import Templates JSON`: imports saved field templates (field node templates only).
 
 ## Palette customization
 

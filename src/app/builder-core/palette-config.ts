@@ -1,7 +1,7 @@
 import { BuilderNodeType, FieldKind } from './model';
 import { PaletteItem } from './registry';
 
-const NODE_TYPES = new Set<BuilderNodeType>(['field', 'panel', 'row', 'col']);
+const NODE_TYPES = new Set<BuilderNodeType>(['field', 'panel', 'row', 'col', 'tabs', 'stepper', 'accordion']);
 const FIELD_KINDS = new Set<FieldKind>([
   'input',
   'textarea',
@@ -150,7 +150,7 @@ function validateBaseFields(
   if (!category) errors.push(`Item ${index}: "category" is required.`);
   if (!title) errors.push(`Item ${index}: "title" is required.`);
   if (!nodeType || !NODE_TYPES.has(nodeType as BuilderNodeType)) {
-    errors.push(`Item ${index}: "nodeType" must be one of field|panel|row|col.`);
+    errors.push(`Item ${index}: "nodeType" must be one of field|panel|row|col|tabs|stepper|accordion.`);
   }
   return { id, category, title, nodeType, errors };
 }

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -15,6 +15,9 @@ import { resolveCustomValidatorsForFields } from '../../builder-core/custom-vali
 import { BuilderDocument, OptionItem } from '../../builder-core/model';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
+import { FbTabsTypeComponent } from './fb-tabs.type.component';
+import { FbStepperTypeComponent } from './fb-stepper.type.component';
+import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
 
 @Component({
@@ -25,7 +28,14 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
     provideFormlyCore([
       ...withFormlyMaterial(),
       { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
-      { types: [{ name: 'repeat', component: FbRepeatTypeComponent }] },
+      {
+        types: [
+          { name: 'repeat', component: FbRepeatTypeComponent },
+          { name: 'fb-tabs', component: FbTabsTypeComponent },
+          { name: 'fb-stepper', component: FbStepperTypeComponent },
+          { name: 'fb-accordion', component: FbAccordionTypeComponent },
+        ],
+      },
       { validators: [{ name: 'email', validation: Validators.email }] },
       { validationMessages: PREVIEW_VALIDATION_MESSAGES as any },
     ]),
@@ -48,6 +58,7 @@ export class PreviewMaterialDialogComponent {
   model: any = {};
   readonly options: FormlyFormOptions = createPreviewOptions();
   fields = builderToFormly(this.data?.doc ?? this.store.doc());
+  readonly viewport = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   constructor() {
     void this.loadDynamicOptions();
@@ -75,6 +86,10 @@ export class PreviewMaterialDialogComponent {
     this.model = {};
     const formState = this.options.formState as { submitted?: boolean };
     formState.submitted = false;
+  }
+
+  setViewport(viewport: 'desktop' | 'tablet' | 'mobile'): void {
+    this.viewport.set(viewport);
   }
 
   async loadDynamicOptions(): Promise<void> {

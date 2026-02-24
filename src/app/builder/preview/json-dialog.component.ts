@@ -15,7 +15,14 @@ import { FormsModule } from '@angular/forms';
 export class JsonDialogComponent {
   private readonly ref = inject(MatDialogRef<JsonDialogComponent>);
   readonly data = inject(MAT_DIALOG_DATA) as {
-    mode: 'exportFormly' | 'exportBuilder' | 'import' | 'importFormly' | 'importPalette';
+    mode:
+      | 'exportFormly'
+      | 'exportBuilder'
+      | 'exportTemplates'
+      | 'import'
+      | 'importFormly'
+      | 'importPalette'
+      | 'importTemplates';
     json: string;
     schemaVersion?: number;
   };
@@ -54,6 +61,10 @@ export class JsonDialogComponent {
         return 'formly-import.json';
       case 'importPalette':
         return 'palette-import.json';
+      case 'exportTemplates':
+        return 'field-templates-export.json';
+      case 'importTemplates':
+        return 'field-templates-import.json';
       case 'import':
       default:
         return 'builder-import.json';

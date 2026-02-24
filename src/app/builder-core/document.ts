@@ -81,7 +81,14 @@ function normalizeContainerNode(
 
 function normalizeNode(raw: Record<string, unknown>, id: string, parentId: string | null): BuilderNode | null {
   if (raw['type'] === 'field') return normalizeFieldNode(raw, id, parentId);
-  if (raw['type'] === 'panel' || raw['type'] === 'row' || raw['type'] === 'col') {
+  if (
+    raw['type'] === 'panel' ||
+    raw['type'] === 'row' ||
+    raw['type'] === 'col' ||
+    raw['type'] === 'tabs' ||
+    raw['type'] === 'stepper' ||
+    raw['type'] === 'accordion'
+  ) {
     return normalizeContainerNode(raw, id, raw['type'], parentId);
   }
   return null;

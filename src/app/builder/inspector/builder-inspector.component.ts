@@ -132,6 +132,17 @@ export class BuilderInspectorComponent {
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
   }
+  isTitledLayout(): boolean {
+    const type = this.containerNode()?.type;
+    return type === 'panel' || type === 'tabs' || type === 'stepper' || type === 'accordion';
+  }
+  titledLayoutLabel(): string {
+    const type = this.containerNode()?.type;
+    if (type === 'tabs') return 'Tabs title';
+    if (type === 'stepper') return 'Stepper title';
+    if (type === 'accordion') return 'Accordion title';
+    return 'Panel title';
+  }
   isCol(): boolean {
     return this.containerNode()?.type === 'col';
   }

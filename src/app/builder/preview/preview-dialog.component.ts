@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -33,6 +33,7 @@ export class PreviewDialogComponent {
   model: any = {};
   readonly options: FormlyFormOptions = {};
   fields = builderToFormly(this.data?.doc ?? this.store.doc());
+  readonly viewport = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   constructor() {
     void this.loadDynamicOptions();
@@ -48,6 +49,15 @@ export class PreviewDialogComponent {
 
   submit(): void {
     alert(JSON.stringify(this.model, null, 2));
+  }
+
+  reset(): void {
+    this.form.reset();
+    this.model = {};
+  }
+
+  setViewport(viewport: 'desktop' | 'tablet' | 'mobile'): void {
+    this.viewport.set(viewport);
   }
 
   private async loadDynamicOptions(): Promise<void> {

@@ -37,20 +37,25 @@ export class NodeRendererComponent {
     const nodes = this.store.nodes();
     const rootId = this.store.rootId();
     for (const node of Object.values(nodes)) {
-      if (node.type === 'panel' || node.type === 'row' || node.type === 'col') {
-        ids.push(`drop_${node.id}`);
-        if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
-      }
+      if (!isContainerNode(node)) continue;
+      ids.push(`drop_${node.id}`);
+      if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
     }
     return ids;
   });
 
   titleFor(n: BuilderNode): string {
     if (isFieldNode(n)) return n.props.label ?? n.fieldKind;
-    if (n.type === 'panel') return n.props.title ?? n.props.label ?? 'Panel';
-    if (n.type === 'row') return 'Row';
     if (n.type === 'col') return `Column (${(n as any).props?.colSpan ?? 12}/12)`;
-    return n.type;
+    const titled = n.props.title ?? n.props.label;
+    const fallback: Record<Exclude<BuilderNodeType, 'field' | 'col'>, string> = {
+      panel: 'Panel',
+      row: 'Row',
+      tabs: 'Tabs',
+      stepper: 'Stepper',
+      accordion: 'Accordion',
+    };
+    return titled ?? fallback[n.type];
   }
 
   subtitleFor(n: BuilderNode): string {

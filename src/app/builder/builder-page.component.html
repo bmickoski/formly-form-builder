@@ -32,6 +32,18 @@
       <mat-icon>restart_alt</mat-icon>
       Reset Palette
     </button>
+    <button mat-button (click)="saveSelectedAsTemplate()" [disabled]="!canSaveTemplate()">
+      <mat-icon>bookmark_add</mat-icon>
+      Save Field Template
+    </button>
+    <button mat-button (click)="openImportTemplates()">
+      <mat-icon>collections_bookmark</mat-icon>
+      Import Templates
+    </button>
+    <button mat-button (click)="openExportTemplates()">
+      <mat-icon>download_for_offline</mat-icon>
+      Export Templates
+    </button>
 
     <mat-form-field appearance="outline" class="fb-starter-layout-field">
       <mat-label>Starter layout</mat-label>
@@ -69,6 +81,18 @@
       <mat-icon>redo</mat-icon>
       Redo
     </button>
+    <button mat-button (click)="copySelected()" [disabled]="!canCopyOrDuplicate()">
+      <mat-icon>content_copy</mat-icon>
+      Copy
+    </button>
+    <button mat-button (click)="duplicateSelected()" [disabled]="!canCopyOrDuplicate()">
+      <mat-icon>library_add</mat-icon>
+      Duplicate
+    </button>
+    <button mat-button (click)="pasteFromClipboard()" [disabled]="!store.hasClipboard()">
+      <mat-icon>content_paste</mat-icon>
+      Paste
+    </button>
     <button mat-button (click)="toggleDiagnostics()">
       <mat-icon>rule</mat-icon>
       Diagnostics ({{ diagnosticsSummary() }})
@@ -96,7 +120,7 @@
       @if (store.diagnostics().diagnostics.length === 0) {
         <div class="fb-hint">No issues found.</div>
       } @else {
-        @for (item of firstDiagnostics(); track $index) {
+        @for (item of store.diagnostics().diagnostics.slice(0, 12); track $index) {
           <div class="fb-diagnostics-item" [class.fb-diagnostics-item-error]="item.severity === 'error'">
             <strong>{{ item.severity.toUpperCase() }}</strong
             >:
