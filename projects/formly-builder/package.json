@@ -2,8 +2,20 @@
   "name": "@bmickoski/formly-form-builder",
   "version": "0.1.0",
   "description": "Embeddable Angular Formly visual builder component and core APIs.",
+  "keywords": [
+    "angular",
+    "formly",
+    "form-builder",
+    "low-code",
+    "json-schema"
+  ],
+  "homepage": "https://github.com/bmickoski/formly-form-builder#readme",
   "license": "MIT",
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "peerDependencies": {
     "@angular/animations": "^21.0.0",
     "@angular/cdk": "^21.0.0",
@@ -24,5 +36,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/bmickoski/formly-form-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bmickoski/formly-form-builder/issues"
   }
 }
