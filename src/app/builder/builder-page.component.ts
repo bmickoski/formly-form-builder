@@ -15,9 +15,10 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
 
@@ -25,20 +26,24 @@ import { BuilderStore } from '../builder-core/store';
 import { BuilderPaletteComponent } from './palette/builder-palette.component';
 import { BuilderCanvasComponent } from './canvas/builder-canvas.component';
 import { BuilderInspectorComponent } from './inspector/builder-inspector.component';
+import { BuilderHistoryPanelComponent } from './history/builder-history-panel.component';
 import { PreviewMaterialDialogComponent } from './preview/preview-material-dialog.component';
 import { PreviewBootstrapDialogComponent } from './preview/preview-bootstrap-dialog.component';
 import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
+import { builderToJsonSchema } from '../builder-core/json-schema';
 import { parsePaletteConfig } from '../builder-core/palette-config';
+import { PALETTE, PaletteItem } from '../builder-core/registry';
+import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
-import type { BuilderPresetId } from '../builder-core/store';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
-import type { BuilderDocument } from '../builder-core/model';
-import type { BuilderPlugin } from '../builder-core/plugins';
-import type { PaletteItem } from '../builder-core/registry';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
+import { isFieldNode, type BuilderDocument } from '../builder-core/model';
+import { BuilderTemplatesService } from './builder-templates.service';
+import { mergePaletteById } from './builder-page.palette';
+import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
 
 @Component({
   selector: 'app-builder-page, formly-builder',
@@ -48,12 +53,14 @@ import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatFormFieldModule,
-    MatSelectModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatDividerModule,
     DragDropModule,
     BuilderPaletteComponent,
     BuilderCanvasComponent,
     BuilderInspectorComponent,
+    BuilderHistoryPanelComponent,
   ],
   providers: [BuilderStore],
   templateUrl: './builder-page.component.html',
@@ -64,8 +71,9 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   readonly store = inject(BuilderStore);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
-  readonly presetToApply = signal<BuilderPresetId>('simple');
+  private readonly templates = inject(BuilderTemplatesService);
   readonly diagnosticsOpen = signal(false);
+  private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
   private readonly ready = signal(false);
   private hasRestoredAutosave = false;
   private isApplyingInputConfig = false;
@@ -112,17 +120,26 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
   }
 
-  get selectedPreset() {
-    const fallback = this.store.presets[0]!;
-    return this.store.presets.find((preset) => preset.id === this.presetToApply()) ?? fallback;
-  }
-
   openPreview(): void {
     const renderer = this.store.renderer();
-    this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {
+    const data = {
+      renderer,
+      lookupRegistry: this.store.lookupRegistry(),
+      doc: this.store.doc(),
+      formlyExtensions: this.store.formlyExtensions(),
+    };
+    if (renderer === 'bootstrap') {
+      this.dialog.open(PreviewBootstrapDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data,
+      });
+      return;
+    }
+    this.dialog.open(PreviewMaterialDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { renderer, lookupRegistry: this.store.lookupRegistry(), doc: this.store.doc() },
+      data,
     });
   }
 
@@ -142,6 +159,16 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       width: '900px',
       maxWidth: '95vw',
       data: { mode: 'exportBuilder', json: this.store.exportDocument(), schemaVersion: this.store.doc().schemaVersion },
+    });
+  }
+
+  openExportJsonSchema(): void {
+    if (!this.canExport()) return;
+    const schema = JSON.stringify(builderToJsonSchema(this.store.doc()), null, 2);
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportJsonSchema', json: schema },
     });
   }
 
@@ -196,12 +223,63 @@ export class BuilderPageComponent implements OnInit, OnChanges {
           this.notifyError(`Invalid palette configuration: ${parsed.errors[0] ?? 'unknown error'}`);
           return;
         }
-        this.store.setPalette(parsed.palette);
+        this.paletteOverride.set(parsed.palette);
+        this.applyRuntimeExtensions();
       });
   }
 
   resetPalette(): void {
-    this.store.resetPalette();
+    this.paletteOverride.set(null);
+    this.applyRuntimeExtensions();
+  }
+
+  canSaveTemplate(): boolean {
+    const selected = this.store.selectedNode();
+    return !!selected && isFieldNode(selected);
+  }
+
+  saveSelectedAsTemplate(): void {
+    const selected = this.store.selectedNode();
+    if (!selected || !isFieldNode(selected)) return;
+    const title = this.templates.saveFieldTemplate(selected);
+    this.applyRuntimeExtensions();
+    this.snackBar.open(`Saved template "${title}".`, 'Close', {
+      duration: 4000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
+  }
+
+  openExportTemplates(): void {
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportTemplates', json: this.templates.exportJson() },
+    });
+  }
+
+  openImportTemplates(): void {
+    this.dialog
+      .open(JsonDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data: { mode: 'importTemplates', json: this.templates.exportJson() },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (!res?.json) return;
+        const out = this.templates.importJson(res.json);
+        if (!out.ok) {
+          this.notifyError(out.error);
+          return;
+        }
+        this.applyRuntimeExtensions();
+        this.snackBar.open(`Imported ${out.count} template(s).`, 'Close', {
+          duration: 4000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+      });
   }
 
   toggleDiagnostics(): void {
@@ -214,8 +292,9 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     return `${report.errorCount} errors, ${report.warningCount} warnings`;
   }
 
-  firstDiagnostics(max = 12) {
-    return this.store.diagnostics().diagnostics.slice(0, max);
+  canCopyOrDuplicate(): boolean {
+    const selected = this.store.selectedNode();
+    return !!selected && selected.id !== this.store.rootId();
   }
 
   async clear(): Promise<void> {
@@ -224,15 +303,15 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
   }
 
-  async applyPreset(): Promise<void> {
-    const presetId = this.presetToApply();
+  async applyPresetById(id: string): Promise<void> {
+    const preset = this.store.presets.find((p) => p.id === id);
     const confirmed = await this.confirmAction(
-      `Apply "${presetId}" preset? Current canvas will be replaced.`,
+      `Apply "${preset?.title ?? id}" layout? Current canvas will be replaced.`,
       'Apply starter layout',
       'Apply',
     );
     if (!confirmed) return;
-    this.store.applyPreset(presetId);
+    this.store.applyPreset(id as 'simple' | 'complex' | 'advanced' | 'advancedLogic');
   }
 
   private canExport(): boolean {
@@ -274,15 +353,14 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
 
     const metaOrCtrl = e.ctrlKey || e.metaKey;
-    if (metaOrCtrl && e.key.toLowerCase() === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) this.store.redo();
-      else this.store.undo();
-      return;
-    }
-    if (metaOrCtrl && e.key.toLowerCase() === 'y') {
-      e.preventDefault();
-      this.store.redo();
+    if (handleHistoryShortcut(e, metaOrCtrl, { undo: () => this.store.undo(), redo: () => this.store.redo() })) return;
+    if (
+      handleClipboardShortcut(e, metaOrCtrl, {
+        copy: () => this.store.copySelected(),
+        paste: () => this.store.pasteFromClipboard(),
+        duplicate: () => this.store.duplicateSelected(),
+      })
+    ) {
       return;
     }
     if (e.key === 'Escape') this.store.select(null);
@@ -290,11 +368,12 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   private applyRuntimeExtensions(): void {
-    if (this.plugins.length > 0 || this.palette?.length) {
-      this.store.configureRuntimeExtensions({ plugins: this.plugins, palette: this.palette ?? undefined });
-      return;
-    }
-    this.store.resetRuntimeExtensions();
+    const basePalette =
+      this.paletteOverride() ?? (this.palette?.length ? [...this.palette] : composePalette(PALETTE, this.plugins));
+    this.store.configureRuntimeExtensions({
+      plugins: this.plugins,
+      palette: mergePaletteById(basePalette, this.templates.toPaletteItems()),
+    });
   }
 
   private applyExternalConfig(config: BuilderDocument): void {

@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BuilderStore } from '../../builder-core/store';
 import { DEFAULT_PALETTE_CATEGORIES, paletteListIdForCategory, PaletteItem } from '../../builder-core/registry';
+import { isContainerNode } from '../../builder-core/model';
 
 @Component({
   selector: 'app-builder-palette',
@@ -27,10 +28,9 @@ export class BuilderPaletteComponent {
     const nodes = this.store.nodes();
     const rootId = this.store.rootId();
     for (const node of Object.values(nodes)) {
-      if (node.type === 'panel' || node.type === 'row' || node.type === 'col') {
-        ids.push(`drop_${node.id}`);
-        if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
-      }
+      if (!isContainerNode(node)) continue;
+      ids.push(`drop_${node.id}`);
+      if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
     }
     return ids;
   });

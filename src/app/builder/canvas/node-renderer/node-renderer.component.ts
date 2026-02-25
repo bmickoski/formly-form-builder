@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, computed, inject } from '@angular/core';
 import { CdkDrag, CdkDropList, CdkDragPlaceholder, DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BuilderStore } from '../../../builder-core/store';
 import { BuilderNode, BuilderNodeType, isContainerNode, isFieldNode } from '../../../builder-core/model';
@@ -10,7 +12,7 @@ type DragData = { kind: 'palette'; paletteId: string } | { kind: 'node'; nodeId:
 @Component({
   selector: 'app-node-renderer',
   standalone: true,
-  imports: [DragDropModule, MatIconModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
+  imports: [DragDropModule, MatIconModule, MatButtonModule, MatTooltipModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
   templateUrl: './node-renderer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,20 +39,25 @@ export class NodeRendererComponent {
     const nodes = this.store.nodes();
     const rootId = this.store.rootId();
     for (const node of Object.values(nodes)) {
-      if (node.type === 'panel' || node.type === 'row' || node.type === 'col') {
-        ids.push(`drop_${node.id}`);
-        if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
-      }
+      if (!isContainerNode(node)) continue;
+      ids.push(`drop_${node.id}`);
+      if (node.type !== 'row' && node.id !== rootId) ids.push(`drop_append_${node.id}`);
     }
     return ids;
   });
 
   titleFor(n: BuilderNode): string {
     if (isFieldNode(n)) return n.props.label ?? n.fieldKind;
-    if (n.type === 'panel') return n.props.title ?? n.props.label ?? 'Panel';
-    if (n.type === 'row') return 'Row';
     if (n.type === 'col') return `Column (${(n as any).props?.colSpan ?? 12}/12)`;
-    return n.type;
+    const titled = n.props.title ?? n.props.label;
+    const fallback: Record<Exclude<BuilderNodeType, 'field' | 'col'>, string> = {
+      panel: 'Panel',
+      row: 'Row',
+      tabs: 'Tabs',
+      stepper: 'Stepper',
+      accordion: 'Accordion',
+    };
+    return titled ?? fallback[n.type];
   }
 
   subtitleFor(n: BuilderNode): string {
@@ -82,29 +89,10 @@ export class NodeRendererComponent {
   canEnter = (drag: CdkDrag<DragData>): boolean => {
     const container = this.node();
     if (!container || !isContainerNode(container)) return false;
-    const rootId = this.store.rootId();
-
-    // Root accepts palette drops so users can choose exact insertion index.
-    // Non-root palette inserts are handled by explicit "Drop inside ..." targets.
-    if (drag.data.kind === 'palette') {
-      return container.id === rootId;
-    }
-
-    // Keep the root list for reordering root children only.
-    if (container.id === rootId) {
-      const dragged = this.store.nodes()[drag.data.nodeId];
-      return !!dragged && dragged.parentId === rootId;
-    }
-
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
-    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
-
-    if (container.type === 'row' && draggedType !== 'col') return false;
-
-    if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
-
-    return true;
+    if (drag.data.kind === 'palette') return this.canEnterFromPalette(container.id, container.type, draggedType);
+    return this.canEnterFromNode(container.id, container.type, drag.data.nodeId, draggedType);
   };
 
   canEnterAppend = (drag: CdkDrag<DragData>): boolean => {
@@ -113,8 +101,6 @@ export class NodeRendererComponent {
 
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
-    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
-
     if (container.type === 'row' && draggedType !== 'col') return false;
 
     if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
@@ -178,22 +164,76 @@ export class NodeRendererComponent {
     return this.store.nodes()[data.nodeId]?.type ?? null;
   }
 
-  /**
-   * Avoid ambiguous nested drops:
-   * if a container already holds layout containers, field drops must target
-   * the inner containers directly (instead of being appended to the outer one).
-   */
-  private canAcceptInContainer(containerId: string, draggedType: BuilderNodeType): boolean {
-    if (draggedType !== 'field') return true;
+  private canEnterFromPalette(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedType: BuilderNodeType,
+  ): boolean {
+    if (containerId === this.store.rootId() && this.preferSelectedContainerTarget(draggedType)) return false;
+    if (containerType === 'row' && draggedType !== 'col') return false;
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    return true;
+  }
+
+  private canEnterFromNode(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedNodeId: string,
+    draggedType: BuilderNodeType,
+  ): boolean {
+    const rootId = this.store.rootId();
+    if (containerId === rootId) {
+      const dragged = this.store.nodes()[draggedNodeId];
+      return !!dragged && dragged.parentId === rootId;
+    }
+    if (containerType === 'row' && draggedType !== 'col') return false;
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    if (this.isSelfOrDescendant(draggedNodeId, containerId)) return false;
+    return true;
+  }
+
+  private hasLayoutChildren(containerId: string): boolean {
     const container = this.store.nodes()[containerId];
     if (!container || !isContainerNode(container)) return false;
-
     const nodes = this.store.nodes();
-    const hasContainerChildren = container.children.some((childId) => {
+    return container.children.some((childId) => {
       const child = nodes[childId];
       return !!child && isContainerNode(child);
     });
-    return !hasContainerChildren;
+  }
+
+  private preferSelectedContainerTarget(draggedType: BuilderNodeType): boolean {
+    const selected = this.store.selectedNode();
+    if (!selected || !isContainerNode(selected) || selected.id === this.store.rootId()) return false;
+    if (this.containerCanAccept(selected.id, selected.type, draggedType)) return true;
+    return this.hasCompatibleDescendantTarget(selected.id, draggedType);
+  }
+
+  private hasCompatibleDescendantTarget(containerId: string, draggedType: BuilderNodeType): boolean {
+    const nodes = this.store.nodes();
+    const stack = [containerId];
+    while (stack.length) {
+      const id = stack.pop()!;
+      const node = nodes[id];
+      if (!node || !isContainerNode(node)) continue;
+      for (const childId of node.children) {
+        const child = nodes[childId];
+        if (!child || !isContainerNode(child)) continue;
+        if (this.containerCanAccept(child.id, child.type, draggedType)) return true;
+        stack.push(child.id);
+      }
+    }
+    return false;
+  }
+
+  private containerCanAccept(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedType: BuilderNodeType,
+  ): boolean {
+    if (containerType === 'row') return draggedType === 'col';
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    return true;
   }
 
   private isSelfOrDescendant(sourceId: string, targetId: string): boolean {

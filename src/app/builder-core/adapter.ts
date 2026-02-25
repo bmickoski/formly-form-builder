@@ -252,6 +252,10 @@ function colClass(renderer: BuilderDocument['renderer'], span: number): string {
   return renderer === 'bootstrap' ? `col-${span}` : `fb-col fb-col-${span}`;
 }
 
+function containerLabel(container: ContainerNode, fallback: string): string {
+  return container.props.title ?? container.props.label ?? fallback;
+}
+
 function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | undefined {
   const validation: string[] = [];
   if (node.validators.email) validation.push('email');
@@ -276,7 +280,7 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
 
   const mapped: FormlyFieldConfig = {
     key: safeKey,
-    type: toFormlyType(node.fieldKind),
+    type: node.props.customType ?? toFormlyType(node.fieldKind),
     props: fieldProps(node),
     hide: !!node.props.hidden,
     defaultValue: node.props.defaultValue,
@@ -317,6 +321,45 @@ function containerNodeToFormly(
 
   if (container.type === 'row') {
     return [{ fieldGroup: childrenFields, fieldGroupClassName: rowClass(doc.renderer) }];
+  }
+
+  if (container.type === 'tabs') {
+    return [
+      {
+        type: 'fb-tabs',
+        props: {
+          label: containerLabel(container, 'Tabs'),
+          description: container.props.description,
+        },
+        fieldGroup: childrenFields,
+      },
+    ];
+  }
+
+  if (container.type === 'stepper') {
+    return [
+      {
+        type: 'fb-stepper',
+        props: {
+          label: containerLabel(container, 'Stepper'),
+          description: container.props.description,
+        },
+        fieldGroup: childrenFields,
+      },
+    ];
+  }
+
+  if (container.type === 'accordion') {
+    return [
+      {
+        type: 'fb-accordion',
+        props: {
+          label: containerLabel(container, 'Accordion'),
+          description: container.props.description,
+        },
+        fieldGroup: childrenFields,
+      },
+    ];
   }
 
   const span = Math.max(1, Math.min(12, container.props.colSpan ?? 12));

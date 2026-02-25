@@ -5,11 +5,23 @@ import { fieldPropsOf, getFieldGroup } from './shared';
 const ROW_REGEX = /\b(?:fb-row|row)\b/;
 const COL_REGEX = /\b(?:fb-col|col-(?:xs-|sm-|md-|lg-|xl-|xxl-)?\d{1,2}|col-\d{1,2})\b/;
 
-export type LayoutImportKind = 'panel-wrapper' | 'row' | 'col' | 'anonymous-group' | 'panel-group' | 'field';
+export type LayoutImportKind =
+  | 'panel-wrapper'
+  | 'tabs'
+  | 'stepper'
+  | 'accordion'
+  | 'row'
+  | 'col'
+  | 'anonymous-group'
+  | 'panel-group'
+  | 'field';
 
 export function detectLayoutKind(field: FormlyFieldConfig): LayoutImportKind {
   const wrappers = Array.isArray(field.wrappers) ? field.wrappers : [];
   if (wrappers.includes('panel')) return 'panel-wrapper';
+  if (field.type === 'fb-tabs') return 'tabs';
+  if (field.type === 'fb-stepper') return 'stepper';
+  if (field.type === 'fb-accordion') return 'accordion';
 
   const group = getFieldGroup(field);
   if (group.length === 0) return 'field';

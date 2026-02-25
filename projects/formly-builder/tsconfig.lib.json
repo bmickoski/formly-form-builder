@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "outDir": "../../dist/out-tsc/lib"
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
+  },
+  "files": ["../../src/public-api.ts"]
+}

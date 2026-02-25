@@ -1,92 +1,147 @@
 <div class="fb-app">
   <div class="fb-topbar">
+    <!-- Primary CTA -->
     <button mat-raised-button color="primary" (click)="openPreview()">
       <mat-icon>visibility</mat-icon>
       Preview
     </button>
 
-    <button mat-button (click)="openExport()">
-      <mat-icon>download</mat-icon>
-      Export Formly JSON
-    </button>
+    <div class="fb-toolbar-divider"></div>
 
-    <button mat-button (click)="openExportBuilder()">
-      <mat-icon>dataset</mat-icon>
-      Export Builder JSON
+    <!-- File menu -->
+    <button mat-button [matMenuTriggerFor]="fileMenu">
+      <mat-icon>folder_open</mat-icon> File <mat-icon>arrow_drop_down</mat-icon>
     </button>
+    <mat-menu #fileMenu="matMenu">
+      <button mat-menu-item (click)="openExport()"><mat-icon>download</mat-icon> Export Formly JSON</button>
+      <button mat-menu-item (click)="openExportBuilder()"><mat-icon>dataset</mat-icon> Export Builder JSON</button>
+      <button mat-menu-item (click)="openExportJsonSchema()"><mat-icon>schema</mat-icon> Export JSON Schema</button>
+      <mat-divider />
+      <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
+      <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
+      <mat-divider />
+      <button mat-menu-item class="fb-menu-item-danger" (click)="clear()">
+        <mat-icon>delete</mat-icon> Clear canvas
+      </button>
+    </mat-menu>
 
-    <button mat-button (click)="openImport()">
-      <mat-icon>upload</mat-icon>
-      Import Builder JSON
+    <!-- Templates menu -->
+    <button mat-button [matMenuTriggerFor]="templatesMenu">
+      <mat-icon>collections_bookmark</mat-icon> Templates <mat-icon>arrow_drop_down</mat-icon>
     </button>
+    <mat-menu #templatesMenu="matMenu">
+      <button mat-menu-item (click)="saveSelectedAsTemplate()" [disabled]="!canSaveTemplate()">
+        <mat-icon>bookmark_add</mat-icon> Save selected as template
+      </button>
+      <mat-divider />
+      <button mat-menu-item (click)="openImportTemplates()"><mat-icon>upload</mat-icon> Import templates</button>
+      <button mat-menu-item (click)="openExportTemplates()"><mat-icon>download</mat-icon> Export templates</button>
+    </mat-menu>
 
-    <button mat-button (click)="openImportFormly()">
-      <mat-icon>transform</mat-icon>
-      Import Formly JSON
+    <!-- Palette menu -->
+    <button mat-button [matMenuTriggerFor]="paletteMenu">
+      <mat-icon>palette</mat-icon> Palette <mat-icon>arrow_drop_down</mat-icon>
     </button>
-    <button mat-button (click)="openImportPalette()">
-      <mat-icon>palette</mat-icon>
-      Load Palette JSON
+    <mat-menu #paletteMenu="matMenu">
+      <button mat-menu-item (click)="openImportPalette()"><mat-icon>upload</mat-icon> Load palette JSON</button>
+      <button mat-menu-item (click)="resetPalette()"><mat-icon>restart_alt</mat-icon> Reset palette</button>
+    </mat-menu>
+
+    <!-- Layout menu: starter presets + renderer toggle -->
+    <button mat-button [matMenuTriggerFor]="layoutMenu">
+      <mat-icon>auto_awesome</mat-icon> Layout <mat-icon>arrow_drop_down</mat-icon>
     </button>
-    <button mat-button (click)="resetPalette()">
-      <mat-icon>restart_alt</mat-icon>
-      Reset Palette
-    </button>
+    <mat-menu #layoutMenu="matMenu">
+      @for (preset of store.presets; track preset.id) {
+        <button mat-menu-item (click)="applyPresetById(preset.id)">
+          <mat-icon>dashboard_customize</mat-icon> {{ preset.title }}
+        </button>
+      }
+      <mat-divider />
+      <button mat-menu-item (click)="store.setRenderer('material')">
+        <mat-icon>{{ store.renderer() === 'material' ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+        Material UI
+      </button>
+      <button mat-menu-item (click)="store.setRenderer('bootstrap')">
+        <mat-icon>{{ store.renderer() === 'bootstrap' ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+        Bootstrap UI
+      </button>
+    </mat-menu>
 
-    <mat-form-field appearance="outline" class="fb-starter-layout-field">
-      <mat-label>Starter layout</mat-label>
-      <mat-select [value]="presetToApply()" (selectionChange)="presetToApply.set($event.value)">
-        @for (preset of store.presets; track preset.id) {
-          <mat-option [value]="preset.id">{{ preset.title }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <div class="fb-toolbar-divider"></div>
 
-    <button mat-button (click)="applyPreset()">
-      <mat-icon>auto_awesome</mat-icon>
-      Apply Layout
-    </button>
-
-    <div class="fb-preset-preview">
-      <div class="fb-preset-thumb" aria-hidden="true">
-        @for (row of selectedPreset.thumbnailRows; track $index) {
-          <div class="fb-preset-thumb-row" [style.width.%]="row"></div>
-        }
-      </div>
-      <div class="fb-preset-preview-content">
-        <div class="fb-preset-preview-title">{{ selectedPreset.title }}</div>
-        <div class="fb-preset-preview-description">{{ selectedPreset.description }}</div>
-        <div class="fb-preset-preview-highlights">{{ selectedPreset.highlights.join(' | ') }}</div>
-      </div>
-    </div>
-
-    <button mat-button (click)="store.undo()" [disabled]="!store.canUndo()">
+    <!-- History -->
+    <button
+      mat-icon-button
+      aria-label="Undo"
+      matTooltip="Undo (Ctrl+Z)"
+      (click)="store.undo()"
+      [disabled]="!store.canUndo()"
+    >
       <mat-icon>undo</mat-icon>
-      Undo
     </button>
-
-    <button mat-button (click)="store.redo()" [disabled]="!store.canRedo()">
+    <button
+      mat-icon-button
+      aria-label="Redo"
+      matTooltip="Redo (Ctrl+Shift+Z)"
+      (click)="store.redo()"
+      [disabled]="!store.canRedo()"
+    >
       <mat-icon>redo</mat-icon>
-      Redo
     </button>
-    <button mat-button (click)="toggleDiagnostics()">
-      <mat-icon>rule</mat-icon>
-      Diagnostics ({{ diagnosticsSummary() }})
+    <button mat-icon-button aria-label="History" matTooltip="History" [matMenuTriggerFor]="historyMenu">
+      <mat-icon>history</mat-icon>
+    </button>
+    <mat-menu #historyMenu="matMenu" class="fb-history-menu">
+      <app-builder-history-panel (click)="$event.stopPropagation()" />
+    </mat-menu>
+
+    <div class="fb-toolbar-divider"></div>
+
+    <!-- Clipboard (labeled buttons for recognition over recall) -->
+    <button
+      mat-button
+      aria-label="Copy selected"
+      matTooltip="Copy (Ctrl+C)"
+      (click)="store.copySelected()"
+      [disabled]="!canCopyOrDuplicate()"
+    >
+      <mat-icon>content_copy</mat-icon> Copy
+    </button>
+    <button
+      mat-button
+      aria-label="Duplicate selected"
+      matTooltip="Duplicate (Ctrl+D)"
+      (click)="store.duplicateSelected()"
+      [disabled]="!canCopyOrDuplicate()"
+    >
+      <mat-icon>library_add</mat-icon> Duplicate
+    </button>
+    <button
+      mat-button
+      aria-label="Paste"
+      matTooltip="Paste (Ctrl+V)"
+      (click)="store.pasteFromClipboard()"
+      [disabled]="!store.hasClipboard()"
+    >
+      <mat-icon>content_paste</mat-icon> Paste
     </button>
 
-    <mat-form-field appearance="outline" class="fb-preview-ui-field">
-      <mat-label>Preview UI</mat-label>
-      <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
-        <mat-option value="material">Material</mat-option>
-        <mat-option value="bootstrap">Bootstrap</mat-option>
-      </mat-select>
-    </mat-form-field>
+    <div class="fb-toolbar-divider"></div>
 
-    <span class="fb-toolbar-spacer"></span>
-
-    <button mat-button color="warn" (click)="clear()">
-      <mat-icon>delete</mat-icon>
-      Clear
+    <!-- Diagnostics indicator -->
+    <button
+      mat-button
+      class="fb-diag-btn"
+      [class.fb-diag-error]="store.diagnostics().errorCount > 0"
+      [class.fb-diag-warn]="store.diagnostics().errorCount === 0 && store.diagnostics().warningCount > 0"
+      (click)="toggleDiagnostics()"
+      matTooltip="Toggle diagnostics panel"
+    >
+      <mat-icon>{{
+        store.diagnostics().errorCount > 0 ? 'error' : store.diagnostics().warningCount > 0 ? 'warning' : 'check_circle'
+      }}</mat-icon>
+      {{ diagnosticsSummary() }}
     </button>
   </div>
 
@@ -96,7 +151,7 @@
       @if (store.diagnostics().diagnostics.length === 0) {
         <div class="fb-hint">No issues found.</div>
       } @else {
-        @for (item of firstDiagnostics(); track $index) {
+        @for (item of store.diagnostics().diagnostics.slice(0, 12); track $index) {
           <div class="fb-diagnostics-item" [class.fb-diagnostics-item-error]="item.severity === 'error'">
             <strong>{{ item.severity.toUpperCase() }}</strong
             >:

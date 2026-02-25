@@ -55,6 +55,30 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       importGroup(doc, row.id, getFieldGroup(field));
       return;
     }
+    case 'tabs': {
+      const tabs = createContainerNode('tabs', uid('c'), parentId);
+      tabs.props.title = getPanelTitle(field, 'Tabs');
+      tabs.props.description = getPanelDescription(field);
+      attachContainer(doc, parentId, tabs.id, tabs);
+      importGroup(doc, tabs.id, getFieldGroup(field));
+      return;
+    }
+    case 'stepper': {
+      const stepper = createContainerNode('stepper', uid('c'), parentId);
+      stepper.props.title = getPanelTitle(field, 'Stepper');
+      stepper.props.description = getPanelDescription(field);
+      attachContainer(doc, parentId, stepper.id, stepper);
+      importGroup(doc, stepper.id, getFieldGroup(field));
+      return;
+    }
+    case 'accordion': {
+      const accordion = createContainerNode('accordion', uid('c'), parentId);
+      accordion.props.title = getPanelTitle(field, 'Accordion');
+      accordion.props.description = getPanelDescription(field);
+      attachContainer(doc, parentId, accordion.id, accordion);
+      importGroup(doc, accordion.id, getFieldGroup(field));
+      return;
+    }
     case 'col': {
       const col = createContainerNode('col', uid('c'), parentId);
       const span = getColSpan(field.className ?? undefined);

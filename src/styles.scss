@@ -34,12 +34,13 @@ body {
 }
 .fb-topbar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 10px 16px;
+  padding: 8px 14px;
   background: white;
   border-bottom: 1px solid #e6e6ee;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 .fb-topbar button[mat-button],
 .fb-topbar button[mat-raised-button] {
@@ -74,8 +75,10 @@ body {
   overflow: auto;
 }
 .fb-canvas-surface {
-  background: white;
-  border: 1px dashed #cfcfe6;
+  background-color: white;
+  background-image: radial-gradient(circle, #d4d4ec 1px, transparent 1px);
+  background-size: 22px 22px;
+  border: 1px solid #e0e0f0;
   border-radius: 12px;
   min-height: 420px;
   padding: 12px;
@@ -95,6 +98,37 @@ body {
   background: #fafaff;
   margin: 4px;
 }
+.fb-empty-guided {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 32px;
+}
+.fb-empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  color: #8f8fd8;
+  opacity: 0.75;
+}
+.fb-node-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.fb-node-actions .mat-mdc-icon-button {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  --mdc-icon-button-state-layer-size: 32px;
+}
+.fb-node-actions .mat-mdc-icon-button .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
 .fb-node {
   border: 1px solid #e2e2f0;
   background: #fff;
@@ -104,7 +138,8 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  gap: 8px;
 }
 .fb-node:hover {
   border-color: #c9c9e6;
@@ -227,30 +262,6 @@ body {
 .fb-field {
   width: 100%;
 }
-.fb-toolbar-spacer {
-  flex: 1 1 auto;
-}
-.fb-preset-preview {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid #ececf5;
-  border-radius: 10px;
-  max-width: 320px;
-}
-.fb-preset-thumb {
-  width: 34px;
-  min-width: 34px;
-  display: grid;
-  gap: 3px;
-}
-.fb-preset-thumb-row {
-  height: 5px;
-  border-radius: 4px;
-  background: #8f8fd8;
-}
-
 /* Preview layout helpers */
 .fb-row {
   display: flex;

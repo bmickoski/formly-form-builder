@@ -1,4 +1,4 @@
-﻿export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col';
+export type BuilderNodeType = 'field' | 'panel' | 'row' | 'col' | 'tabs' | 'stepper' | 'accordion';
 
 export type PreviewRenderer = 'material' | 'bootstrap';
 
@@ -92,6 +92,8 @@ export interface FieldProps extends CommonProps {
   enabledRule?: ConditionalRule;
   visibleExpression?: string;
   enabledExpression?: string;
+  /** Custom Formly type name override (from PaletteItem.formlyType). Overrides fieldKind-based type in adapter. */
+  customType?: string;
 }
 
 export interface ContainerProps extends CommonProps {
@@ -114,7 +116,7 @@ export interface FieldNode extends BuilderNodeBase {
 }
 
 export interface ContainerNode extends BuilderNodeBase {
-  type: 'panel' | 'row' | 'col';
+  type: 'panel' | 'row' | 'col' | 'tabs' | 'stepper' | 'accordion';
   props: ContainerProps;
 }
 
@@ -134,7 +136,14 @@ export interface DropLocation {
 }
 
 export function isContainerNode(n: BuilderNode): n is ContainerNode {
-  return n.type === 'panel' || n.type === 'row' || n.type === 'col';
+  return (
+    n.type === 'panel' ||
+    n.type === 'row' ||
+    n.type === 'col' ||
+    n.type === 'tabs' ||
+    n.type === 'stepper' ||
+    n.type === 'accordion'
+  );
 }
 export function isFieldNode(n: BuilderNode): n is FieldNode {
   return n.type === 'field';

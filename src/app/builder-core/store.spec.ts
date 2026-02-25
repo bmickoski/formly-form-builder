@@ -127,6 +127,24 @@ describe('BuilderStore layout commands', () => {
     expect(withEnabledExpression).toBeTruthy();
     expect(withCustomValidation).toBeTruthy();
   });
+});
+
+describe('BuilderStore grouped updates and clipboard', () => {
+  let store: BuilderStore;
+
+  beforeEach(() => {
+    store = new BuilderStore();
+  });
+
+  function rootId(): string {
+    return store.rootId();
+  }
+
+  function selectedId(): string {
+    const id = store.selectedId();
+    expect(id).toBeTruthy();
+    return id as string;
+  }
 
   it('groups rapid inspector updates into one undo step', () => {
     store.addFromPalette('input', { containerId: rootId(), index: 0 });
@@ -146,5 +164,35 @@ describe('BuilderStore layout commands', () => {
     expect(afterUndo?.type).toBe('field');
     if (!afterUndo || afterUndo.type !== 'field') return;
     expect(afterUndo.props.label).toBe('Input');
+  });
+
+  it('supports copy, paste, and duplicate actions for selected node', () => {
+    store.addFromPalette('input', { containerId: rootId(), index: 0 });
+    const firstFieldId = selectedId();
+    const firstField = store.nodes()[firstFieldId];
+    expect(firstField?.type).toBe('field');
+    if (!firstField || firstField.type !== 'field') return;
+
+    store.updateNodeProps(firstFieldId, { key: 'customerEmail' });
+    store.copySelected();
+    expect(store.hasClipboard()).toBeTrue();
+
+    store.pasteFromClipboard();
+    const rootAfterPaste = store.nodes()[rootId()];
+    expect(rootAfterPaste.type).toBe('panel');
+    if (rootAfterPaste.type !== 'panel') return;
+    expect(rootAfterPaste.children.length).toBe(2);
+
+    const pastedField = store.nodes()[rootAfterPaste.children[1]];
+    expect(pastedField?.type).toBe('field');
+    if (!pastedField || pastedField.type !== 'field') return;
+    expect(pastedField.props.key).toContain('customerEmail_copy');
+
+    store.select(firstFieldId);
+    store.duplicateSelected();
+    const rootAfterDuplicate = store.nodes()[rootId()];
+    expect(rootAfterDuplicate.type).toBe('panel');
+    if (rootAfterDuplicate.type !== 'panel') return;
+    expect(rootAfterDuplicate.children.length).toBe(3);
   });
 });

@@ -17,6 +17,11 @@ import { PALETTE, PaletteItem } from './registry';
  * Each function returns either the unchanged document (no-op) or a new immutable snapshot.
  */
 
+export interface NodeClipboard {
+  rootId: string;
+  nodes: Record<string, BuilderNode>;
+}
+
 export function removeNodeCommand(doc: BuilderDocument, id: string): BuilderDocument {
   const node = doc.nodes[id];
   if (!node || !node.parentId) return doc;
@@ -214,6 +219,102 @@ export function splitColumnCommand(doc: BuilderDocument, columnId: string, parts
   return { ...doc, nodes, selectedId: row.children[0] };
 }
 
+export function copyNodeSnapshot(doc: BuilderDocument, nodeId: string): NodeClipboard | null {
+  const source = doc.nodes[nodeId];
+  if (!source || source.id === doc.rootId) return null;
+
+  const collected: Record<string, BuilderNode> = {};
+  const stack = [nodeId];
+  while (stack.length) {
+    const currentId = stack.pop()!;
+    const current = doc.nodes[currentId];
+    if (!current || collected[currentId]) continue;
+    collected[currentId] = cloneNode(current);
+    if (isContainerNode(current)) stack.push(...current.children);
+  }
+
+  if (!collected[nodeId]) return null;
+  collected[nodeId] = { ...collected[nodeId], parentId: null };
+  return { rootId: nodeId, nodes: collected };
+}
+
+export function pasteNodeCommand(
+  doc: BuilderDocument,
+  clipboard: NodeClipboard | null,
+  loc: DropLocation,
+): BuilderDocument {
+  if (!clipboard) return doc;
+
+  const target = doc.nodes[loc.containerId];
+  if (!target || !isContainerNode(target)) return doc;
+  const sourceRoot = clipboard.nodes[clipboard.rootId];
+  if (!sourceRoot) return doc;
+  if (target.type === 'row' && sourceRoot.type !== 'col') return doc;
+
+  const idMap = new Map<string, string>();
+  const usedKeys = collectFieldKeys(doc);
+  const createdNodes: Record<string, BuilderNode> = {};
+
+  const createRecursive = (oldId: string, parentId: string | null): string | null => {
+    const original = clipboard.nodes[oldId];
+    if (!original) return null;
+
+    const nextId = uid(original.type === 'field' ? 'f' : 'c');
+    idMap.set(oldId, nextId);
+
+    if (original.type === 'field') {
+      const desiredKey = (original.props.key ?? '').trim() || toFieldKey(nextId);
+      const uniqueKey = toUniqueFieldKey(desiredKey, usedKeys);
+      createdNodes[nextId] = {
+        ...original,
+        id: nextId,
+        parentId,
+        children: [],
+        props: { ...original.props, key: uniqueKey },
+        validators: { ...original.validators },
+      };
+      return nextId;
+    }
+
+    const childIds: string[] = [];
+    for (const childOldId of original.children) {
+      const childNewId = createRecursive(childOldId, nextId);
+      if (childNewId) childIds.push(childNewId);
+    }
+
+    createdNodes[nextId] = {
+      ...original,
+      id: nextId,
+      parentId,
+      children: childIds,
+      props: { ...original.props },
+    };
+    return nextId;
+  };
+
+  const newRootId = createRecursive(clipboard.rootId, loc.containerId);
+  if (!newRootId) return doc;
+
+  const nodes = { ...doc.nodes, ...createdNodes };
+  const children = [...target.children];
+  const index = clampIndex(loc.index, children.length);
+  children.splice(index, 0, newRootId);
+  nodes[target.id] = { ...target, children };
+  return { ...doc, nodes, selectedId: newRootId };
+}
+
+export function duplicateNodeCommand(doc: BuilderDocument, nodeId: string): BuilderDocument {
+  const source = doc.nodes[nodeId];
+  if (!source || !source.parentId) return doc;
+  const parent = doc.nodes[source.parentId];
+  if (!parent || !isContainerNode(parent)) return doc;
+
+  const index = parent.children.indexOf(nodeId);
+  if (index < 0) return doc;
+  const snapshot = copyNodeSnapshot(doc, nodeId);
+  return pasteNodeCommand(doc, snapshot, { containerId: parent.id, index: index + 1 });
+}
+
 function createNodeFromPalette(
   item: PaletteItem,
   parentId: string,
@@ -231,7 +332,11 @@ function createNodeFromPalette(
       parentId,
       children: [],
       fieldKind,
-      props: { ...(item.defaults.props as any), key: toFieldKey(id) },
+      props: {
+        ...(item.defaults.props as any),
+        key: toFieldKey(id),
+        ...(item.formlyType ? { customType: item.formlyType } : {}),
+      },
       validators: {
         ...(validatorsForFieldKind ? validatorsForFieldKind(fieldKind) : {}),
         ...(item.defaults.validators ?? {}),
@@ -257,6 +362,48 @@ function createNodeFromPalette(
     extraNodes.push(createdChild.node, ...createdChild.extraNodes);
   }
   return { id, node, extraNodes };
+}
+
+function cloneNode(node: BuilderNode): BuilderNode {
+  if (node.type === 'field') {
+    return {
+      ...node,
+      props: { ...node.props },
+      validators: { ...node.validators },
+      children: [],
+    };
+  }
+  return {
+    ...node,
+    props: { ...node.props },
+    children: [...node.children],
+  };
+}
+
+function collectFieldKeys(doc: BuilderDocument): Set<string> {
+  const out = new Set<string>();
+  for (const node of Object.values(doc.nodes)) {
+    if (node.type !== 'field') continue;
+    const key = (node.props.key ?? '').trim();
+    if (key) out.add(key);
+  }
+  return out;
+}
+
+function toUniqueFieldKey(base: string, usedKeys: Set<string>): string {
+  if (!usedKeys.has(base)) {
+    usedKeys.add(base);
+    return base;
+  }
+
+  let index = 1;
+  let candidate = `${base}_copy`;
+  while (usedKeys.has(candidate)) {
+    index += 1;
+    candidate = `${base}_copy${index}`;
+  }
+  usedKeys.add(candidate);
+  return candidate;
 }
 
 function isDescendant(nodes: Record<string, BuilderNode>, rootId: string, searchId: string): boolean {

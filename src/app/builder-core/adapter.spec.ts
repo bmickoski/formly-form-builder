@@ -102,6 +102,42 @@ describe('builder/formly adapters: layout + dynamic options', () => {
     expect(node.props.optionsSource?.type).toBe('lookup');
     expect(node.props.optionsSource?.lookupKey).toBe('priorities');
   });
+
+  it('exports advanced layout containers as custom Formly types', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('tabs', { containerId: store.rootId(), index: 0 });
+    const tabsId = store.selectedId() as string;
+    store.addFromPalette('input', { containerId: tabsId, index: 0 });
+
+    store.addFromPalette('stepper', { containerId: store.rootId(), index: 1 });
+    const stepperId = store.selectedId() as string;
+    store.addFromPalette('input', { containerId: stepperId, index: 0 });
+
+    store.addFromPalette('accordion', { containerId: store.rootId(), index: 2 });
+    const accordionId = store.selectedId() as string;
+    store.addFromPalette('input', { containerId: accordionId, index: 0 });
+
+    const fields = builderToFormly(store.doc());
+    expect(fields[0].type).toBe('fb-tabs');
+    expect(fields[1].type).toBe('fb-stepper');
+    expect(fields[2].type).toBe('fb-accordion');
+  });
+
+  it('imports advanced layout Formly types as builder containers', () => {
+    const fields: FormlyFieldConfig[] = [
+      { type: 'fb-tabs', props: { label: 'Tabs' }, fieldGroup: [{ type: 'input', key: 'a' }] },
+      { type: 'fb-stepper', props: { label: 'Stepper' }, fieldGroup: [{ type: 'input', key: 'b' }] },
+      { type: 'fb-accordion', props: { label: 'Accordion' }, fieldGroup: [{ type: 'input', key: 'c' }] },
+    ];
+
+    const doc = formlyToBuilder(fields, 'material');
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const types = root.children.map((id) => doc.nodes[id]?.type);
+    expect(types).toEqual(['tabs', 'stepper', 'accordion']);
+  });
 });
 
 describe('builder/formly adapters: rules + async validators', () => {

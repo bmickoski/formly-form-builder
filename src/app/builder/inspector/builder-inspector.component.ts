@@ -83,6 +83,14 @@ export class BuilderInspectorComponent {
     if (!f) return false;
     return f.fieldKind === 'input' || f.fieldKind === 'email';
   });
+  readonly customTypeHint = computed(() => {
+    const field = this.fieldNode();
+    const customType = field?.props.customType?.trim();
+    if (!customType) return null;
+    const match = this.store.paletteItems().find((item) => item.formlyType === customType);
+    const hint = match?.inspectorHint?.trim();
+    return hint || `Custom Formly type: ${customType}`;
+  });
 
   private readonly tabByNodeType = signal<{ field: number; layout: number }>({ field: 0, layout: 0 });
   readonly selectedTabIndex = computed(() =>
@@ -131,6 +139,17 @@ export class BuilderInspectorComponent {
 
   isPanel(): boolean {
     return this.containerNode()?.type === 'panel';
+  }
+  isTitledLayout(): boolean {
+    const type = this.containerNode()?.type;
+    return type === 'panel' || type === 'tabs' || type === 'stepper' || type === 'accordion';
+  }
+  titledLayoutLabel(): string {
+    const type = this.containerNode()?.type;
+    if (type === 'tabs') return 'Tabs title';
+    if (type === 'stepper') return 'Stepper title';
+    if (type === 'accordion') return 'Accordion title';
+    return 'Panel title';
   }
   isCol(): boolean {
     return this.containerNode()?.type === 'col';

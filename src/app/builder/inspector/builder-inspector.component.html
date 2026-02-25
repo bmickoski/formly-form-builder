@@ -30,9 +30,9 @@
             </button>
           </mat-form-field>
 
-          @if (isPanel()) {
+          @if (isTitledLayout()) {
             <mat-form-field appearance="outline" class="fb-field">
-              <mat-label>Panel title</mat-label>
+              <mat-label>{{ titledLayoutLabel() }}</mat-label>
               <input matInput [ngModel]="c?.props?.title" (ngModelChange)="setProp('title', $event)" />
               <button
                 mat-icon-button
@@ -62,6 +62,9 @@
                 <mat-icon>help_outline</mat-icon>
               </button>
             </mat-form-field>
+            @if (customTypeHint()) {
+              <div class="fb-hint fb-hint-margin-bottom">{{ customTypeHint() }}</div>
+            }
           }
 
           <mat-form-field appearance="outline" class="fb-field">

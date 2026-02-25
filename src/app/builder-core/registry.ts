@@ -15,6 +15,10 @@ export interface PaletteItem {
   title: string;
   nodeType: BuilderNodeType;
   fieldKind?: FieldKind;
+  /** Override the emitted Formly type name (e.g. 'my-datepicker'). Persisted as FieldProps.customType. */
+  formlyType?: string;
+  /** Optional hint shown in the inspector for custom field types. */
+  inspectorHint?: string;
   defaults: {
     props: FieldProps | ContainerProps;
     validators?: BuilderValidators;
@@ -207,6 +211,27 @@ export const PALETTE: PaletteItem[] = [
     title: 'Column',
     nodeType: 'col',
     defaults: { props: { colSpan: 6 }, childrenTemplate: [] },
+  },
+  {
+    id: 'tabs',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Tabs',
+    nodeType: 'tabs',
+    defaults: { props: { title: 'Tabs' }, childrenTemplate: [] },
+  },
+  {
+    id: 'stepper',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Stepper',
+    nodeType: 'stepper',
+    defaults: { props: { title: 'Stepper' }, childrenTemplate: [] },
+  },
+  {
+    id: 'accordion',
+    category: DEFAULT_PALETTE_CATEGORIES.layout,
+    title: 'Accordion',
+    nodeType: 'accordion',
+    defaults: { props: { title: 'Accordion' }, childrenTemplate: [] },
   },
 ];
 

@@ -1,10 +1,49 @@
-<h2 mat-dialog-title>
-  Preview <span class="fb-hint">({{ isBootstrap ? 'Bootstrap' : 'Material' }})</span>
+<h2 mat-dialog-title class="fb-preview-dialog-title">
+  <span>Preview</span>
+  <div class="fb-preview-viewports">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('desktop')"
+      [class.fb-preview-viewport-active]="viewport() === 'desktop'"
+      matTooltip="Desktop (~100%)"
+    >
+      <mat-icon>desktop_mac</mat-icon> Desktop
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('tablet')"
+      [class.fb-preview-viewport-active]="viewport() === 'tablet'"
+      matTooltip="Tablet (820px)"
+    >
+      <mat-icon>tablet</mat-icon> Tablet
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="setViewport('mobile')"
+      [class.fb-preview-viewport-active]="viewport() === 'mobile'"
+      matTooltip="Mobile (390px)"
+    >
+      <mat-icon>phone_iphone</mat-icon> Mobile
+    </button>
+  </div>
+  <span class="fb-hint fb-preview-renderer-badge">{{ isBootstrap ? 'Bootstrap' : 'Material' }}</span>
 </h2>
 
 <mat-dialog-content class="fb-form">
   <form [formGroup]="form" (ngSubmit)="submit()">
-    <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
+    <div
+      class="fb-preview-viewport"
+      [class.fb-preview-desktop]="viewport() === 'desktop'"
+      [class.fb-preview-tablet]="viewport() === 'tablet'"
+      [class.fb-preview-mobile]="viewport() === 'mobile'"
+      [class.fb-preview-force-stack]="viewport() !== 'desktop'"
+      [style.max-width.px]="viewportMaxWidth()"
+    >
+      <formly-form [form]="form" [model]="model" [fields]="fields" [options]="options"></formly-form>
+    </div>
 
     <div class="fb-preview-actions">
       @if (isBootstrap) {

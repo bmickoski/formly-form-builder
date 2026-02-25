@@ -17,7 +17,18 @@
         <div class="fb-node-sub">{{ subtitleFor(n) }}</div>
       </div>
 
-      <mat-icon>{{ isContainer() ? 'view_week' : 'tune' }}</mat-icon>
+      @if (selected()) {
+        <div class="fb-node-actions" (click)="$event.stopPropagation()">
+          <button mat-icon-button aria-label="Duplicate" matTooltip="Duplicate" (click)="store.duplicateSelected()">
+            <mat-icon>library_add</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Delete" matTooltip="Delete (Del)" (click)="store.removeSelected()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      } @else {
+        <mat-icon>{{ isContainer() ? 'view_week' : 'tune' }}</mat-icon>
+      }
 
       <ng-template cdkDragPlaceholder>
         <div class="fb-drag-placeholder"></div>
@@ -64,9 +75,13 @@
         (cdkDropListDropped)="onDrop($event)"
       >
         @if (isRoot() && children().length === 0) {
-          <div class="fb-empty fb-empty-dropzone">
-            <div class="fb-empty-title">Drop fields here</div>
-            <div class="fb-hint">Drop on this canvas root area to start building.</div>
+          <div class="fb-empty fb-empty-dropzone fb-empty-guided">
+            <mat-icon class="fb-empty-icon">dashboard_customize</mat-icon>
+            <div class="fb-empty-title">Start building your form</div>
+            <div class="fb-hint">
+              Drag fields from the left panel — or use
+              <strong>Layout</strong> in the toolbar to apply a starter template.
+            </div>
           </div>
         }
         @for (cid of children(); track cid) {

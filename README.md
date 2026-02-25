@@ -14,7 +14,9 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Left panel: draggable palette grouped into `Common Fields`, `Advanced Fields`, and `Layout`.
 - Center panel: placeholder canvas with nested layout editing.
 - Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
-- Preview: real Formly render (Material or Bootstrap).
+- Preview: real Formly render (Material or Bootstrap) with desktop/tablet/mobile viewport toggle.
+- Layout palette includes `Panel`, `Row`, `Column`, `Tabs`, `Stepper`, and `Accordion`.
+- Field templates can be saved from selected field and reused via the palette (`My Templates` category).
 - Default preview renderer: Bootstrap.
 - Root route uses lazy `loadComponent` for the builder page.
 
@@ -40,6 +42,8 @@ App runs at `http://localhost:4201`.
 ```bash
 npm start
 npm run build
+npm run build:lib
+npm run pack:lib
 npm run build:pages
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run e2e
@@ -63,6 +67,8 @@ npm run docs
 - `Export Builder JSON`: internal builder document (round-trip format).
 - `Import Builder JSON`: restores builder document.
 - `Import Formly JSON`: maps Formly config into builder model.
+- `Export Templates JSON`: exports saved field templates.
+- `Import Templates JSON`: imports saved field templates (field node templates only).
 
 ## Palette customization
 
@@ -76,6 +82,7 @@ npm run docs
   - `lookupRegistry` extensions/overrides
   - `validatorPresets` extensions (for custom field defaults)
   - `validatorPresetDefinitions` extensions/overrides (for inspector-selectable named presets)
+  - `formlyExtensions` for custom Formly types/wrappers used by Preview dialogs
 - Plugin example (`src/app/app.config.ts`):
 
 ```ts
@@ -116,11 +123,32 @@ const CRM_PLUGIN: BuilderPlugin = {
       }),
     },
   ],
+  formlyExtensions: [
+    {
+      types: [{ name: 'crm-datepicker', component: CrmDatepickerTypeComponent }],
+      wrappers: [{ name: 'crm-card', component: CrmCardWrapperComponent }],
+    },
+  ],
 };
 
 export const appConfig: ApplicationConfig = {
   providers: [{ provide: BUILDER_PLUGINS, useValue: [CRM_PLUGIN] }],
 };
+```
+
+- To emit a custom type from palette, set `formlyType` on the palette item:
+
+```ts
+{
+  id: 'crm-date',
+  category: 'Advanced Fields',
+  title: 'CRM Date',
+  nodeType: 'field',
+  fieldKind: 'input',
+  formlyType: 'crm-datepicker',
+  inspectorHint: 'Uses CRM datepicker custom type.',
+  defaults: { props: { label: 'Date' } },
+}
 ```
 
 - `validatorPresets` are applied when adding fields from palette.
@@ -249,6 +277,7 @@ export const appConfig: ApplicationConfig = {
 - `src/public-api.ts` exports a stable integration surface for host apps and future packaging.
 - `src/app/builder-core/index.ts` is the core barrel behind that surface.
 - Embeddable component selector: `formly-builder`.
+- Library package build output: `dist/formly-builder` (via `npm run build:lib`).
 - Example imports for host integration:
 
 ```ts

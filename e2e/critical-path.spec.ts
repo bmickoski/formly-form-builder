@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { applyStarterLayout, clearBuilder } from './helpers';
+import { applyStarterLayout, clearBuilder, clickTopbarMenuItem } from './helpers';
 
 test('exports valid formly json @critical', async ({ page }) => {
   await page.goto('/');
   await applyStarterLayout(page);
 
-  await page.getByRole('button', { name: 'Export Formly JSON' }).click();
+  await clickTopbarMenuItem(page, 'File', 'Export Formly JSON');
   const jsonArea = page.locator('textarea');
   await expect(jsonArea).toBeVisible();
   const value = await jsonArea.inputValue();
@@ -22,7 +22,7 @@ test('builder json round-trip import restores layout @critical', async ({ page }
   const titlesBefore = await page.locator('.fb-canvas .fb-node-title').count();
   expect(titlesBefore).toBeGreaterThan(0);
 
-  await page.getByRole('button', { name: 'Export Builder JSON' }).click();
+  await clickTopbarMenuItem(page, 'File', 'Export Builder JSON');
   const exportArea = page.locator('textarea');
   await expect(exportArea).toBeVisible();
   const builderJson = await exportArea.inputValue();
@@ -32,7 +32,7 @@ test('builder json round-trip import restores layout @critical', async ({ page }
   await clearBuilder(page);
   await expect(page.locator('.fb-canvas .fb-node-title')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Import Builder JSON' }).click();
+  await clickTopbarMenuItem(page, 'File', 'Import Builder JSON');
   const importArea = page.locator('textarea');
   await importArea.fill(builderJson);
   await page.getByRole('button', { name: 'Import', exact: true }).click();
@@ -44,24 +44,20 @@ test('switch renderer to bootstrap and preview uses bootstrap mode @critical', a
   await page.goto('/');
   await applyStarterLayout(page);
 
-  await page.locator('mat-form-field').filter({ hasText: 'Preview UI' }).click();
-  await page.getByRole('option', { name: 'Bootstrap' }).click();
+  await clickTopbarMenuItem(page, 'Layout', 'Bootstrap UI');
 
   await page.getByRole('button', { name: 'Preview' }).click();
   const previewDialog = page.locator('mat-dialog-container');
-  await expect(previewDialog.getByText('(Bootstrap)')).toBeVisible();
+  await expect(previewDialog.getByText('Bootstrap')).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
 });
 
 test('bootstrap renderer is default on fresh load @critical', async ({ page }) => {
   await page.goto('/');
 
-  const rendererField = page.locator('mat-form-field').filter({ hasText: 'Preview UI' });
-  await expect(rendererField).toContainText('Bootstrap');
-
   await page.getByRole('button', { name: 'Preview' }).click();
   const previewDialog = page.locator('mat-dialog-container');
-  await expect(previewDialog.getByText('(Bootstrap)')).toBeVisible();
+  await expect(previewDialog.getByText('Bootstrap')).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
 });
 

@@ -1,0 +1,24 @@
+<div class="fb-history-panel">
+  @if (store.pastLabels().length === 0 && store.futureLabels().length === 0) {
+    <div class="fb-history-empty">No history yet.</div>
+  }
+
+  @for (label of store.futureLabels(); track $index; let i = $index) {
+    <div class="fb-history-item fb-history-future" (click)="redoTo(i)" matTooltip="Redo to here">
+      <mat-icon class="fb-history-icon">redo</mat-icon>
+      <span class="fb-history-label">{{ label }}</span>
+    </div>
+  }
+
+  <div class="fb-history-item fb-history-current">
+    <mat-icon class="fb-history-icon">radio_button_checked</mat-icon>
+    <span class="fb-history-label">Current state</span>
+  </div>
+
+  @for (label of store.pastLabels(); track $index; let i = $index) {
+    <div class="fb-history-item" (click)="undoTo(i)" matTooltip="Undo to here">
+      <mat-icon class="fb-history-icon">undo</mat-icon>
+      <span class="fb-history-label">{{ label }}</span>
+    </div>
+  }
+</div>

@@ -5,8 +5,17 @@ import type { PaletteItem } from './registry';
 import type { ValidatorPresetDefinition } from './validation-presets';
 
 /**
+ * A subset of Formly's ConfigOption used to register custom types and wrappers.
+ * Pass instances via BuilderPlugin.formlyExtensions to register them in the preview dialogs.
+ */
+export interface FormlyConfigExtension {
+  types?: Array<{ name: string; component: unknown; extends?: string; wrappers?: string[] }>;
+  wrappers?: Array<{ name: string; component: unknown }>;
+}
+
+/**
  * Product extension contract for builder capabilities.
- * Plugins can contribute palette entries, lookup datasets, and validator presets.
+ * Plugins can contribute palette entries, lookup datasets, validator presets, and custom Formly types.
  */
 export interface BuilderPlugin {
   id: string;
@@ -14,6 +23,8 @@ export interface BuilderPlugin {
   lookupRegistry?: Record<string, OptionItem[]>;
   validatorPresets?: Partial<Record<FieldKind, BuilderValidators>>;
   validatorPresetDefinitions?: readonly ValidatorPresetDefinition[];
+  /** Custom Formly types/wrappers to register in the preview dialogs. */
+  formlyExtensions?: readonly FormlyConfigExtension[];
 }
 
 /** Multi-plugin injection token used to compose runtime extensions. */
@@ -91,4 +102,9 @@ export function composeValidatorPresetDefinitions(
   }
 
   return out;
+}
+
+/** Collects all formlyExtensions from plugins into a flat array. */
+export function composeFormlyExtensions(plugins: readonly BuilderPlugin[]): FormlyConfigExtension[] {
+  return plugins.flatMap((plugin) => [...(plugin.formlyExtensions ?? [])]);
 }

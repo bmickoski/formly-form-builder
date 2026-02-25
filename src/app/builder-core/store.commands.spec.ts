@@ -1,7 +1,10 @@
 import {
   addColumnToRowCommand,
   addFromPaletteCommand,
+  copyNodeSnapshot,
+  duplicateNodeCommand,
   moveNodeCommand,
+  pasteNodeCommand,
   rebalanceRowColumnsCommand,
   removeNodeCommand,
   reorderWithinCommand,
@@ -120,7 +123,9 @@ describe('store.commands', () => {
     if (!nestedRow || nestedRow.type !== 'row') return;
     expect(nestedRow.children.length).toBe(2);
   });
+});
 
+describe('store.commands templates and clipboard', () => {
   it('supports custom palette collections for creation templates', () => {
     const doc = createDoc();
     const customPalette: PaletteItem[] = [
@@ -151,5 +156,54 @@ describe('store.commands', () => {
     expect(row.children.length).toBe(2);
     expect(out.nodes[row.children[0]]?.type).toBe('col');
     expect(out.nodes[row.children[1]]?.type).toBe('col');
+  });
+
+  it('duplicates selected subtree with fresh ids and unique field keys', () => {
+    const doc = createDoc();
+    let out = addFromPaletteCommand(doc, 'input', { containerId: 'root', index: 0 });
+    const root = out.nodes['root'] as ContainerNode;
+    const fieldId = root.children[0];
+    const existing = out.nodes[fieldId];
+    expect(existing?.type).toBe('field');
+    if (!existing || existing.type !== 'field') return;
+    out = {
+      ...out,
+      nodes: {
+        ...out.nodes,
+        [fieldId]: { ...existing, props: { ...existing.props, key: 'email' } },
+      },
+    };
+
+    const duplicated = duplicateNodeCommand(out, fieldId);
+    const nextRoot = duplicated.nodes['root'] as ContainerNode;
+    expect(nextRoot.children.length).toBe(2);
+
+    const first = duplicated.nodes[nextRoot.children[0]];
+    const second = duplicated.nodes[nextRoot.children[1]];
+    expect(first?.type).toBe('field');
+    expect(second?.type).toBe('field');
+    if (!first || !second || first.type !== 'field' || second.type !== 'field') return;
+
+    expect(first.id).not.toBe(second.id);
+    expect(first.props.key).toBe('email');
+    expect(second.props.key).toContain('email_copy');
+  });
+
+  it('copies and pastes a row subtree into root', () => {
+    const doc = createDoc();
+    const withRow = addFromPaletteCommand(doc, 'row', { containerId: 'root', index: 0 });
+    const root = withRow.nodes['root'] as ContainerNode;
+    const rowId = root.children[0];
+
+    const snapshot = copyNodeSnapshot(withRow, rowId);
+    expect(snapshot).toBeTruthy();
+    const pasted = pasteNodeCommand(withRow, snapshot, { containerId: 'root', index: 1 });
+    const nextRoot = pasted.nodes['root'] as ContainerNode;
+    expect(nextRoot.children.length).toBe(2);
+
+    const clonedRow = pasted.nodes[nextRoot.children[1]];
+    expect(clonedRow?.type).toBe('row');
+    if (!clonedRow || clonedRow.type !== 'row') return;
+    expect(clonedRow.children.length).toBe(2);
   });
 });
