@@ -11,12 +11,18 @@
 2. Run locally:
    - `npm run typecheck`
    - `npm run lint`
-   - `npm test -- --watch=false --browsers=ChromeHeadless`
+   - `npm run test:ci`
+   - `npm run e2e:critical`
    - `npm run build`
+   - `npm run build:lib`
 3. Update docs/ADR entries if architecture or behavior changed.
-4. Create release commit (if needed) and push.
-5. Create Git tag (`git tag vX.Y.Z`) and push tag (`git push origin vX.Y.Z`).
-6. Publish GitHub Release notes (highlights, migration notes, known issues).
+4. Ensure `NPM_TOKEN` is configured in GitHub repository secrets for npm publish.
+5. Create release commit (if needed) and push.
+6. Create Git tag (`git tag vX.Y.Z`) and push tag (`git push origin vX.Y.Z`).
+7. Verify the release workflow published:
+   - npm package from `dist/formly-builder`
+   - GitHub release assets (`formly-form-builder-dist.tar.gz` and library `.tgz`)
+8. Publish release notes (highlights, migration notes, known issues).
 
 ## Hotfix process
 
