@@ -8,6 +8,7 @@
       mat-stroked-button
       type="button"
       (click)="setViewport('desktop')"
+      [color]="viewport() === 'desktop' ? 'primary' : undefined"
       [class.fb-preview-viewport-active]="viewport() === 'desktop'"
     >
       Desktop
@@ -16,6 +17,7 @@
       mat-stroked-button
       type="button"
       (click)="setViewport('tablet')"
+      [color]="viewport() === 'tablet' ? 'primary' : undefined"
       [class.fb-preview-viewport-active]="viewport() === 'tablet'"
     >
       Tablet
@@ -24,15 +26,21 @@
       mat-stroked-button
       type="button"
       (click)="setViewport('mobile')"
+      [color]="viewport() === 'mobile' ? 'primary' : undefined"
       [class.fb-preview-viewport-active]="viewport() === 'mobile'"
     >
       Mobile
     </button>
   </div>
+  <div class="fb-hint fb-preview-mode-hint">
+    Viewport:
+    {{ viewport() === 'desktop' ? 'Desktop (~100%)' : viewport() === 'tablet' ? 'Tablet (820px)' : 'Mobile (390px)' }}
+  </div>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div
       class="fb-preview-viewport"
+      [class.fb-preview-desktop]="viewport() === 'desktop'"
       [class.fb-preview-tablet]="viewport() === 'tablet'"
       [class.fb-preview-mobile]="viewport() === 'mobile'"
     >

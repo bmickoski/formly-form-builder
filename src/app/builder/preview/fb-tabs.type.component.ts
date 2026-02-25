@@ -106,8 +106,7 @@ export class FbTabsTypeComponent extends FieldType {
       const props = child.props as Record<string, unknown> | undefined;
       const label =
         typeof props?.['label'] === 'string' && props['label'].trim() ? String(props['label']) : `Tab ${index + 1}`;
-      const fields = Array.isArray(child.fieldGroup) && child.fieldGroup.length > 0 ? child.fieldGroup : [child];
-      return { label, fields };
+      return { label, fields: [child] };
     });
   }
 }

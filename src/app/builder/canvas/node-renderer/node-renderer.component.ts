@@ -89,25 +89,8 @@ export class NodeRendererComponent {
     if (!container || !isContainerNode(container)) return false;
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
-
-    // Allow direct palette drop on any compatible container.
-    // This avoids forcing users to use the explicit "Drop inside ..." strip first.
-    if (drag.data.kind === 'palette') {
-      if (container.type === 'row' && draggedType !== 'col') return false;
-      return true;
-    }
-
-    const rootId = this.store.rootId();
-    // Keep root list for reordering root children only.
-    if (container.id === rootId) {
-      const dragged = this.store.nodes()[drag.data.nodeId];
-      return !!dragged && dragged.parentId === rootId;
-    }
-    if (container.type === 'row' && draggedType !== 'col') return false;
-
-    if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
-
-    return true;
+    if (drag.data.kind === 'palette') return this.canEnterFromPalette(container.id, container.type, draggedType);
+    return this.canEnterFromNode(container.id, container.type, drag.data.nodeId, draggedType);
   };
 
   canEnterAppend = (drag: CdkDrag<DragData>): boolean => {
@@ -177,6 +160,78 @@ export class NodeRendererComponent {
       return this.store.getPaletteItem(data.paletteId)?.nodeType ?? null;
     }
     return this.store.nodes()[data.nodeId]?.type ?? null;
+  }
+
+  private canEnterFromPalette(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedType: BuilderNodeType,
+  ): boolean {
+    if (containerId === this.store.rootId() && this.preferSelectedContainerTarget(draggedType)) return false;
+    if (containerType === 'row' && draggedType !== 'col') return false;
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    return true;
+  }
+
+  private canEnterFromNode(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedNodeId: string,
+    draggedType: BuilderNodeType,
+  ): boolean {
+    const rootId = this.store.rootId();
+    if (containerId === rootId) {
+      const dragged = this.store.nodes()[draggedNodeId];
+      return !!dragged && dragged.parentId === rootId;
+    }
+    if (containerType === 'row' && draggedType !== 'col') return false;
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    if (this.isSelfOrDescendant(draggedNodeId, containerId)) return false;
+    return true;
+  }
+
+  private hasLayoutChildren(containerId: string): boolean {
+    const container = this.store.nodes()[containerId];
+    if (!container || !isContainerNode(container)) return false;
+    const nodes = this.store.nodes();
+    return container.children.some((childId) => {
+      const child = nodes[childId];
+      return !!child && isContainerNode(child);
+    });
+  }
+
+  private preferSelectedContainerTarget(draggedType: BuilderNodeType): boolean {
+    const selected = this.store.selectedNode();
+    if (!selected || !isContainerNode(selected) || selected.id === this.store.rootId()) return false;
+    if (this.containerCanAccept(selected.id, selected.type, draggedType)) return true;
+    return this.hasCompatibleDescendantTarget(selected.id, draggedType);
+  }
+
+  private hasCompatibleDescendantTarget(containerId: string, draggedType: BuilderNodeType): boolean {
+    const nodes = this.store.nodes();
+    const stack = [containerId];
+    while (stack.length) {
+      const id = stack.pop()!;
+      const node = nodes[id];
+      if (!node || !isContainerNode(node)) continue;
+      for (const childId of node.children) {
+        const child = nodes[childId];
+        if (!child || !isContainerNode(child)) continue;
+        if (this.containerCanAccept(child.id, child.type, draggedType)) return true;
+        stack.push(child.id);
+      }
+    }
+    return false;
+  }
+
+  private containerCanAccept(
+    containerId: string,
+    containerType: BuilderNode['type'],
+    draggedType: BuilderNodeType,
+  ): boolean {
+    if (containerType === 'row') return draggedType === 'col';
+    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    return true;
   }
 
   private isSelfOrDescendant(sourceId: string, targetId: string): boolean {

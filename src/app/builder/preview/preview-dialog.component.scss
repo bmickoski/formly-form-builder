@@ -1,7 +1,7 @@
 .fb-preview-viewports {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .fb-preview-viewport-active {
@@ -9,19 +9,31 @@
   color: #1f1f32;
 }
 
+.fb-preview-mode-hint {
+  margin-bottom: 10px;
+}
+
 .fb-preview-viewport {
+  box-sizing: border-box;
   width: 100%;
+  margin: 0 auto;
+  border: 1px solid #e6e6f2;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fcfcff;
+  transition: max-width 160ms ease;
+}
+
+.fb-preview-desktop {
   max-width: 100%;
 }
 
 .fb-preview-tablet {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 820px;
 }
 
 .fb-preview-mobile {
   max-width: 390px;
-  margin: 0 auto;
 }
 
 .fb-preview-actions {
