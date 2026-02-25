@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FieldType, FormlyModule, FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-accordion-type',
   standalone: true,
-  imports: [NgFor, NgIf, FormlyModule],
+  imports: [FormlyModule],
   template: `
     <div class="fb-layout-shell">
       <div class="fb-layout-title">{{ props?.label || 'Accordion' }}</div>
@@ -14,15 +13,21 @@ import { FieldType, FormlyModule, FormlyFieldConfig } from '@ngx-formly/core';
       }
 
       <div class="fb-layout-accordion">
-        <div class="fb-layout-section" *ngFor="let child of field.fieldGroup || []; let i = index">
-          <button type="button" class="fb-layout-toggle" (click)="toggle(i)">
-            <span>{{ sectionLabel(child, 'Section', i) }}</span>
-            <span>{{ openIndex() === i ? '-' : '+' }}</span>
-          </button>
-          <div class="fb-layout-body" *ngIf="openIndex() === i">
-            <formly-field [field]="child"></formly-field>
+        @for (section of sections(); track $index; let i = $index) {
+          <div class="fb-layout-section">
+            <button type="button" class="fb-layout-toggle" (click)="toggle(i)">
+              <span>{{ section.label }}</span>
+              <span>{{ openIndex() === i ? '-' : '+' }}</span>
+            </button>
+            @if (openIndex() === i) {
+              <div class="fb-layout-body">
+                @for (child of section.fields; track child.id ?? $index) {
+                  <formly-field [field]="child"></formly-field>
+                }
+              </div>
+            }
           </div>
-        </div>
+        }
       </div>
     </div>
   `,
@@ -75,14 +80,27 @@ import { FieldType, FormlyModule, FormlyFieldConfig } from '@ngx-formly/core';
 })
 export class FbAccordionTypeComponent extends FieldType {
   readonly openIndex = signal(0);
+  readonly sections = computed(() => this.toSections(this.field.fieldGroup ?? []));
 
   toggle(index: number): void {
     this.openIndex.update((current) => (current === index ? -1 : index));
   }
 
-  sectionLabel(field: FormlyFieldConfig, prefix: string, index: number): string {
-    const props = field.props as Record<string, unknown> | undefined;
-    const label = props?.['label'];
-    return typeof label === 'string' && label.trim().length > 0 ? label : `${prefix} ${index + 1}`;
+  private toSections(group: FormlyFieldConfig[]): Array<{ label: string; fields: FormlyFieldConfig[] }> {
+    if (group.length === 0) return [];
+    const hasContainerChildren = group.some(
+      (child) => Array.isArray(child.fieldGroup) && (child.fieldGroup?.length ?? 0) > 0,
+    );
+    if (!hasContainerChildren) {
+      return [{ label: String(this.props?.['label'] ?? 'Section'), fields: group }];
+    }
+
+    return group.map((child, index) => {
+      const props = child.props as Record<string, unknown> | undefined;
+      const label =
+        typeof props?.['label'] === 'string' && props['label'].trim() ? String(props['label']) : `Section ${index + 1}`;
+      const fields = Array.isArray(child.fieldGroup) && child.fieldGroup.length > 0 ? child.fieldGroup : [child];
+      return { label, fields };
+    });
   }
 }

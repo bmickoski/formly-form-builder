@@ -18,6 +18,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
 
@@ -51,6 +54,9 @@ import { BuilderTemplatesService } from './builder-templates.service';
     MatSnackBarModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatDividerModule,
     DragDropModule,
     BuilderPaletteComponent,
     BuilderCanvasComponent,
@@ -273,18 +279,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     return !!selected && selected.id !== this.store.rootId();
   }
 
-  copySelected(): void {
-    this.store.copySelected();
-  }
-
-  duplicateSelected(): void {
-    this.store.duplicateSelected();
-  }
-
-  pasteFromClipboard(): void {
-    this.store.pasteFromClipboard();
-  }
-
   async clear(): Promise<void> {
     if (await this.confirmAction('Clear the builder?', 'Clear builder', 'Clear')) {
       this.store.clear();
@@ -367,17 +361,17 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     const key = e.key.toLowerCase();
     if (key === 'c') {
       e.preventDefault();
-      this.copySelected();
+      this.store.copySelected();
       return true;
     }
     if (key === 'v') {
       e.preventDefault();
-      this.pasteFromClipboard();
+      this.store.pasteFromClipboard();
       return true;
     }
     if (key === 'd') {
       e.preventDefault();
-      this.duplicateSelected();
+      this.store.duplicateSelected();
       return true;
     }
     return false;

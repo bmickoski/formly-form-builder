@@ -87,24 +87,22 @@ export class NodeRendererComponent {
   canEnter = (drag: CdkDrag<DragData>): boolean => {
     const container = this.node();
     if (!container || !isContainerNode(container)) return false;
-    const rootId = this.store.rootId();
+    const draggedType = this.getDraggedNodeType(drag.data);
+    if (!draggedType) return false;
 
-    // Root accepts palette drops so users can choose exact insertion index.
-    // Non-root palette inserts are handled by explicit "Drop inside ..." targets.
+    // Allow direct palette drop on any compatible container.
+    // This avoids forcing users to use the explicit "Drop inside ..." strip first.
     if (drag.data.kind === 'palette') {
-      return container.id === rootId;
+      if (container.type === 'row' && draggedType !== 'col') return false;
+      return true;
     }
 
-    // Keep the root list for reordering root children only.
+    const rootId = this.store.rootId();
+    // Keep root list for reordering root children only.
     if (container.id === rootId) {
       const dragged = this.store.nodes()[drag.data.nodeId];
       return !!dragged && dragged.parentId === rootId;
     }
-
-    const draggedType = this.getDraggedNodeType(drag.data);
-    if (!draggedType) return false;
-    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
-
     if (container.type === 'row' && draggedType !== 'col') return false;
 
     if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
@@ -118,8 +116,6 @@ export class NodeRendererComponent {
 
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
-    if (!this.canAcceptInContainer(container.id, draggedType)) return false;
-
     if (container.type === 'row' && draggedType !== 'col') return false;
 
     if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
@@ -181,24 +177,6 @@ export class NodeRendererComponent {
       return this.store.getPaletteItem(data.paletteId)?.nodeType ?? null;
     }
     return this.store.nodes()[data.nodeId]?.type ?? null;
-  }
-
-  /**
-   * Avoid ambiguous nested drops:
-   * if a container already holds layout containers, field drops must target
-   * the inner containers directly (instead of being appended to the outer one).
-   */
-  private canAcceptInContainer(containerId: string, draggedType: BuilderNodeType): boolean {
-    if (draggedType !== 'field') return true;
-    const container = this.store.nodes()[containerId];
-    if (!container || !isContainerNode(container)) return false;
-
-    const nodes = this.store.nodes();
-    const hasContainerChildren = container.children.some((childId) => {
-      const child = nodes[childId];
-      return !!child && isContainerNode(child);
-    });
-    return !hasContainerChildren;
   }
 
   private isSelfOrDescendant(sourceId: string, targetId: string): boolean {

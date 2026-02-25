@@ -1,11 +1,51 @@
+.fb-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.12);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.fb-diag-btn {
+  &.fb-diag-error {
+    color: #b3261e;
+  }
+  &.fb-diag-warn {
+    color: #7d5700;
+  }
+}
+
 .fb-starter-layout-field {
-  width: 220px;
-  margin-left: 8px;
+  width: 200px;
+  margin-left: 4px;
 }
 
 .fb-preview-ui-field {
-  width: 170px;
-  margin-left: 8px;
+  width: 150px;
+  margin-left: 4px;
+}
+
+.fb-preset-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #ececf5;
+  border-radius: 10px;
+  max-width: 300px;
+}
+
+.fb-preset-thumb {
+  width: 34px;
+  min-width: 34px;
+  display: grid;
+  gap: 3px;
+}
+
+.fb-preset-thumb-row {
+  height: 5px;
+  border-radius: 4px;
+  background: #8f8fd8;
 }
 
 .fb-preset-preview-content {
