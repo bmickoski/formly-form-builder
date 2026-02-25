@@ -26,11 +26,13 @@ import { BuilderStore } from '../builder-core/store';
 import { BuilderPaletteComponent } from './palette/builder-palette.component';
 import { BuilderCanvasComponent } from './canvas/builder-canvas.component';
 import { BuilderInspectorComponent } from './inspector/builder-inspector.component';
+import { BuilderHistoryPanelComponent } from './history/builder-history-panel.component';
 import { PreviewMaterialDialogComponent } from './preview/preview-material-dialog.component';
 import { PreviewBootstrapDialogComponent } from './preview/preview-bootstrap-dialog.component';
 import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
+import { builderToJsonSchema } from '../builder-core/json-schema';
 import { parsePaletteConfig } from '../builder-core/palette-config';
 import { PALETTE, PaletteItem } from '../builder-core/registry';
 import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
@@ -40,6 +42,8 @@ import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
 import { isFieldNode, type BuilderDocument } from '../builder-core/model';
 import { BuilderTemplatesService } from './builder-templates.service';
+import { mergePaletteById } from './builder-page.palette';
+import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
 
 @Component({
   selector: 'app-builder-page, formly-builder',
@@ -56,6 +60,7 @@ import { BuilderTemplatesService } from './builder-templates.service';
     BuilderPaletteComponent,
     BuilderCanvasComponent,
     BuilderInspectorComponent,
+    BuilderHistoryPanelComponent,
   ],
   providers: [BuilderStore],
   templateUrl: './builder-page.component.html',
@@ -117,10 +122,24 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   openPreview(): void {
     const renderer = this.store.renderer();
-    this.dialog.open(renderer === 'bootstrap' ? PreviewBootstrapDialogComponent : PreviewMaterialDialogComponent, {
+    const data = {
+      renderer,
+      lookupRegistry: this.store.lookupRegistry(),
+      doc: this.store.doc(),
+      formlyExtensions: this.store.formlyExtensions(),
+    };
+    if (renderer === 'bootstrap') {
+      this.dialog.open(PreviewBootstrapDialogComponent, {
+        width: '900px',
+        maxWidth: '95vw',
+        data,
+      });
+      return;
+    }
+    this.dialog.open(PreviewMaterialDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { renderer, lookupRegistry: this.store.lookupRegistry(), doc: this.store.doc() },
+      data,
     });
   }
 
@@ -140,6 +159,16 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       width: '900px',
       maxWidth: '95vw',
       data: { mode: 'exportBuilder', json: this.store.exportDocument(), schemaVersion: this.store.doc().schemaVersion },
+    });
+  }
+
+  openExportJsonSchema(): void {
+    if (!this.canExport()) return;
+    const schema = JSON.stringify(builderToJsonSchema(this.store.doc()), null, 2);
+    this.dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: { mode: 'exportJsonSchema', json: schema },
     });
   }
 
@@ -324,46 +353,18 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
 
     const metaOrCtrl = e.ctrlKey || e.metaKey;
-    if (this.handleHistoryShortcut(e, metaOrCtrl)) return;
-    if (this.handleClipboardShortcut(e, metaOrCtrl)) return;
+    if (handleHistoryShortcut(e, metaOrCtrl, { undo: () => this.store.undo(), redo: () => this.store.redo() })) return;
+    if (
+      handleClipboardShortcut(e, metaOrCtrl, {
+        copy: () => this.store.copySelected(),
+        paste: () => this.store.pasteFromClipboard(),
+        duplicate: () => this.store.duplicateSelected(),
+      })
+    ) {
+      return;
+    }
     if (e.key === 'Escape') this.store.select(null);
     if (e.key === 'Delete' || e.key === 'Backspace') this.store.removeSelected();
-  }
-
-  private handleHistoryShortcut(e: KeyboardEvent, metaOrCtrl: boolean): boolean {
-    if (!metaOrCtrl) return false;
-    const key = e.key.toLowerCase();
-    if (key === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) this.store.redo();
-      else this.store.undo();
-      return true;
-    }
-    if (key !== 'y') return false;
-    e.preventDefault();
-    this.store.redo();
-    return true;
-  }
-
-  private handleClipboardShortcut(e: KeyboardEvent, metaOrCtrl: boolean): boolean {
-    if (!metaOrCtrl) return false;
-    const key = e.key.toLowerCase();
-    if (key === 'c') {
-      e.preventDefault();
-      this.store.copySelected();
-      return true;
-    }
-    if (key === 'v') {
-      e.preventDefault();
-      this.store.pasteFromClipboard();
-      return true;
-    }
-    if (key === 'd') {
-      e.preventDefault();
-      this.store.duplicateSelected();
-      return true;
-    }
-    return false;
   }
 
   private applyRuntimeExtensions(): void {
@@ -371,19 +372,8 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       this.paletteOverride() ?? (this.palette?.length ? [...this.palette] : composePalette(PALETTE, this.plugins));
     this.store.configureRuntimeExtensions({
       plugins: this.plugins,
-      palette: this.mergeById(basePalette, this.templates.toPaletteItems()),
+      palette: mergePaletteById(basePalette, this.templates.toPaletteItems()),
     });
-  }
-
-  private mergeById(base: readonly PaletteItem[], extra: readonly PaletteItem[]): PaletteItem[] {
-    const out = [...base];
-    const seen = new Set(out.map((item) => item.id));
-    for (const item of extra) {
-      if (seen.has(item.id)) continue;
-      out.push(item);
-      seen.add(item.id);
-    }
-    return out;
   }
 
   private applyExternalConfig(config: BuilderDocument): void {

@@ -92,6 +92,8 @@ export interface FieldProps extends CommonProps {
   enabledRule?: ConditionalRule;
   visibleExpression?: string;
   enabledExpression?: string;
+  /** Custom Formly type name override (from PaletteItem.formlyType). Overrides fieldKind-based type in adapter. */
+  customType?: string;
 }
 
 export interface ContainerProps extends CommonProps {

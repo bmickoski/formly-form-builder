@@ -62,6 +62,9 @@
                 <mat-icon>help_outline</mat-icon>
               </button>
             </mat-form-field>
+            @if (customTypeHint()) {
+              <div class="fb-hint fb-hint-margin-bottom">{{ customTypeHint() }}</div>
+            }
           }
 
           <mat-form-field appearance="outline" class="fb-field">

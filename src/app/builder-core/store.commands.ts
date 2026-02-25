@@ -332,7 +332,11 @@ function createNodeFromPalette(
       parentId,
       children: [],
       fieldKind,
-      props: { ...(item.defaults.props as any), key: toFieldKey(id) },
+      props: {
+        ...(item.defaults.props as any),
+        key: toFieldKey(id),
+        ...(item.formlyType ? { customType: item.formlyType } : {}),
+      },
       validators: {
         ...(validatorsForFieldKind ? validatorsForFieldKind(fieldKind) : {}),
         ...(item.defaults.validators ?? {}),

@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { FormlyFormOptions, FormlyModule, provideFormlyCore } from '@ngx-formly/core';
+import { FormlyConfig, FormlyFormOptions, FormlyModule, provideFormlyCore } from '@ngx-formly/core';
 import { FormlyMaterialModule, withFormlyMaterial } from '@ngx-formly/material';
 
 import { BuilderStore } from '../../builder-core/store';
@@ -15,6 +15,7 @@ import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-optio
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
 import { resolveCustomValidatorsForFields } from '../../builder-core/custom-validators';
 import { BuilderDocument, OptionItem } from '../../builder-core/model';
+import type { FormlyConfigExtension } from '../../builder-core/plugins';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
 import { FbRepeatTypeComponent } from './fb-repeat.type.component';
 import { FbTabsTypeComponent } from './fb-tabs.type.component';
@@ -59,10 +60,12 @@ export class PreviewMaterialDialogComponent {
   readonly store = inject(BuilderStore);
   readonly ref = inject(MatDialogRef<PreviewMaterialDialogComponent>);
   readonly cdr = inject(ChangeDetectorRef);
+  private readonly formlyConfig = inject(FormlyConfig);
   readonly data = inject(MAT_DIALOG_DATA) as {
     renderer?: 'material' | 'bootstrap';
     lookupRegistry?: Record<string, OptionItem[]>;
     doc?: BuilderDocument;
+    formlyExtensions?: readonly FormlyConfigExtension[];
   };
   readonly lookupRegistry = this.data?.lookupRegistry ?? this.store.lookupRegistry();
 
@@ -73,6 +76,7 @@ export class PreviewMaterialDialogComponent {
   readonly viewport = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   constructor() {
+    this.applyFormlyExtensions();
     void this.loadDynamicOptions();
   }
 
@@ -120,5 +124,11 @@ export class PreviewMaterialDialogComponent {
     resolveCustomValidatorsForFields(this.fields);
     this.fields = [...this.fields];
     this.cdr.markForCheck();
+  }
+
+  private applyFormlyExtensions(): void {
+    for (const extension of this.data?.formlyExtensions ?? []) {
+      this.formlyConfig.addConfig(extension as any);
+    }
   }
 }

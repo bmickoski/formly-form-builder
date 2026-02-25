@@ -83,6 +83,14 @@ export class BuilderInspectorComponent {
     if (!f) return false;
     return f.fieldKind === 'input' || f.fieldKind === 'email';
   });
+  readonly customTypeHint = computed(() => {
+    const field = this.fieldNode();
+    const customType = field?.props.customType?.trim();
+    if (!customType) return null;
+    const match = this.store.paletteItems().find((item) => item.formlyType === customType);
+    const hint = match?.inspectorHint?.trim();
+    return hint || `Custom Formly type: ${customType}`;
+  });
 
   private readonly tabByNodeType = signal<{ field: number; layout: number }>({ field: 0, layout: 0 });
   readonly selectedTabIndex = computed(() =>

@@ -15,6 +15,10 @@ export interface PaletteItem {
   title: string;
   nodeType: BuilderNodeType;
   fieldKind?: FieldKind;
+  /** Override the emitted Formly type name (e.g. 'my-datepicker'). Persisted as FieldProps.customType. */
+  formlyType?: string;
+  /** Optional hint shown in the inspector for custom field types. */
+  inspectorHint?: string;
   defaults: {
     props: FieldProps | ContainerProps;
     validators?: BuilderValidators;

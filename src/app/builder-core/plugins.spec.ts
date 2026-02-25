@@ -1,5 +1,6 @@
 import { PaletteItem } from './registry';
 import {
+  composeFormlyExtensions,
   composeLookupRegistry,
   composePalette,
   composeValidatorPresetDefinitions,
@@ -100,5 +101,25 @@ describe('builder plugin composition', () => {
     expect(out.length).toBe(2);
     expect(out.find((item) => item.id === 'length-range')?.label).toBe('Plugin length range');
     expect(out.find((item) => item.id === 'numeric-range')).toBeDefined();
+  });
+
+  it('collects formly config extensions from all plugins in order', () => {
+    const dateType = { name: 'my-datepicker', component: class DateTypeComponent {} };
+    const cardWrapper = { name: 'my-card', component: class CardWrapperComponent {} };
+
+    const out = composeFormlyExtensions([
+      {
+        id: 'plugin-a',
+        formlyExtensions: [{ types: [dateType] }],
+      },
+      {
+        id: 'plugin-b',
+        formlyExtensions: [{ wrappers: [cardWrapper] }],
+      },
+    ]);
+
+    expect(out.length).toBe(2);
+    expect(out[0]?.types?.[0]?.name).toBe('my-datepicker');
+    expect(out[1]?.wrappers?.[0]?.name).toBe('my-card');
   });
 });

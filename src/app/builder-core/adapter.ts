@@ -280,7 +280,7 @@ function fieldNodeToFormly(node: FieldNode): FormlyFieldConfig {
 
   const mapped: FormlyFieldConfig = {
     key: safeKey,
-    type: toFormlyType(node.fieldKind),
+    type: node.props.customType ?? toFormlyType(node.fieldKind),
     props: fieldProps(node),
     hide: !!node.props.hidden,
     defaultValue: node.props.defaultValue,

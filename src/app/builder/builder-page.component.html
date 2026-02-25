@@ -15,6 +15,7 @@
     <mat-menu #fileMenu="matMenu">
       <button mat-menu-item (click)="openExport()"><mat-icon>download</mat-icon> Export Formly JSON</button>
       <button mat-menu-item (click)="openExportBuilder()"><mat-icon>dataset</mat-icon> Export Builder JSON</button>
+      <button mat-menu-item (click)="openExportJsonSchema()"><mat-icon>schema</mat-icon> Export JSON Schema</button>
       <mat-divider />
       <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
       <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
@@ -88,6 +89,12 @@
     >
       <mat-icon>redo</mat-icon>
     </button>
+    <button mat-icon-button aria-label="History" matTooltip="History" [matMenuTriggerFor]="historyMenu">
+      <mat-icon>history</mat-icon>
+    </button>
+    <mat-menu #historyMenu="matMenu" class="fb-history-menu">
+      <app-builder-history-panel (click)="$event.stopPropagation()" />
+    </mat-menu>
 
     <div class="fb-toolbar-divider"></div>
 

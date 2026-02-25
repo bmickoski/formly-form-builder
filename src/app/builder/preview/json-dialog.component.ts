@@ -18,6 +18,7 @@ export class JsonDialogComponent {
     mode:
       | 'exportFormly'
       | 'exportBuilder'
+      | 'exportJsonSchema'
       | 'exportTemplates'
       | 'import'
       | 'importFormly'
@@ -57,6 +58,8 @@ export class JsonDialogComponent {
         return 'formly-export.json';
       case 'exportBuilder':
         return `builder-export.v${this.data.schemaVersion ?? 'x'}.json`;
+      case 'exportJsonSchema':
+        return 'json-schema-export.json';
       case 'importFormly':
         return 'formly-import.json';
       case 'importPalette':

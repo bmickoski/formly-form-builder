@@ -82,6 +82,7 @@ npm run docs
   - `lookupRegistry` extensions/overrides
   - `validatorPresets` extensions (for custom field defaults)
   - `validatorPresetDefinitions` extensions/overrides (for inspector-selectable named presets)
+  - `formlyExtensions` for custom Formly types/wrappers used by Preview dialogs
 - Plugin example (`src/app/app.config.ts`):
 
 ```ts
@@ -122,11 +123,32 @@ const CRM_PLUGIN: BuilderPlugin = {
       }),
     },
   ],
+  formlyExtensions: [
+    {
+      types: [{ name: 'crm-datepicker', component: CrmDatepickerTypeComponent }],
+      wrappers: [{ name: 'crm-card', component: CrmCardWrapperComponent }],
+    },
+  ],
 };
 
 export const appConfig: ApplicationConfig = {
   providers: [{ provide: BUILDER_PLUGINS, useValue: [CRM_PLUGIN] }],
 };
+```
+
+- To emit a custom type from palette, set `formlyType` on the palette item:
+
+```ts
+{
+  id: 'crm-date',
+  category: 'Advanced Fields',
+  title: 'CRM Date',
+  nodeType: 'field',
+  fieldKind: 'input',
+  formlyType: 'crm-datepicker',
+  inspectorHint: 'Uses CRM datepicker custom type.',
+  defaults: { props: { label: 'Date' } },
+}
 ```
 
 - `validatorPresets` are applied when adding fields from palette.

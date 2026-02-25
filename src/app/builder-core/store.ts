@@ -1,25 +1,23 @@
-import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
-import { BuilderDocument, ContainerNode, DropLocation, FieldNode, isContainerNode } from './model';
-import { BUILDER_PALETTE, PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
+import { computed, Injectable, signal, WritableSignal } from '@angular/core';
+import { BuilderDocument, DropLocation, FieldNode, isContainerNode } from './model';
+import { PALETTE, paletteListIdForCategory, PaletteItem } from './registry';
 import { parseBuilderDocument } from './document';
 import { buildDiagnostics } from './diagnostics';
-import { BUILDER_LOOKUP_REGISTRY, DEFAULT_LOOKUP_REGISTRY } from './lookup-registry';
+import { DEFAULT_LOOKUP_REGISTRY } from './lookup-registry';
 import {
   BuilderPlugin,
   composeLookupRegistry,
   composePalette,
+  composeFormlyExtensions,
   composeValidatorPresetDefinitions,
   composeValidatorPresets,
+  FormlyConfigExtension,
 } from './plugins';
 import {
-  BUILDER_VALIDATOR_PRESET_DEFINITIONS,
-  BUILDER_VALIDATOR_PRESETS,
-  DEFAULT_VALIDATOR_PRESET_DEFINITIONS,
   defaultValidatorsForFieldKind,
   DEFAULT_FIELD_VALIDATION_PRESETS,
+  DEFAULT_VALIDATOR_PRESET_DEFINITIONS,
 } from './validation-presets';
-import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
-import { toFieldKey, uid } from './ids';
 import { applyPresetToDocument, BUILDER_PRESETS, BuilderPresetId } from './presets';
 import {
   addColumnToRowCommand,
@@ -36,32 +34,16 @@ import {
   updateNodePropsCommand,
   updateNodeValidatorsCommand,
 } from './store.commands';
+import {
+  resolveDefaultPalette,
+  resolveLookupRegistry,
+  resolveValidatorPresetDefinitions,
+  resolveValidatorPresets,
+} from './store.resolvers';
+import { ApplyOptions, createRoot, HistoryGroupState, ROOT_ID } from './store.state';
+import { addContainerNodeToDoc, addFieldNodeToDoc } from './store.mutators';
 
 export type { BuilderPresetId } from './presets';
-
-const ROOT_ID = 'root';
-
-interface ApplyOptions {
-  recordHistory?: boolean;
-  historyGroupKey?: string;
-  historyWindowMs?: number;
-}
-
-interface HistoryGroupState {
-  key: string;
-  expiresAt: number;
-}
-
-function createRoot(): BuilderDocument {
-  const root: ContainerNode = { id: ROOT_ID, type: 'panel', parentId: null, children: [], props: { title: 'Form' } };
-  return {
-    schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
-    rootId: ROOT_ID,
-    nodes: { [ROOT_ID]: root },
-    selectedId: null,
-    renderer: 'bootstrap',
-  };
-}
 
 /**
  * Signal-based state container for the form builder editor.
@@ -81,6 +63,9 @@ export class BuilderStore {
   private readonly _clipboard = signal<NodeClipboard | null>(null);
   private readonly _past = signal<BuilderDocument[]>([]);
   private readonly _future = signal<BuilderDocument[]>([]);
+  private readonly _pastLabels = signal<string[]>([]);
+  private readonly _futureLabels = signal<string[]>([]);
+  private readonly _formlyExtensions = signal<FormlyConfigExtension[]>([]);
   private readonly maxHistory = 100;
   private historyGroup: HistoryGroupState | null = null;
 
@@ -94,12 +79,17 @@ export class BuilderStore {
   readonly selectedId = computed(() => this._doc().selectedId);
   readonly canUndo = computed(() => this._past().length > 0);
   readonly canRedo = computed(() => this._future().length > 0);
+  /** Past history labels, newest first (index 0 = most recent undoable action). */
+  readonly pastLabels = computed(() => [...this._pastLabels()].reverse());
+  /** Future (redoable) labels, most-recently-undone first (index 0 = next redo). */
+  readonly futureLabels = computed(() => [...this._futureLabels()].reverse());
   readonly hasClipboard = computed(() => !!this._clipboard());
   readonly renderer = computed(() => this._doc().renderer ?? 'bootstrap');
   readonly presets = BUILDER_PRESETS;
   readonly paletteItems = computed(() => this.palette());
   readonly lookupRegistry = this._lookupRegistry.asReadonly();
   readonly validatorPresetDefinitions = this._validatorPresetDefinitions.asReadonly();
+  readonly formlyExtensions = this._formlyExtensions.asReadonly();
   readonly diagnostics = computed(() =>
     buildDiagnostics(this._doc(), {
       knownValidatorPresetIds: new Set(this._validatorPresetDefinitions().map((item) => item.id)),
@@ -136,7 +126,7 @@ export class BuilderStore {
 
   /** Resets builder state to a new empty document. */
   clear(): void {
-    this.apply(() => createRoot());
+    this.apply(() => createRoot(), { historyLabel: 'Clear canvas' });
   }
 
   /** Serializes builder document as formatted JSON. */
@@ -148,20 +138,24 @@ export class BuilderStore {
   importDocument(json: string): { ok: true } | { ok: false; error: string } {
     const parsed = parseBuilderDocument(json);
     if (!parsed.ok) return { ok: false, error: parsed.error };
-    this.apply(() => parsed.doc);
+    this.apply(() => parsed.doc, { historyLabel: 'Import' });
     return { ok: true };
   }
 
   /** Replaces current canvas with a predefined starter preset. */
   applyPreset(presetId: BuilderPresetId): void {
-    this.apply(() => {
-      const next = createRoot();
-      applyPresetToDocument(next, presetId, {
-        addContainerNode: this.addContainerNode.bind(this),
-        addFieldNode: this.addFieldNode.bind(this),
-      });
-      return next;
-    });
+    this.apply(
+      () => {
+        const next = createRoot();
+        applyPresetToDocument(next, presetId, {
+          addContainerNode: (doc, type, parentId, props) => addContainerNodeToDoc(doc, type, parentId, props),
+          addFieldNode: (doc, fieldKind, parentId, props, validators) =>
+            addFieldNodeToDoc(doc, fieldKind, parentId, props, validators),
+        });
+        return next;
+      },
+      { historyLabel: 'Apply layout' },
+    );
   }
 
   /** Restores previous snapshot from history. */
@@ -172,8 +166,12 @@ export class BuilderStore {
     this.historyGroup = null;
     const previous = past[past.length - 1];
     const current = this._doc();
+    const pastLabels = this._pastLabels();
+    const undoneLabel = pastLabels[pastLabels.length - 1] ?? 'Edit';
     this._past.set(past.slice(0, -1));
+    this._pastLabels.set(pastLabels.slice(0, -1));
     this._future.update((future) => [...future, current]);
+    this._futureLabels.update((labels) => [...labels, undoneLabel]);
     this._doc.set(previous);
   }
 
@@ -185,8 +183,12 @@ export class BuilderStore {
     this.historyGroup = null;
     const next = future[future.length - 1];
     const current = this._doc();
+    const futureLabels = this._futureLabels();
+    const redoneLabel = futureLabels[futureLabels.length - 1] ?? 'Edit';
     this._future.set(future.slice(0, -1));
+    this._futureLabels.set(futureLabels.slice(0, -1));
     this._past.update((past) => [...past, current].slice(-this.maxHistory));
+    this._pastLabels.update((labels) => [...labels, redoneLabel].slice(-this.maxHistory));
     this._doc.set(next);
   }
 
@@ -199,7 +201,7 @@ export class BuilderStore {
 
   /** Removes a node and all descendants. */
   removeNode(id: string): void {
-    this.apply((doc) => removeNodeCommand(doc, id));
+    this.apply((doc) => removeNodeCommand(doc, id), { historyLabel: 'Remove node' });
   }
 
   /** Copies node subtree into builder clipboard. */
@@ -219,7 +221,7 @@ export class BuilderStore {
   duplicateSelected(): void {
     const id = this._doc().selectedId;
     if (!id || id === ROOT_ID) return;
-    this.apply((doc) => duplicateNodeCommand(doc, id));
+    this.apply((doc) => duplicateNodeCommand(doc, id), { historyLabel: 'Duplicate' });
   }
 
   /** Pastes clipboard subtree relative to current selection or root. */
@@ -230,8 +232,9 @@ export class BuilderStore {
     const selectedId = this._doc().selectedId;
     const selected = selectedId ? this._doc().nodes[selectedId] : null;
     if (selected && isContainerNode(selected)) {
-      this.apply((doc) =>
-        pasteNodeCommand(doc, clipboard, { containerId: selected.id, index: selected.children.length }),
+      this.apply(
+        (doc) => pasteNodeCommand(doc, clipboard, { containerId: selected.id, index: selected.children.length }),
+        { historyLabel: 'Paste' },
       );
       return;
     }
@@ -241,29 +244,43 @@ export class BuilderStore {
       if (parent && isContainerNode(parent)) {
         const index = parent.children.indexOf(selected.id);
         const at = index >= 0 ? index + 1 : parent.children.length;
-        this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: parent.id, index: at }));
+        this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: parent.id, index: at }), {
+          historyLabel: 'Paste',
+        });
         return;
       }
     }
 
     const root = this._doc().nodes[this._doc().rootId];
     if (!root || !isContainerNode(root)) return;
-    this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: root.id, index: root.children.length }));
+    this.apply((doc) => pasteNodeCommand(doc, clipboard, { containerId: root.id, index: root.children.length }), {
+      historyLabel: 'Paste',
+    });
   }
 
   /** Applies partial props patch to a node. */
-  updateNodeProps(id: string, patch: Record<string, unknown>): void {
-    this.apply((doc) => updateNodePropsCommand(doc, id, patch));
+  updateNodeProps(id: string, patch: Record<string, unknown>, historyLabel = 'Edit field'): void {
+    this.apply((doc) => updateNodePropsCommand(doc, id, patch), { historyLabel });
   }
 
   /** Applies partial validator patch to a field node. */
-  updateNodeValidators(id: string, patch: Record<string, unknown>): void {
-    this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch));
+  updateNodeValidators(id: string, patch: Record<string, unknown>, historyLabel = 'Edit field'): void {
+    this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch), { historyLabel });
   }
 
   /** Applies grouped props updates so rapid typing becomes one undo step. */
-  updateNodePropsGrouped(id: string, patch: Record<string, unknown>, groupKey: string, historyWindowMs = 500): void {
-    this.apply((doc) => updateNodePropsCommand(doc, id, patch), { historyGroupKey: groupKey, historyWindowMs });
+  updateNodePropsGrouped(
+    id: string,
+    patch: Record<string, unknown>,
+    groupKey: string,
+    historyWindowMs = 500,
+    historyLabel = 'Edit field',
+  ): void {
+    this.apply((doc) => updateNodePropsCommand(doc, id, patch), {
+      historyGroupKey: groupKey,
+      historyWindowMs,
+      historyLabel,
+    });
   }
 
   /** Applies grouped validator updates so rapid typing becomes one undo step. */
@@ -272,14 +289,23 @@ export class BuilderStore {
     patch: Record<string, unknown>,
     groupKey: string,
     historyWindowMs = 500,
+    historyLabel = 'Edit field',
   ): void {
-    this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch), { historyGroupKey: groupKey, historyWindowMs });
+    this.apply((doc) => updateNodeValidatorsCommand(doc, id, patch), {
+      historyGroupKey: groupKey,
+      historyWindowMs,
+      historyLabel,
+    });
   }
 
   /** Adds a new palette item instance at drop location. */
   addFromPalette(paletteId: string, loc: DropLocation): void {
-    this.apply((doc) =>
-      addFromPaletteCommand(doc, paletteId, loc, this.paletteItems(), this.defaultValidatorsForFieldKind.bind(this)),
+    const paletteItem = this.paletteItems().find((item) => item.id === paletteId);
+    const historyLabel = paletteItem ? `Add ${paletteItem.title}` : 'Add field';
+    this.apply(
+      (doc) =>
+        addFromPaletteCommand(doc, paletteId, loc, this.paletteItems(), this.defaultValidatorsForFieldKind.bind(this)),
+      { historyLabel },
     );
   }
 
@@ -309,6 +335,7 @@ export class BuilderStore {
     this._validatorPresetDefinitions.set(
       composeValidatorPresetDefinitions(DEFAULT_VALIDATOR_PRESET_DEFINITIONS, plugins),
     );
+    this._formlyExtensions.set(composeFormlyExtensions(plugins));
   }
 
   /** Restores runtime extensions back to DI/default-resolved values. */
@@ -317,35 +344,36 @@ export class BuilderStore {
     this._lookupRegistry.set(this.defaultLookupRegistry);
     this._validatorPresets.set(this.defaultValidatorPresets);
     this._validatorPresetDefinitions.set(this.defaultValidatorPresetDefinitions);
+    this._formlyExtensions.set([]);
   }
 
   /** Moves existing node between containers/reorder targets. */
   moveNode(nodeId: string, to: DropLocation): void {
-    this.apply((doc) => moveNodeCommand(doc, nodeId, to));
+    this.apply((doc) => moveNodeCommand(doc, nodeId, to), { historyLabel: 'Move node' });
   }
 
   /** Reorders children within the same container. */
   reorderWithin(containerId: string, fromIndex: number, toIndex: number): void {
-    this.apply((doc) => reorderWithinCommand(doc, containerId, fromIndex, toIndex));
+    this.apply((doc) => reorderWithinCommand(doc, containerId, fromIndex, toIndex), { historyLabel: 'Reorder' });
   }
 
   /** Appends a column to an existing row. */
   addColumnToRow(rowId: string, span = 6): void {
-    this.apply((doc) => addColumnToRowCommand(doc, rowId, span));
+    this.apply((doc) => addColumnToRowCommand(doc, rowId, span), { historyLabel: 'Add column' });
   }
 
   /** Rebalances row child columns so spans sum to 12. */
   rebalanceRowColumns(rowId: string): void {
-    this.apply((doc) => rebalanceRowColumnsCommand(doc, rowId));
+    this.apply((doc) => rebalanceRowColumnsCommand(doc, rowId), { historyLabel: 'Rebalance columns' });
   }
 
   /** Splits one column into a nested row with N columns. */
   splitColumn(columnId: string, parts = 2): void {
-    this.apply((doc) => splitColumnCommand(doc, columnId, parts));
+    this.apply((doc) => splitColumnCommand(doc, columnId, parts), { historyLabel: 'Split column' });
   }
 
   private apply(mutator: (doc: BuilderDocument) => BuilderDocument, options: ApplyOptions = {}): void {
-    const { recordHistory = true, historyGroupKey, historyWindowMs = 500 } = options;
+    const { recordHistory = true, historyGroupKey, historyWindowMs = 500, historyLabel = 'Edit' } = options;
 
     const previous = this._doc();
     const next = mutator(previous);
@@ -361,8 +389,10 @@ export class BuilderStore {
 
       if (!canGroup) {
         this._past.update((history) => [...history, previous].slice(-this.maxHistory));
+        this._pastLabels.update((labels) => [...labels, historyLabel].slice(-this.maxHistory));
       }
       this._future.set([]);
+      this._futureLabels.set([]);
 
       if (historyGroupKey) {
         this.historyGroup = { key: historyGroupKey, expiresAt: now + historyWindowMs };
@@ -376,86 +406,7 @@ export class BuilderStore {
     this._doc.set(next);
   }
 
-  private addContainerNode(
-    doc: BuilderDocument,
-    type: ContainerNode['type'],
-    parentId: string,
-    props: ContainerNode['props'],
-  ): ContainerNode {
-    const id = uid('c');
-    const node: ContainerNode = { id, type, parentId, children: [], props: { ...props } };
-
-    const nodes: BuilderDocument['nodes'] = { ...doc.nodes, [id]: node };
-    const parent = doc.nodes[parentId];
-    if (parent && isContainerNode(parent)) {
-      nodes[parentId] = { ...parent, children: [...parent.children, id] };
-    }
-    doc.nodes = nodes;
-    return node;
-  }
-
-  private addFieldNode(
-    doc: BuilderDocument,
-    fieldKind: FieldNode['fieldKind'],
-    parentId: string,
-    props: FieldNode['props'],
-    validators: FieldNode['validators'] = {},
-  ): FieldNode {
-    const id = uid('f');
-    const key = props.key ?? toFieldKey(id);
-    const node: FieldNode = {
-      id,
-      type: 'field',
-      parentId,
-      children: [],
-      fieldKind,
-      props: { ...props, key },
-      validators: { ...validators },
-    };
-
-    const nodes: BuilderDocument['nodes'] = { ...doc.nodes, [id]: node };
-    const parent = doc.nodes[parentId];
-    if (parent && isContainerNode(parent)) {
-      nodes[parentId] = { ...parent, children: [...parent.children, id] };
-    }
-    doc.nodes = nodes;
-    return node;
-  }
-
   private defaultValidatorsForFieldKind(fieldKind: FieldNode['fieldKind']) {
     return defaultValidatorsForFieldKind(fieldKind, this._validatorPresets());
-  }
-}
-
-function resolveDefaultPalette(): readonly PaletteItem[] {
-  try {
-    return inject(BUILDER_PALETTE, { optional: true }) ?? PALETTE;
-  } catch {
-    // Allows direct `new BuilderStore()` in unit tests where no DI context exists.
-    return PALETTE;
-  }
-}
-
-function resolveValidatorPresets() {
-  try {
-    return inject(BUILDER_VALIDATOR_PRESETS, { optional: true }) ?? DEFAULT_FIELD_VALIDATION_PRESETS;
-  } catch {
-    return DEFAULT_FIELD_VALIDATION_PRESETS;
-  }
-}
-
-function resolveValidatorPresetDefinitions() {
-  try {
-    return inject(BUILDER_VALIDATOR_PRESET_DEFINITIONS, { optional: true }) ?? DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
-  } catch {
-    return DEFAULT_VALIDATOR_PRESET_DEFINITIONS;
-  }
-}
-
-function resolveLookupRegistry() {
-  try {
-    return inject(BUILDER_LOOKUP_REGISTRY, { optional: true }) ?? DEFAULT_LOOKUP_REGISTRY;
-  } catch {
-    return DEFAULT_LOOKUP_REGISTRY;
   }
 }
