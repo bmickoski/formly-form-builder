@@ -1,22 +1,26 @@
 import { expect, type Page } from '@playwright/test';
 
 export async function applyStarterLayout(page: Page, presetLabel?: string): Promise<void> {
-  if (presetLabel) {
-    await page.locator('mat-form-field').filter({ hasText: 'Starter layout' }).click();
-    await page.getByRole('option', { name: presetLabel }).click();
-  }
+  await clickTopbarMenuItem(page, 'Layout', presetLabel ?? 'Simple Form');
   const nativeDialogPromise = waitForNativeDialog(page);
-  await page.getByRole('button', { name: 'Apply Layout' }).click();
   await confirmMaterialDialogIfPresent(page, 'Apply');
   await nativeDialogPromise;
   await expect(page.locator('.fb-canvas .fb-node-title').first()).toBeVisible();
 }
 
 export async function clearBuilder(page: Page): Promise<void> {
+  await clickTopbarMenuItem(page, 'File', 'Clear canvas');
   const nativeDialogPromise = waitForNativeDialog(page);
-  await page.getByRole('button', { name: 'Clear' }).click();
   await confirmMaterialDialogIfPresent(page, 'Clear');
   await nativeDialogPromise;
+}
+
+export async function clickTopbarMenuItem(page: Page, menuLabel: string, itemLabel: string): Promise<void> {
+  await page
+    .locator('.fb-topbar')
+    .getByRole('button', { name: new RegExp(menuLabel, 'i') })
+    .click();
+  await page.getByRole('menuitem', { name: new RegExp(itemLabel, 'i') }).click();
 }
 
 async function waitForNativeDialog(page: Page): Promise<void> {
