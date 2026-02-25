@@ -15,8 +15,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -37,7 +35,6 @@ import { parsePaletteConfig } from '../builder-core/palette-config';
 import { PALETTE, PaletteItem } from '../builder-core/registry';
 import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
-import type { BuilderPresetId } from '../builder-core/store';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
@@ -52,8 +49,6 @@ import { BuilderTemplatesService } from './builder-templates.service';
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatFormFieldModule,
-    MatSelectModule,
     MatMenuModule,
     MatTooltipModule,
     MatDividerModule,
@@ -72,7 +67,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly templates = inject(BuilderTemplatesService);
-  readonly presetToApply = signal<BuilderPresetId>('simple');
   readonly diagnosticsOpen = signal(false);
   private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
   private readonly ready = signal(false);
@@ -119,11 +113,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) {
       this.restoreFromAutosave();
     }
-  }
-
-  get selectedPreset() {
-    const fallback = this.store.presets[0]!;
-    return this.store.presets.find((preset) => preset.id === this.presetToApply()) ?? fallback;
   }
 
   openPreview(): void {
@@ -285,15 +274,15 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     }
   }
 
-  async applyPreset(): Promise<void> {
-    const presetId = this.presetToApply();
+  async applyPresetById(id: string): Promise<void> {
+    const preset = this.store.presets.find((p) => p.id === id);
     const confirmed = await this.confirmAction(
-      `Apply "${presetId}" preset? Current canvas will be replaced.`,
+      `Apply "${preset?.title ?? id}" layout? Current canvas will be replaced.`,
       'Apply starter layout',
       'Apply',
     );
     if (!confirmed) return;
-    this.store.applyPreset(presetId);
+    this.store.applyPreset(id as 'simple' | 'complex' | 'advanced' | 'advancedLogic');
   }
 
   private canExport(): boolean {

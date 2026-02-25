@@ -18,6 +18,10 @@
       <mat-divider />
       <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
       <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
+      <mat-divider />
+      <button mat-menu-item class="fb-menu-item-danger" (click)="clear()">
+        <mat-icon>delete</mat-icon> Clear canvas
+      </button>
     </mat-menu>
 
     <!-- Templates menu -->
@@ -40,6 +44,27 @@
     <mat-menu #paletteMenu="matMenu">
       <button mat-menu-item (click)="openImportPalette()"><mat-icon>upload</mat-icon> Load palette JSON</button>
       <button mat-menu-item (click)="resetPalette()"><mat-icon>restart_alt</mat-icon> Reset palette</button>
+    </mat-menu>
+
+    <!-- Layout menu: starter presets + renderer toggle -->
+    <button mat-button [matMenuTriggerFor]="layoutMenu">
+      <mat-icon>auto_awesome</mat-icon> Layout <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #layoutMenu="matMenu">
+      @for (preset of store.presets; track preset.id) {
+        <button mat-menu-item (click)="applyPresetById(preset.id)">
+          <mat-icon>dashboard_customize</mat-icon> {{ preset.title }}
+        </button>
+      }
+      <mat-divider />
+      <button mat-menu-item (click)="store.setRenderer('material')">
+        <mat-icon>{{ store.renderer() === 'material' ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+        Material UI
+      </button>
+      <button mat-menu-item (click)="store.setRenderer('bootstrap')">
+        <mat-icon>{{ store.renderer() === 'bootstrap' ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+        Bootstrap UI
+      </button>
     </mat-menu>
 
     <div class="fb-toolbar-divider"></div>
@@ -66,33 +91,33 @@
 
     <div class="fb-toolbar-divider"></div>
 
-    <!-- Clipboard -->
+    <!-- Clipboard (labeled buttons for recognition over recall) -->
     <button
-      mat-icon-button
+      mat-button
       aria-label="Copy selected"
       matTooltip="Copy (Ctrl+C)"
       (click)="store.copySelected()"
       [disabled]="!canCopyOrDuplicate()"
     >
-      <mat-icon>content_copy</mat-icon>
+      <mat-icon>content_copy</mat-icon> Copy
     </button>
     <button
-      mat-icon-button
+      mat-button
       aria-label="Duplicate selected"
       matTooltip="Duplicate (Ctrl+D)"
       (click)="store.duplicateSelected()"
       [disabled]="!canCopyOrDuplicate()"
     >
-      <mat-icon>library_add</mat-icon>
+      <mat-icon>library_add</mat-icon> Duplicate
     </button>
     <button
-      mat-icon-button
+      mat-button
       aria-label="Paste"
       matTooltip="Paste (Ctrl+V)"
       (click)="store.pasteFromClipboard()"
       [disabled]="!store.hasClipboard()"
     >
-      <mat-icon>content_paste</mat-icon>
+      <mat-icon>content_paste</mat-icon> Paste
     </button>
 
     <div class="fb-toolbar-divider"></div>
@@ -110,48 +135,6 @@
         store.diagnostics().errorCount > 0 ? 'error' : store.diagnostics().warningCount > 0 ? 'warning' : 'check_circle'
       }}</mat-icon>
       {{ diagnosticsSummary() }}
-    </button>
-
-    <span class="fb-toolbar-spacer"></span>
-
-    <!-- Starter layout -->
-    <mat-form-field appearance="outline" class="fb-starter-layout-field">
-      <mat-label>Starter layout</mat-label>
-      <mat-select [value]="presetToApply()" (selectionChange)="presetToApply.set($event.value)">
-        @for (preset of store.presets; track preset.id) {
-          <mat-option [value]="preset.id">{{ preset.title }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <button mat-icon-button aria-label="Apply starter layout" matTooltip="Apply starter layout" (click)="applyPreset()">
-      <mat-icon>auto_awesome</mat-icon>
-    </button>
-
-    <div class="fb-preset-preview">
-      <div class="fb-preset-thumb" aria-hidden="true">
-        @for (row of selectedPreset.thumbnailRows; track $index) {
-          <div class="fb-preset-thumb-row" [style.width.%]="row"></div>
-        }
-      </div>
-      <div class="fb-preset-preview-content">
-        <div class="fb-preset-preview-title">{{ selectedPreset.title }}</div>
-        <div class="fb-preset-preview-description">{{ selectedPreset.description }}</div>
-        <div class="fb-preset-preview-highlights">{{ selectedPreset.highlights.join(' | ') }}</div>
-      </div>
-    </div>
-
-    <!-- Preview UI toggle -->
-    <mat-form-field appearance="outline" class="fb-preview-ui-field">
-      <mat-label>Preview UI</mat-label>
-      <mat-select [value]="store.renderer()" (selectionChange)="store.setRenderer($event.value)">
-        <mat-option value="material">Material</mat-option>
-        <mat-option value="bootstrap">Bootstrap</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <!-- Clear (destructive, far right) -->
-    <button mat-icon-button aria-label="Clear canvas" color="warn" matTooltip="Clear canvas" (click)="clear()">
-      <mat-icon>delete</mat-icon>
     </button>
   </div>
 

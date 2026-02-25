@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, computed, inject } from '@angular/core';
 import { CdkDrag, CdkDropList, CdkDragPlaceholder, DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { BuilderStore } from '../../../builder-core/store';
 import { BuilderNode, BuilderNodeType, isContainerNode, isFieldNode } from '../../../builder-core/model';
@@ -10,7 +12,7 @@ type DragData = { kind: 'palette'; paletteId: string } | { kind: 'node'; nodeId:
 @Component({
   selector: 'app-node-renderer',
   standalone: true,
-  imports: [DragDropModule, MatIconModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
+  imports: [DragDropModule, MatIconModule, MatButtonModule, MatTooltipModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
   templateUrl: './node-renderer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

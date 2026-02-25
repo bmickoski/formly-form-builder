@@ -1,16 +1,42 @@
+.fb-preview-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.fb-preview-renderer-badge {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid #ececf5;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
 .fb-preview-viewports {
   display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 6px;
+}
+
+.fb-preview-viewports button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fb-preview-viewports .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
 }
 
 .fb-preview-viewport-active {
-  border-color: #7b7bf0;
-  color: #1f1f32;
-}
-
-.fb-preview-mode-hint {
-  margin-bottom: 10px;
+  border-color: #7b7bf0 !important;
+  color: #4040c0 !important;
+  background: rgba(123, 123, 240, 0.08) !important;
 }
 
 .fb-preview-viewport {
@@ -19,9 +45,9 @@
   margin: 0 auto;
   border: 1px solid #e6e6f2;
   border-radius: 14px;
-  padding: 12px;
+  padding: 16px;
   background: #fcfcff;
-  transition: max-width 160ms ease;
+  transition: max-width 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fb-preview-desktop {
@@ -34,6 +60,37 @@
 
 .fb-preview-mobile {
   max-width: 390px;
+}
+
+/* Force single-column stacking in constrained viewport modes (tablet + mobile). */
+:host ::ng-deep .fb-preview-force-stack .fb-row {
+  display: block !important;
+}
+
+:host ::ng-deep .fb-preview-force-stack .fb-row > .fb-col,
+:host ::ng-deep .fb-preview-force-stack .fb-row > [class*='fb-col-'] {
+  float: none !important;
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Bootstrap column stacking */
+:host ::ng-deep .fb-preview-force-stack .row {
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+:host ::ng-deep .fb-preview-force-stack .row > [class*='col-'] {
+  float: none !important;
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .fb-preview-actions {

@@ -3,6 +3,8 @@ import { JsonPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { FormlyFormOptions, FormlyModule, provideFormlyCore } from '@ngx-formly/core';
 import { FormlyBootstrapModule, withFormlyBootstrap } from '@ngx-formly/bootstrap';
@@ -23,7 +25,17 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
 @Component({
   selector: 'app-preview-bootstrap-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule, ReactiveFormsModule, FormlyModule, FormlyBootstrapModule, JsonPipe],
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    ReactiveFormsModule,
+    FormlyModule,
+    FormlyBootstrapModule,
+    JsonPipe,
+  ],
+  styleUrl: './preview-dialog.component.scss',
   providers: [
     provideFormlyCore([
       ...withFormlyBootstrap(),
@@ -90,6 +102,12 @@ export class PreviewBootstrapDialogComponent {
 
   setViewport(viewport: 'desktop' | 'tablet' | 'mobile'): void {
     this.viewport.set(viewport);
+  }
+
+  viewportMaxWidth(): number | null {
+    if (this.viewport() === 'tablet') return 820;
+    if (this.viewport() === 'mobile') return 390;
+    return null;
   }
 
   async loadDynamicOptions(): Promise<void> {
