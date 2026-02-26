@@ -1,5 +1,5 @@
 {
-  "name": "@bmickoski/formly-form-builder",
+  "name": "@ngx-formly-builder/core",
   "version": "0.1.0",
   "description": "Embeddable Angular Formly visual builder component and core APIs.",
   "keywords": [

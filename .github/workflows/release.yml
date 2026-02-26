@@ -51,4 +51,4 @@ jobs:
           generate_release_notes: true
           files: |
             formly-form-builder-dist.tar.gz
-            bmickoski-formly-form-builder-*.tgz
+            *.tgz

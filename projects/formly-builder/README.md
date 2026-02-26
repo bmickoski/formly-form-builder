@@ -1,11 +1,11 @@
-# @bmickoski/formly-form-builder
+# @ngx-formly-builder/core
 
 Embeddable Angular standalone Formly visual builder.
 
 ## Usage
 
 ```ts
-import { FormlyBuilderComponent } from '@bmickoski/formly-form-builder';
+import { FormlyBuilderComponent } from '@ngx-formly-builder/core';
 ```
 
 ```html
