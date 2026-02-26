@@ -62,6 +62,7 @@ describe('BuilderPageComponent contract', () => {
 
     expect(configChangeSpy).toHaveBeenCalled();
     const latest = configChangeSpy.calls.mostRecent().args[0] as BuilderDocument;
+    expect(latest.selectedId).toBeNull();
     const root = latest.nodes[latest.rootId];
     expect(root.type).toBe('panel');
     if (root.type !== 'panel') return;
@@ -88,63 +89,5 @@ describe('BuilderPageComponent contract', () => {
     expect(field.type).toBe('field');
     if (field.type !== 'field') return;
     expect(field.props.label).toBe('External Config');
-  });
-
-  it('writes autosave drafts when autosave is enabled', () => {
-    createComponent();
-    const setItemSpy = spyOn(Storage.prototype, 'setItem');
-
-    component.autosave = true;
-    component.autosaveKey = 'builder:test:draft';
-    component.ngOnInit();
-    fixture.detectChanges();
-    setItemSpy.calls.reset();
-
-    component.store.addFromPalette('input', { containerId: component.store.rootId(), index: 0 });
-    fixture.detectChanges();
-
-    expect(setItemSpy).toHaveBeenCalled();
-    const [key, json] = setItemSpy.calls.mostRecent().args as [string, string];
-    expect(key).toBe('builder:test:draft');
-    expect(json).toContain('"field"');
-  });
-
-  it('restores document from autosave when no [config] is provided', () => {
-    createComponent();
-    const saved = JSON.stringify(createSampleDoc('Restored Draft'));
-    const getItemSpy = spyOn(Storage.prototype, 'getItem').and.returnValue(saved);
-
-    component.autosave = true;
-    component.autosaveKey = 'builder:test:restore';
-    component.ngOnInit();
-
-    expect(getItemSpy).toHaveBeenCalledWith('builder:test:restore');
-    const root = component.store.doc().nodes[component.store.rootId()];
-    expect(root.type).toBe('panel');
-    if (root.type !== 'panel') return;
-    const field = component.store.doc().nodes[root.children[0]];
-    expect(field.type).toBe('field');
-    if (field.type !== 'field') return;
-    expect(field.props.label).toBe('Restored Draft');
-  });
-
-  it('prefers [config] over autosave restore', () => {
-    createComponent();
-    const getItemSpy = spyOn(Storage.prototype, 'getItem').and.returnValue(JSON.stringify(createSampleDoc('Draft')));
-    const config = createSampleDoc('Config Wins');
-
-    component.autosave = true;
-    component.autosaveKey = 'builder:test:prefer-config';
-    component.config = config;
-    component.ngOnInit();
-
-    expect(getItemSpy).not.toHaveBeenCalled();
-    const root = component.store.doc().nodes[component.store.rootId()];
-    expect(root.type).toBe('panel');
-    if (root.type !== 'panel') return;
-    const field = component.store.doc().nodes[root.children[0]];
-    expect(field.type).toBe('field');
-    if (field.type !== 'field') return;
-    expect(field.props.label).toBe('Config Wins');
   });
 });

@@ -37,6 +37,37 @@ npm start
 
 App runs at `http://localhost:4201`.
 
+## Library Getting Started (5 Minutes)
+
+1. Install:
+
+```bash
+npm install @ngx-formly-builder/core @ngx-formly/core @ngx-formly/material @angular/material
+```
+
+2. Embed:
+
+```html
+<formly-builder (configChange)="builderDoc = $event" />
+```
+
+3. Convert to runtime Formly config:
+
+```ts
+import { builderToFormly, type BuilderDocument } from '@ngx-formly-builder/core';
+import type { FormlyFieldConfig } from '@ngx-formly/core';
+
+builderDoc: BuilderDocument | null = null;
+formlyFields: FormlyFieldConfig[] = [];
+
+onConfigChange(doc: BuilderDocument): void {
+  this.builderDoc = doc;
+  this.formlyFields = builderToFormly(doc);
+}
+```
+
+See full guide: `docs/features/getting-started-5-min.md`.
+
 ## Scripts
 
 ```bash
@@ -248,6 +279,7 @@ export const appConfig: ApplicationConfig = {
 ## Documentation
 
 - docs/FEATURES.md: product-focused features, usage patterns, and examples.
+- docs/features/getting-started-5-min.md: install -> embed -> export in minutes.
 - docs/features/embedding-and-consumption.md: embedding, multi-instance scope, and reusable API surface.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
 - CONTRIBUTING.md: coding/testing workflow and rules.
@@ -281,7 +313,7 @@ export const appConfig: ApplicationConfig = {
 - Example imports for host integration:
 
 ```ts
-import { FormlyBuilderComponent, type BuilderDocument, type BuilderPlugin } from './src/public-api';
+import { FormlyBuilderComponent, type BuilderDocument, type BuilderPlugin } from '@ngx-formly-builder/core';
 ```
 
 - Embedding example:
@@ -294,5 +326,6 @@ import { FormlyBuilderComponent, type BuilderDocument, type BuilderPlugin } from
   autosaveKey="my-product:builder:draft"
   (configChange)="builderConfig = $event"
   (diagnosticsChange)="onDiagnostics($event)"
+  (autosaveError)="onAutosaveError($event)"
 />
 ```

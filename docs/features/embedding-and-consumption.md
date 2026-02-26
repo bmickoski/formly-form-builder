@@ -37,5 +37,11 @@
   - `autosave: boolean` (enables localStorage persistence)
   - `autosaveKey: string` (storage key)
 - Outputs:
-  - `configChange` (fires on each document update)
+  - `configChange` (fires on each document update; emits a public document with `selectedId: null`)
   - `diagnosticsChange` (fires on each diagnostics update)
+  - `autosaveError` (fires when localStorage save/restore fails)
+
+## Public Document Contract
+
+- Public exports from `<formly-builder>` now sanitize `selectedId` to `null`.
+- This prevents internal editor UI selection state from leaking into consumer persistence payloads.
