@@ -12,15 +12,7 @@ import { BUILDER_PLUGINS, type BuilderPlugin } from '../src/app/builder-core/plu
   selector: 'storybook-crm-tier-type',
   standalone: true,
   template: `
-    <div
-      style="
-        border: 1px dashed #0b5ed7;
-        border-radius: 8px;
-        padding: 8px 10px;
-        font-size: 12px;
-        background: #e7f1ff;
-      "
-    >
+    <div style="border:1px dashed #0b5ed7;border-radius:8px;padding:8px 10px;font-size:12px;background:#e7f1ff;">
       Custom type renderer: {{ props?.['label'] || 'CRM Tier' }}
     </div>
   `,
@@ -28,20 +20,24 @@ import { BUILDER_PLUGINS, type BuilderPlugin } from '../src/app/builder-core/plu
 class StorybookCrmTierTypeComponent extends FieldType {}
 
 @Component({
-  selector: 'storybook-builder-host',
+  selector: 'storybook-builder-banner-host',
   standalone: true,
   imports: [BuilderPageComponent],
   template: `
-    <formly-builder
-      [config]="config"
-      [plugins]="plugins"
-      (configChange)="onConfigChange($event)"
-      (diagnosticsChange)="onDiagnosticsChange($event)"
-      (autosaveError)="onAutosaveError($event)"
-    />
+    <div style="padding:10px 12px;font-size:12px;border-bottom:1px solid #d9dce8;background:#f8f9fc;">{{ banner }}</div>
+    <div style="min-height:760px;">
+      <formly-builder
+        [config]="config"
+        [plugins]="plugins"
+        (configChange)="onConfigChange($event)"
+        (diagnosticsChange)="onDiagnosticsChange($event)"
+        (autosaveError)="onAutosaveError($event)"
+      />
+    </div>
   `,
 })
-class BuilderStoryHostComponent {
+class BuilderBannerHostComponent {
+  @Input() banner = '';
   @Input() config: BuilderDocument | null = null;
   @Input() plugins: readonly BuilderPlugin[] = [];
   @Input() onConfigChange: (doc: BuilderDocument) => void = () => {};
@@ -54,16 +50,21 @@ class BuilderStoryHostComponent {
   standalone: true,
   imports: [BuilderPageComponent],
   template: `
-    <formly-builder
-      [config]="config"
-      [plugins]="plugins"
-      (configChange)="onConfigChange($event)"
-      (diagnosticsChange)="onDiagnosticsChange($event)"
-      (autosaveError)="onAutosaveError($event)"
-    />
+    <div style="padding:10px 12px;font-size:12px;border-bottom:1px solid #cfe2ff;background:#e7f1ff;">
+      Plugin-injected custom field type loaded through <code>BUILDER_PLUGINS</code>.
+    </div>
+    <div style="min-height:760px;">
+      <formly-builder
+        [config]="config"
+        [plugins]="plugins"
+        (configChange)="onConfigChange($event)"
+        (diagnosticsChange)="onDiagnosticsChange($event)"
+        (autosaveError)="onAutosaveError($event)"
+      />
+    </div>
   `,
 })
-class PluginTokenHostStoryComponent {
+class PluginTokenHostComponent {
   readonly plugins = inject(BUILDER_PLUGINS);
   @Input() config: BuilderDocument | null = null;
   @Input() onConfigChange: (doc: BuilderDocument) => void = () => {};
@@ -95,11 +96,7 @@ const CRM_PLUGIN: BuilderPlugin = {
       },
     },
   ],
-  formlyExtensions: [
-    {
-      types: [{ name: 'storybook-crm-tier', component: StorybookCrmTierTypeComponent, extends: 'select' }],
-    },
-  ],
+  formlyExtensions: [{ types: [{ name: 'storybook-crm-tier', component: StorybookCrmTierTypeComponent }] }],
 };
 
 function createSeedDocument(renderer: BuilderDocument['renderer']): BuilderDocument {
@@ -109,20 +106,8 @@ function createSeedDocument(renderer: BuilderDocument['renderer']): BuilderDocum
     selectedId: null,
     renderer,
     nodes: {
-      root: {
-        id: 'root',
-        type: 'panel',
-        parentId: null,
-        children: ['row-main'],
-        props: { title: 'Customer Intake' },
-      },
-      'row-main': {
-        id: 'row-main',
-        type: 'row',
-        parentId: 'root',
-        children: ['col-left', 'col-right'],
-        props: {},
-      },
+      root: { id: 'root', type: 'panel', parentId: null, children: ['row-main'], props: { title: 'Customer Intake' } },
+      'row-main': { id: 'row-main', type: 'row', parentId: 'root', children: ['col-left', 'col-right'], props: {} },
       'col-left': {
         id: 'col-left',
         type: 'col',
@@ -173,9 +158,9 @@ function createPluginSeedDocument(): BuilderDocument {
     selectedId: null,
     renderer: 'bootstrap',
     nodes: {
-      root: { id: 'root', type: 'panel', parentId: null, children: ['field-plugin'], props: { title: 'Plugin Demo' } },
-      'field-plugin': {
-        id: 'field-plugin',
+      root: { id: 'root', type: 'panel', parentId: null, children: ['plugin-field'], props: { title: 'Plugin Demo' } },
+      'plugin-field': {
+        id: 'plugin-field',
         type: 'field',
         parentId: 'root',
         children: [],
@@ -196,48 +181,25 @@ function createPluginSeedDocument(): BuilderDocument {
   };
 }
 
-const meta: Meta<BuilderStoryHostComponent> = {
+const meta: Meta<BuilderBannerHostComponent> = {
   title: 'Embed/Builder Host',
-  component: BuilderStoryHostComponent,
+  component: BuilderBannerHostComponent,
   argTypes: {
     onConfigChange: { action: 'configChange' },
     onDiagnosticsChange: { action: 'diagnosticsChange' },
     onAutosaveError: { action: 'autosaveError' },
   },
-  parameters: {
-    docs: {
-      description: {
-        component:
-          'Consumer-focused embed stories: plugin injection, preloaded config round-trip, renderer variants, and read-only support status.',
-      },
-    },
-  },
 };
 
 export default meta;
-type Story = StoryObj<BuilderStoryHostComponent>;
+type Story = StoryObj<BuilderBannerHostComponent>;
 
-export const PluginTokenCustomType: StoryObj<PluginTokenHostStoryComponent> = {
+export const PluginTokenCustomType: StoryObj<PluginTokenHostComponent> = {
   render: (args) => ({
-    component: PluginTokenHostStoryComponent,
+    component: PluginTokenHostComponent,
     props: args,
-    template: `
-      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #cfe2ff; background: #e7f1ff;">
-        Plugin-injected custom field type loaded through <code>BUILDER_PLUGINS</code>.
-      </div>
-      <storybook-builder-plugin-token-host
-        [config]="config"
-        [onConfigChange]="onConfigChange"
-        [onDiagnosticsChange]="onDiagnosticsChange"
-        [onAutosaveError]="onAutosaveError"
-      />
-    `,
   }),
-  decorators: [
-    applicationConfig({
-      providers: [{ provide: BUILDER_PLUGINS, useValue: [CRM_PLUGIN] }],
-    }),
-  ],
+  decorators: [applicationConfig({ providers: [{ provide: BUILDER_PLUGINS, useValue: [CRM_PLUGIN] }] })],
   argTypes: meta.argTypes,
   args: {
     config: createPluginSeedDocument(),
@@ -245,108 +207,35 @@ export const PluginTokenCustomType: StoryObj<PluginTokenHostStoryComponent> = {
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,
   },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Injects BUILDER_PLUGINS via DI and forwards it to the component. Open palette category "Custom Plugin" to add the custom CRM field type.',
-      },
-    },
-  },
 };
 
 export const PreloadedDocumentRoundTrip: Story = {
-  render: (args) => ({
-    props: args,
-    template: `
-      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #d9dce8; background: #f8f9fc;">
-        Preloaded <code>[config]</code> story. Edit canvas and inspect <code>configChange</code> payload in Actions.
-      </div>
-      <storybook-builder-host
-        [config]="config"
-        [plugins]="plugins"
-        [onConfigChange]="onConfigChange"
-        [onDiagnosticsChange]="onDiagnosticsChange"
-        [onAutosaveError]="onAutosaveError"
-      />
-    `,
-  }),
   args: {
+    banner: 'Preloaded [config] story. Edit canvas and inspect configChange payload in Actions.',
     config: createSeedDocument('bootstrap'),
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,
   },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Seeds [config] with BuilderDocument JSON so consumers can inspect emitted configChange payloads in Actions after editing.',
-      },
-    },
-  },
 };
 
 export const MaterialRenderer: Story = {
-  render: (args) => ({
-    props: args,
-    template: `
-      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #ffe69c; background: #fff3cd;">
-        Material renderer document seeded. Use <b>Preview</b> to validate Material runtime rendering.
-      </div>
-      <storybook-builder-host
-        [config]="config"
-        [plugins]="plugins"
-        [onConfigChange]="onConfigChange"
-        [onDiagnosticsChange]="onDiagnosticsChange"
-        [onAutosaveError]="onAutosaveError"
-      />
-    `,
-  }),
   args: {
+    banner: 'Material renderer document seeded. Use Preview to validate Material runtime rendering.',
     config: createSeedDocument('material'),
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,
   },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Starts with a document configured for the Material renderer path.',
-      },
-    },
-  },
 };
 
 export const ReadOnlyNotSupportedYet: Story = {
-  render: (args) => ({
-    props: args,
-    template: `
-      <div style="padding: 12px; font-size: 13px; border-bottom: 1px solid #ddd; background: #fff8e1;">
-        Read-only mode is not currently supported as a first-class input.
-        This story documents the current limitation so consumers can plan host-level guards.
-      </div>
-      <storybook-builder-host
-        [config]="config"
-        [plugins]="plugins"
-        [onConfigChange]="onConfigChange"
-        [onDiagnosticsChange]="onDiagnosticsChange"
-        [onAutosaveError]="onAutosaveError"
-      />
-    `,
-  }),
   args: {
+    banner: 'Read-only mode is not yet supported as a first-class input. This story documents current limitation.',
     config: createSeedDocument('bootstrap'),
     plugins: [],
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Explicitly documents that locked/view-only mode is not available yet.',
-      },
-    },
   },
 };
