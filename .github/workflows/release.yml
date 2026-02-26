@@ -44,6 +44,8 @@ jobs:
       - name: Publish npm package
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish ./dist/formly-builder --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
