@@ -55,6 +55,7 @@ class BuilderStoryHostComponent {
   imports: [BuilderPageComponent],
   template: `
     <formly-builder
+      [config]="config"
       [plugins]="plugins"
       (configChange)="onConfigChange($event)"
       (diagnosticsChange)="onDiagnosticsChange($event)"
@@ -64,6 +65,7 @@ class BuilderStoryHostComponent {
 })
 class PluginTokenHostStoryComponent {
   readonly plugins = inject(BUILDER_PLUGINS);
+  @Input() config: BuilderDocument | null = null;
   @Input() onConfigChange: (doc: BuilderDocument) => void = () => {};
   @Input() onDiagnosticsChange: (report: BuilderDiagnosticsReport) => void = () => {};
   @Input() onAutosaveError: (event: BuilderAutosaveError) => void = () => {};
@@ -164,6 +166,36 @@ function createSeedDocument(renderer: BuilderDocument['renderer']): BuilderDocum
   };
 }
 
+function createPluginSeedDocument(): BuilderDocument {
+  return {
+    schemaVersion: 2,
+    rootId: 'root',
+    selectedId: null,
+    renderer: 'bootstrap',
+    nodes: {
+      root: { id: 'root', type: 'panel', parentId: null, children: ['field-plugin'], props: { title: 'Plugin Demo' } },
+      'field-plugin': {
+        id: 'field-plugin',
+        type: 'field',
+        parentId: 'root',
+        children: [],
+        fieldKind: 'select',
+        props: {
+          key: 'crmTier',
+          label: 'CRM Tier (Custom)',
+          customType: 'storybook-crm-tier',
+          options: [
+            { label: 'Bronze', value: 'bronze' },
+            { label: 'Silver', value: 'silver' },
+            { label: 'Gold', value: 'gold' },
+          ],
+        },
+        validators: {},
+      },
+    },
+  };
+}
+
 const meta: Meta<BuilderStoryHostComponent> = {
   title: 'Embed/Builder Host',
   component: BuilderStoryHostComponent,
@@ -189,6 +221,17 @@ export const PluginTokenCustomType: StoryObj<PluginTokenHostStoryComponent> = {
   render: (args) => ({
     component: PluginTokenHostStoryComponent,
     props: args,
+    template: `
+      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #cfe2ff; background: #e7f1ff;">
+        Plugin-injected custom field type loaded through <code>BUILDER_PLUGINS</code>.
+      </div>
+      <storybook-builder-plugin-token-host
+        [config]="config"
+        [onConfigChange]="onConfigChange"
+        [onDiagnosticsChange]="onDiagnosticsChange"
+        [onAutosaveError]="onAutosaveError"
+      />
+    `,
   }),
   decorators: [
     applicationConfig({
@@ -197,6 +240,7 @@ export const PluginTokenCustomType: StoryObj<PluginTokenHostStoryComponent> = {
   ],
   argTypes: meta.argTypes,
   args: {
+    config: createPluginSeedDocument(),
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,
@@ -212,6 +256,21 @@ export const PluginTokenCustomType: StoryObj<PluginTokenHostStoryComponent> = {
 };
 
 export const PreloadedDocumentRoundTrip: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #d9dce8; background: #f8f9fc;">
+        Preloaded <code>[config]</code> story. Edit canvas and inspect <code>configChange</code> payload in Actions.
+      </div>
+      <storybook-builder-host
+        [config]="config"
+        [plugins]="plugins"
+        [onConfigChange]="onConfigChange"
+        [onDiagnosticsChange]="onDiagnosticsChange"
+        [onAutosaveError]="onAutosaveError"
+      />
+    `,
+  }),
   args: {
     config: createSeedDocument('bootstrap'),
     onConfigChange: undefined,
@@ -229,6 +288,21 @@ export const PreloadedDocumentRoundTrip: Story = {
 };
 
 export const MaterialRenderer: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #ffe69c; background: #fff3cd;">
+        Material renderer document seeded. Use <b>Preview</b> to validate Material runtime rendering.
+      </div>
+      <storybook-builder-host
+        [config]="config"
+        [plugins]="plugins"
+        [onConfigChange]="onConfigChange"
+        [onDiagnosticsChange]="onDiagnosticsChange"
+        [onAutosaveError]="onAutosaveError"
+      />
+    `,
+  }),
   args: {
     config: createSeedDocument('material'),
     onConfigChange: undefined,
