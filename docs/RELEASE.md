@@ -16,7 +16,7 @@
    - `npm run build`
    - `npm run build:lib`
 3. Update docs/ADR entries if architecture or behavior changed.
-4. Ensure `NPM_TOKEN` is configured in GitHub repository secrets for npm publish.
+4. Ensure npm trusted publishing is configured (GitHub Actions OIDC publisher for this repository/package).
 5. Create release commit (if needed) and push.
 6. Create Git tag (`git tag vX.Y.Z`) and push tag (`git push origin vX.Y.Z`).
 7. Verify the release workflow published:
