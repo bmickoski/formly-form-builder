@@ -7,6 +7,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Demo URL: https://bmickoski.github.io/formly-form-builder/
 - Documentation Hub URL: https://bmickoski.github.io/formly-form-builder/docs/
 - API Reference URL: https://bmickoski.github.io/formly-form-builder/docs/api/
+- Storybook URL: https://bmickoski.github.io/formly-form-builder/docs/storybook/
 - Deployed automatically by `.github/workflows/pages.yml` on push to `master`.
 
 ## What this app does
