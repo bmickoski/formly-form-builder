@@ -1,6 +1,6 @@
 {
   "name": "formly-form-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "start": "ng serve --port 4202",
