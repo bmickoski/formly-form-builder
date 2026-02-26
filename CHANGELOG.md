@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [0.1.3] - 2026-02-26
+
+### Changed
+
+- Upgraded release workflow npm runtime before publish to satisfy trusted publishing requirements.
+
+### CI
+
+- Release pipeline now publishes `@ngx-formly-builder/core` with GitHub OIDC provenance (`--provenance`).
+
+## [0.1.2] - 2026-02-26
+
+### Changed
+
+- Switched npm publish path from token env wiring to trusted publishing flow in release automation.
+
+### CI
+
+- Release workflow hardened for npm trusted publishing compatibility and provenance attestation.
+
+## [0.1.1] - 2026-02-26
+
+### Added
+
+- Storybook static deployment in GitHub Pages under `/docs/storybook/` with docs hub navigation link.
+
+### Changed
+
+- Release workflow publish auth now aligned with npm registry settings and normalized package repository metadata.
+
 ## [0.1.0] - 2026-02-25
 
 ### Added

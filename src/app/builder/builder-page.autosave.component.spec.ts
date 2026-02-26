@@ -114,4 +114,22 @@ describe('BuilderPageComponent autosave contract', () => {
     expect(event.key).toBe('builder:test:error');
     expect(event.error).toBeTruthy();
   });
+
+  it('emits autosaveError when draft restore fails', () => {
+    createComponent();
+    const restoreError = new Error('blocked');
+    spyOn(Storage.prototype, 'getItem').and.throwError(restoreError.message);
+    const autosaveErrorSpy = jasmine.createSpy('autosaveError');
+    component.autosaveError.subscribe(autosaveErrorSpy);
+
+    component.autosave = true;
+    component.autosaveKey = 'builder:test:restore-error';
+    component.ngOnInit();
+
+    expect(autosaveErrorSpy).toHaveBeenCalled();
+    const event = autosaveErrorSpy.calls.mostRecent().args[0] as { operation: string; key: string; error: unknown };
+    expect(event.operation).toBe('restore');
+    expect(event.key).toBe('builder:test:restore-error');
+    expect(event.error).toBeTruthy();
+  });
 });

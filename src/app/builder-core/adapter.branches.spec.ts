@@ -173,4 +173,38 @@ describe('builder/formly adapter branch hardening: expressions and containers', 
     expect(fields[0].fieldGroupClassName).toBe('row');
     expect(fields[0].fieldGroup).toEqual([]);
   });
+
+  it('normalizes advanced show expression and ignores trailing empty segments', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('input', { containerId: store.rootId(), index: 0 });
+    const fieldId = store.selectedId() as string;
+    store.updateNodeProps(fieldId, {
+      visibleExpression: ' show = model?.status === "active" ; ; ',
+      enabledExpression: ' model?.canEdit === true ; ',
+    });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    const expressions = (first.expressions ?? {}) as Record<string, string>;
+    expect(expressions['hide']).toContain('model?.status === "active"');
+    expect(expressions['props.disabled']).toContain('model?.canEdit === true');
+  });
+
+  it('avoids infinite recursion when a container graph is cyclic', () => {
+    const doc = {
+      schemaVersion: 2,
+      rootId: 'root',
+      selectedId: null,
+      renderer: 'bootstrap',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: ['row1'], props: {} },
+        row1: { id: 'row1', type: 'row', parentId: 'root', children: ['col1'], props: {} },
+        col1: { id: 'col1', type: 'col', parentId: 'row1', children: ['row1'], props: {} },
+      },
+    } as unknown as Parameters<typeof builderToFormly>[0];
+
+    const fields = builderToFormly(doc);
+    expect(fields.length).toBe(1);
+    expect(fields[0].fieldGroupClassName).toBe('row');
+  });
 });

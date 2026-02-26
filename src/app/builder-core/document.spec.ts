@@ -2,6 +2,19 @@ import { parseBuilderDocument, parseBuilderDocumentObject } from './document';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 
 describe('document parsing and migration', () => {
+  it('returns error when input is not an object', () => {
+    const out = parseBuilderDocumentObject('not-an-object');
+    expect(out.ok).toBeFalse();
+  });
+
+  it('returns error when nodes is not an object map', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      nodes: [],
+    });
+    expect(out.ok).toBeFalse();
+  });
+
   it('returns error for invalid json', () => {
     const out = parseBuilderDocument('{bad');
     expect(out.ok).toBeFalse();
@@ -118,5 +131,70 @@ describe('document parsing and migration', () => {
     expect(col.type).toBe('col');
     if (col.type !== 'col') return;
     expect(col.props.colSpan).toBe(6);
+  });
+});
+
+describe('document parsing edge cases', () => {
+  it('drops unknown node types and warns when selected node becomes invalid', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      selectedId: 'legacy',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: ['legacy'], props: {} },
+        legacy: { id: 'legacy', type: 'legacy-widget', parentId: 'root', children: [], props: {} },
+      },
+    });
+
+    expect(out.ok).toBeTrue();
+    if (!out.ok) return;
+    expect(out.doc.nodes['legacy']).toBeUndefined();
+    expect(out.doc.selectedId).toBeNull();
+    expect(out.warnings.some((w) => w.includes('Dropped node "legacy"'))).toBeTrue();
+    expect(out.warnings.some((w) => w.includes('Selected node was invalid'))).toBeTrue();
+  });
+
+  it('returns error when root resolves to a field node', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      nodes: {
+        root: { id: 'root', type: 'field', parentId: null, children: [], props: {}, validators: {} },
+      },
+    });
+
+    expect(out.ok).toBeFalse();
+  });
+
+  it('falls back to default root and adds warning when requested root is missing', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'custom-root',
+      renderer: 'not-a-renderer',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
+      },
+    });
+
+    expect(out.ok).toBeTrue();
+    if (!out.ok) return;
+    expect(out.doc.rootId).toBe('root');
+    expect(out.doc.renderer).toBe('bootstrap');
+    expect(out.warnings.some((w) => w.includes('fell back to "root"'))).toBeTrue();
+  });
+
+  it('stops traversing cyclic references', () => {
+    const out = parseBuilderDocumentObject({
+      rootId: 'root',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: ['row1'], props: {} },
+        row1: { id: 'row1', type: 'row', parentId: 'root', children: ['root', 'field1'], props: {} },
+        field1: { id: 'field1', type: 'field', parentId: 'row1', children: [], fieldKind: 'input', props: {} },
+      },
+    });
+
+    expect(out.ok).toBeTrue();
+    if (!out.ok) return;
+    const row = out.doc.nodes['row1'];
+    expect(row.type).toBe('row');
+    if (row.type !== 'row') return;
+    expect(row.children).toEqual(['field1']);
   });
 });

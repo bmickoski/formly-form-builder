@@ -90,4 +90,20 @@ describe('BuilderPageComponent contract', () => {
     if (field.type !== 'field') return;
     expect(field.props.label).toBe('External Config');
   });
+
+  it('emits diagnosticsChange after store updates when ready', () => {
+    createComponent();
+    component.ngOnInit();
+    fixture.detectChanges();
+    const diagnosticsSpy = jasmine.createSpy('diagnosticsChange');
+    component.diagnosticsChange.subscribe(diagnosticsSpy);
+
+    component.store.addFromPalette('input', { containerId: component.store.rootId(), index: 0 });
+    fixture.detectChanges();
+
+    expect(diagnosticsSpy).toHaveBeenCalled();
+    const latest = diagnosticsSpy.calls.mostRecent().args[0] as { errorCount: number; warningCount: number };
+    expect(latest.errorCount).toBeGreaterThanOrEqual(0);
+    expect(latest.warningCount).toBeGreaterThanOrEqual(0);
+  });
 });
