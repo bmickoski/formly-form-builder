@@ -1,4 +1,4 @@
-﻿import { FormlyFieldConfig } from '@ngx-formly/core';
+import { FormlyFieldConfig } from '@ngx-formly/core';
 
 import { builderToFormly } from './adapter';
 import { formlyToBuilder } from './formly-import';
