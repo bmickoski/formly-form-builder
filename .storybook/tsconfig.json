@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "react"],
+    "skipLibCheck": true
+  },
+  "include": ["../.storybook/**/*.ts", "../stories/**/*.ts", "../src/**/*.ts"],
+  "exclude": ["../src/**/*.spec.ts", "../docs/**", "../dist/**", "../node_modules/**"]
+}

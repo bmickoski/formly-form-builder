@@ -45,6 +45,12 @@ App runs at `http://localhost:4201`.
 npm install @ngx-formly-builder/core @ngx-formly/core @ngx-formly/material @angular/material
 ```
 
+Or use schematic setup:
+
+```bash
+ng add @ngx-formly-builder/core
+```
+
 2. Embed:
 
 ```html
@@ -84,6 +90,8 @@ npm run typecheck
 npm run lint
 npm run format:check
 npm run docs
+npm run storybook
+npm run storybook:build
 ```
 
 ## Engineering workflow
@@ -281,6 +289,7 @@ export const appConfig: ApplicationConfig = {
 - docs/FEATURES.md: product-focused features, usage patterns, and examples.
 - docs/features/getting-started-5-min.md: install -> embed -> export in minutes.
 - docs/features/embedding-and-consumption.md: embedding, multi-instance scope, and reusable API surface.
+- stories/builder-page.stories.ts: isolated Storybook embed example.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
 - CONTRIBUTING.md: coding/testing workflow and rules.
 - TROUBLESHOOTING.md: common runtime and DnD issues.

@@ -8,6 +8,12 @@ This is the fastest path to embed the builder and receive `FormlyFieldConfig[]`.
 npm install @ngx-formly-builder/core @ngx-formly/core @ngx-formly/material @angular/material
 ```
 
+Alternative:
+
+```bash
+ng add @ngx-formly-builder/core
+```
+
 ## 2. Render `<formly-builder>`
 
 ```ts

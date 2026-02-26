@@ -2,6 +2,7 @@
   "name": "@ngx-formly-builder/core",
   "version": "0.1.0",
   "description": "Embeddable Angular Formly visual builder component and core APIs.",
+  "schematics": "./schematics/collection.json",
   "keywords": [
     "angular",
     "formly",
@@ -39,6 +40,8 @@
     }
   },
   "dependencies": {
+    "@angular-devkit/schematics": "^21.1.4",
+    "@schematics/angular": "^21.1.4",
     "tslib": "^2.6.0"
   },
   "repository": {
