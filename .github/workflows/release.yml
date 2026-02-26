@@ -43,7 +43,7 @@ jobs:
 
       - name: Publish npm package
         if: startsWith(github.ref, 'refs/tags/v')
-        run: npm publish ./dist/formly-builder --access public
+        run: npm publish ./dist/formly-builder --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
