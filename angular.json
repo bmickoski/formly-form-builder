@@ -57,6 +57,26 @@
             "scripts": [],
             "karmaConfig": "karma.conf.cjs"
           }
+        },
+        "storybook": {
+          "builder": "@storybook/angular:start-storybook",
+          "options": {
+            "configDir": ".storybook",
+            "browserTarget": "formly-form-builder:build",
+            "port": 6006,
+            "compodoc": false,
+            "tsConfig": ".storybook/tsconfig.json"
+          }
+        },
+        "build-storybook": {
+          "builder": "@storybook/angular:build-storybook",
+          "options": {
+            "configDir": ".storybook",
+            "browserTarget": "formly-form-builder:build",
+            "outputDir": "storybook-static",
+            "compodoc": false,
+            "tsConfig": ".storybook/tsconfig.json"
+          }
         }
       }
     }

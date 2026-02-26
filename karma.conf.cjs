@@ -22,6 +22,14 @@ module.exports = function (config) {
       dir: path.join(__dirname, './coverage/formly-form-builder'),
       subdir: '.',
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
+      check: {
+        global: {
+          statements: 50,
+          branches: 38,
+          functions: 44,
+          lines: 55,
+        },
+      },
     },
     reporters: ['progress', 'kjhtml'],
     port: 9876,

@@ -11,3 +11,9 @@ pnpm-debug.log*
 
 playwright-report/
 test-results/
+storybook-static/
+
+# Local tooling artifacts
+.claude/
+documentation.json
+

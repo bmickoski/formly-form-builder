@@ -4,5 +4,6 @@
   "lib": {
     "entryFile": "../../src/public-api.ts"
   },
-  "allowedNonPeerDependencies": ["tslib"]
+  "assets": ["./schematics/**/*"],
+  "allowedNonPeerDependencies": ["tslib", "@angular-devkit/schematics", "@schematics/angular"]
 }

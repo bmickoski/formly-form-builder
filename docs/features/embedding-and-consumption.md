@@ -27,6 +27,11 @@
 2. Register plugins at app config level.
 3. Mount one or more `BuilderPageComponent` instances as needed.
 
+## ng add
+
+- `ng add @ngx-formly-builder/core` installs the package plus recommended Formly/Material dependencies.
+- It also drops a quick setup note (`NGX_FORMLY_BUILDER_SETUP.md`) into the host project.
+
 ## Embeddable Inputs/Outputs
 
 - Selector: `formly-builder`
@@ -37,5 +42,16 @@
   - `autosave: boolean` (enables localStorage persistence)
   - `autosaveKey: string` (storage key)
 - Outputs:
-  - `configChange` (fires on each document update)
+  - `configChange` (fires on each document update; emits a public document with `selectedId: null`)
   - `diagnosticsChange` (fires on each diagnostics update)
+  - `autosaveError` (fires when localStorage save/restore fails)
+
+## Public Document Contract
+
+- Public exports from `<formly-builder>` now sanitize `selectedId` to `null`.
+- This prevents internal editor UI selection state from leaking into consumer persistence payloads.
+
+## Isolated Examples
+
+- Storybook setup is available in `.storybook/` with isolated host stories in `stories/`.
+- Run `npm run storybook` for local isolated embed examples.

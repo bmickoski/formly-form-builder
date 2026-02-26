@@ -38,12 +38,17 @@ jobs:
       - name: Build documentation
         run: npm run docs
 
-      - name: Publish docs site under /docs and Compodoc under /docs/api
+      - name: Build Storybook
+        run: npm run storybook:build
+
+      - name: Publish docs site under /docs, Compodoc under /docs/api, and Storybook under /docs/storybook
         run: |
           mkdir -p dist/formly-form-builder/browser/docs
           mkdir -p dist/formly-form-builder/browser/docs/api
+          mkdir -p dist/formly-form-builder/browser/docs/storybook
           cp docs/site/index.html dist/formly-form-builder/browser/docs/index.html
           cp -r docs/compodoc/* dist/formly-form-builder/browser/docs/api/
+          cp -r storybook-static/* dist/formly-form-builder/browser/docs/storybook/
 
       - name: SPA fallback
         run: cp dist/formly-form-builder/browser/index.html dist/formly-form-builder/browser/404.html

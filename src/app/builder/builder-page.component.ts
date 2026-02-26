@@ -45,6 +45,12 @@ import { BuilderTemplatesService } from './builder-templates.service';
 import { mergePaletteById } from './builder-page.palette';
 import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
 
+export interface BuilderAutosaveError {
+  operation: 'save' | 'restore';
+  key: string;
+  error: unknown;
+}
+
 @Component({
   selector: 'app-builder-page, formly-builder',
   standalone: true,
@@ -85,6 +91,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   @Input() autosaveKey = 'formly-builder:draft';
   @Output() readonly configChange = new EventEmitter<BuilderDocument>();
   @Output() readonly diagnosticsChange = new EventEmitter<BuilderDiagnosticsReport>();
+  @Output() readonly autosaveError = new EventEmitter<BuilderAutosaveError>();
 
   constructor() {
     effect(() => {
@@ -92,7 +99,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       const doc = this.store.doc();
       const diagnostics = this.store.diagnostics();
       if (!isReady) return;
-      if (!this.isApplyingInputConfig) this.configChange.emit(doc);
+      if (!this.isApplyingInputConfig) this.configChange.emit(this.toPublicDocument(doc));
       this.diagnosticsChange.emit(diagnostics);
       if (this.autosave) this.saveToAutosave();
     });
@@ -155,10 +162,11 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   openExportBuilder(): void {
     if (!this.canExport()) return;
+    const publicDoc = this.toPublicDocument(this.store.doc());
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { mode: 'exportBuilder', json: this.store.exportDocument(), schemaVersion: this.store.doc().schemaVersion },
+      data: { mode: 'exportBuilder', json: JSON.stringify(publicDoc, null, 2), schemaVersion: publicDoc.schemaVersion },
     });
   }
 
@@ -389,9 +397,9 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   private saveToAutosave(): void {
     if (!this.autosave || !this.autosaveKey) return;
     try {
-      localStorage.setItem(this.autosaveKey, this.store.exportDocument());
-    } catch {
-      // Ignore storage errors (quota/privacy mode).
+      localStorage.setItem(this.autosaveKey, JSON.stringify(this.toPublicDocument(this.store.doc()), null, 2));
+    } catch (error) {
+      this.autosaveError.emit({ operation: 'save', key: this.autosaveKey, error });
     }
   }
 
@@ -406,8 +414,12 @@ export class BuilderPageComponent implements OnInit, OnChanges {
         localStorage.removeItem(this.autosaveKey);
         this.notifyError('Stored draft was invalid and has been cleared.');
       }
-    } catch {
-      // Ignore restore errors.
+    } catch (error) {
+      this.autosaveError.emit({ operation: 'restore', key: this.autosaveKey, error });
     }
+  }
+
+  private toPublicDocument(doc: BuilderDocument): BuilderDocument {
+    return { ...doc, selectedId: null };
   }
 }
