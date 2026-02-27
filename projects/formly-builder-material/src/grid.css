@@ -1,0 +1,91 @@
+/**
+ * @ngx-formly-builder/material — Grid layout styles
+ *
+ * Required when your form uses row/col containers (fb-row, fb-col-*).
+ * Add this to your application's global styles:
+ *
+ *   // angular.json
+ *   "styles": ["node_modules/@ngx-formly-builder/material/grid.css"]
+ *
+ *   // styles.scss
+ *   @import '@ngx-formly-builder/material/grid.css';
+ *
+ * Wrap your <formly-form> in an element with class="fb-form" to ensure
+ * Material form fields fill their column width:
+ *
+ *   <div class="fb-form">
+ *     <formly-form ... />
+ *   </div>
+ */
+
+.fb-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -6px;
+  margin-right: -6px;
+}
+
+.fb-row > .fb-col {
+  padding-left: 6px;
+  padding-right: 6px;
+  box-sizing: border-box;
+}
+
+.fb-col {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+.fb-col-1 {
+  flex: 0 0 8.3333%;
+  max-width: 8.3333%;
+}
+.fb-col-2 {
+  flex: 0 0 16.6667%;
+  max-width: 16.6667%;
+}
+.fb-col-3 {
+  flex: 0 0 25%;
+  max-width: 25%;
+}
+.fb-col-4 {
+  flex: 0 0 33.3333%;
+  max-width: 33.3333%;
+}
+.fb-col-5 {
+  flex: 0 0 41.6667%;
+  max-width: 41.6667%;
+}
+.fb-col-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+.fb-col-7 {
+  flex: 0 0 58.3333%;
+  max-width: 58.3333%;
+}
+.fb-col-8 {
+  flex: 0 0 66.6667%;
+  max-width: 66.6667%;
+}
+.fb-col-9 {
+  flex: 0 0 75%;
+  max-width: 75%;
+}
+.fb-col-10 {
+  flex: 0 0 83.3333%;
+  max-width: 83.3333%;
+}
+.fb-col-11 {
+  flex: 0 0 91.6667%;
+  max-width: 91.6667%;
+}
+.fb-col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+/* Ensure Material form fields fill their column width. */
+.fb-form .mat-mdc-form-field {
+  width: 100%;
+  display: block;
+}
