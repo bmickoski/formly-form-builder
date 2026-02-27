@@ -20,7 +20,9 @@
 5. Create release commit (if needed) and push.
 6. Create Git tag (`git tag vX.Y.Z`) and push tag (`git push origin vX.Y.Z`).
 7. Verify the release workflow published:
-   - npm package from `dist/formly-builder`
+   - npm package from `dist/formly-builder` (`@ngx-formly-builder/core`)
+   - npm package from `dist/formly-builder-bootstrap` (`@ngx-formly-builder/bootstrap`)
+   - npm package from `dist/formly-builder-material` (`@ngx-formly-builder/material`)
    - GitHub release assets (`formly-form-builder-dist.tar.gz` and library `.tgz`)
 8. Publish release notes (highlights, migration notes, known issues).
 
