@@ -2,6 +2,11 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
+    "paths": {
+      "@ngx-formly-builder/core": ["dist/formly-builder"],
+      "@ngx-formly-builder/material": ["dist/formly-builder-material"],
+      "@ngx-formly-builder/bootstrap": ["dist/formly-builder-bootstrap"]
+    },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,

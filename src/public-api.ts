@@ -9,3 +9,12 @@ export {
   BuilderPageComponent,
   BuilderPageComponent as FormlyBuilderComponent,
 } from './app/builder/builder-page.component';
+
+// Validation building blocks for renderer sub-packages and consumer apps
+export {
+  PREVIEW_VALIDATION_MESSAGES as BUILDER_VALIDATION_MESSAGES,
+  previewShowError,
+  createPreviewOptions,
+} from './app/builder/preview/formly-preview-config';
+export { resolveAsyncValidatorsForFields } from './app/builder-core/async-validators';
+export { resolveCustomValidatorsForFields } from './app/builder-core/custom-validators';

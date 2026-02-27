@@ -31,6 +31,7 @@ export function buildDiagnostics(
   const fields = Object.values(doc.nodes).filter((node): node is FieldNode => isFieldNode(node));
   const fieldsByKey = indexFieldsByKey(fields);
 
+  diagnostics.push(...missingKeyDiagnostics(fields));
   diagnostics.push(...duplicateKeyDiagnostics(fieldsByKey));
   diagnostics.push(...ruleDiagnostics(fields, fieldsByKey));
   diagnostics.push(...expressionDiagnostics(fields));
@@ -77,6 +78,21 @@ function indexFieldsByKey(fields: FieldNode[]): Map<string, FieldNode[]> {
 
 function normalizedKey(field: FieldNode): string {
   return (field.props.key ?? '').trim();
+}
+
+function missingKeyDiagnostics(fields: FieldNode[]): BuilderDiagnostic[] {
+  const diagnostics: BuilderDiagnostic[] = [];
+  for (const field of fields) {
+    if (!normalizedKey(field)) {
+      diagnostics.push({
+        severity: 'warning',
+        code: 'missing-key',
+        nodeId: field.id,
+        message: `Field has no key. A generated key will be used on export — set an explicit key to control the form model property name.`,
+      });
+    }
+  }
+  return diagnostics;
 }
 
 function duplicateKeyDiagnostics(fieldsByKey: Map<string, FieldNode[]>): BuilderDiagnostic[] {

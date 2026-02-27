@@ -13,7 +13,6 @@ import { BuilderStore } from '../../builder-core/store';
 import { builderToFormly } from '../../builder-core/adapter';
 import { resolveDynamicOptionsForFields } from '../../builder-core/dynamic-options';
 import { resolveAsyncValidatorsForFields } from '../../builder-core/async-validators';
-import { resolveCustomValidatorsForFields } from '../../builder-core/custom-validators';
 import { BuilderDocument, OptionItem } from '../../builder-core/model';
 import type { FormlyConfigExtension } from '../../builder-core/plugins';
 import { FbPanelWrapperComponent } from './fb-panel-wrapper.component';
@@ -121,7 +120,6 @@ export class PreviewBootstrapDialogComponent {
     resolveAsyncValidatorsForFields(this.fields, {
       lookupRegistry: this.lookupRegistry,
     });
-    resolveCustomValidatorsForFields(this.fields);
     this.fields = [...this.fields];
     this.cdr.markForCheck();
   }

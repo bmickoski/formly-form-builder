@@ -1,0 +1,34 @@
+{
+  "name": "@ngx-formly-builder/material",
+  "version": "0.1.3",
+  "description": "Angular Material renderer components for @ngx-formly-builder/core.",
+  "keywords": [
+    "angular",
+    "formly",
+    "form-builder",
+    "material"
+  ],
+  "homepage": "https://github.com/bmickoski/formly-form-builder#readme",
+  "license": "MIT",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "@angular/cdk": "^21.0.0",
+    "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/material": "^21.0.0",
+    "@ngx-formly/core": "^7.0.0",
+    "@ngx-formly-builder/core": "^0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bmickoski/formly-form-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bmickoski/formly-form-builder/issues"
+  }
+}

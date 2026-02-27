@@ -79,6 +79,90 @@
           }
         }
       }
+    },
+    "material-consumer-example": {
+      "projectType": "application",
+      "root": "examples/material-consumer",
+      "sourceRoot": "examples/material-consumer/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/material-consumer-example",
+            "index": "examples/material-consumer/src/index.html",
+            "browser": "examples/material-consumer/src/main.ts",
+            "polyfills": [],
+            "tsConfig": "examples/material-consumer/tsconfig.app.json",
+            "assets": [],
+            "styles": [
+              "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
+              "examples/material-consumer/src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractLicenses": true
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "development": {
+              "buildTarget": "material-consumer-example:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    },
+    "formly-builder-bootstrap": {
+      "projectType": "library",
+      "root": "projects/formly-builder-bootstrap",
+      "sourceRoot": "projects/formly-builder-bootstrap/src",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/formly-builder-bootstrap/ng-package.json",
+            "tsConfig": "projects/formly-builder-bootstrap/tsconfig.lib.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/formly-builder-bootstrap/tsconfig.lib.json"
+            }
+          }
+        }
+      }
+    },
+    "formly-builder-material": {
+      "projectType": "library",
+      "root": "projects/formly-builder-material",
+      "sourceRoot": "projects/formly-builder-material/src",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/formly-builder-material/ng-package.json",
+            "tsConfig": "projects/formly-builder-material/tsconfig.lib.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/formly-builder-material/tsconfig.lib.json"
+            }
+          }
+        }
+      }
     }
   },
   "cli": {
