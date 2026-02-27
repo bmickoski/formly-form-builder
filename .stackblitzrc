@@ -1,0 +1,4 @@
+{
+  "installDependencies": true,
+  "startCommand": "npm run build:libs && npm run start:example:material"
+}

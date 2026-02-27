@@ -54,6 +54,11 @@ npm run start:example:material
   - `examples/bootstrap-consumer`
   - `examples/material-consumer`
 
+## Try It In StackBlitz
+
+- Material interactive demo: https://stackblitz.com/github/bmickoski/formly-form-builder
+- After load, StackBlitz runs `npm run build:libs && npm run start:example:material` from `.stackblitzrc`.
+
 ## Library Getting Started (5 Minutes)
 
 1. Install:
