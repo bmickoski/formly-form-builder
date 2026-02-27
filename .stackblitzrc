@@ -1,4 +1,4 @@
 {
-  "installDependencies": true,
-  "startCommand": "npm run build:libs && npm run start:example:material"
+  "installDependencies": false,
+  "startCommand": "npm cache clean --force && npm install --prefer-online --no-audit --progress=false && npm run build:libs && npm run start:example:material"
 }
