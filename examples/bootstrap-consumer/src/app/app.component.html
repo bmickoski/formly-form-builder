@@ -1,0 +1,47 @@
+<div class="container py-4" style="max-width: 900px">
+  <h1 class="display-6 mb-1">@ngx-formly-builder - Bootstrap Examples</h1>
+  <p class="text-muted mb-4">
+    Forms below are built with <code>@ngx-formly-builder/core</code> and rendered with
+    <code>@ngx-formly-builder/bootstrap</code>.
+  </p>
+
+  <ul class="nav nav-tabs mb-3">
+    @for (demo of demos; track demo.title; let i = $index) {
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTabIndex === i" type="button" (click)="activeTabIndex = i">
+          {{ demo.title }}
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (demos[activeTabIndex]; as demo) {
+    <p class="mb-1 text-secondary">{{ demo.subtitle }}</p>
+    @if (demo.badge) {
+      <code class="d-inline-block mb-3">{{ demo.badge }}</code>
+    }
+
+    <div class="card">
+      <div class="card-body">
+        <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
+          <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary btn-sm" type="submit" [disabled]="demo.form.invalid">Submit</button>
+            @if (demo.submitted) {
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="reset(demo)">Reset</button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+
+    @if (demo.submitted) {
+      <div class="card mt-3 border-success-subtle">
+        <div class="card-header bg-success-subtle">Submitted model</div>
+        <div class="card-body">
+          <pre class="mb-0" style="font-size: 13px; overflow: auto">{{ demo.model | json }}</pre>
+        </div>
+      </div>
+    }
+  }
+</div>

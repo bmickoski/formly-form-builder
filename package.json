@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "ng serve --port 4202",
+    "start:example:bootstrap": "ng serve bootstrap-consumer-example --port 4204",
     "start:example:material": "ng serve material-consumer-example --port 4203",
     "build": "ng build",
     "test": "ng test",

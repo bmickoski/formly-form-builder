@@ -80,6 +80,52 @@
         }
       }
     },
+    "bootstrap-consumer-example": {
+      "projectType": "application",
+      "root": "examples/bootstrap-consumer",
+      "sourceRoot": "examples/bootstrap-consumer/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/bootstrap-consumer-example",
+            "index": "examples/bootstrap-consumer/src/index.html",
+            "browser": "examples/bootstrap-consumer/src/main.ts",
+            "polyfills": [],
+            "tsConfig": "examples/bootstrap-consumer/tsconfig.app.json",
+            "assets": [],
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "examples/bootstrap-consumer/src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractLicenses": true
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "development": {
+              "buildTarget": "bootstrap-consumer-example:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    },
     "material-consumer-example": {
       "projectType": "application",
       "root": "examples/material-consumer",

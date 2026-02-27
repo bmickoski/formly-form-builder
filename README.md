@@ -38,6 +38,22 @@ npm start
 
 App runs at `http://localhost:4201`.
 
+## Consumer Examples
+
+Build libraries once, then run either renderer consumer app:
+
+```bash
+npm run build:libs
+npm run start:example:bootstrap
+npm run start:example:material
+```
+
+- Bootstrap consumer: `http://localhost:4204`
+- Material consumer: `http://localhost:4203`
+- Example sources:
+  - `examples/bootstrap-consumer`
+  - `examples/material-consumer`
+
 ## Library Getting Started (5 Minutes)
 
 1. Install:

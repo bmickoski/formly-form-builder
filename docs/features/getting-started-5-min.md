@@ -54,3 +54,16 @@ export class BuilderHostComponent {
 
 - Use `(configChange)` payload for backend/API persistence.
 - It is a public export and includes `selectedId: null` by design.
+
+## 4. Run full consumer examples
+
+Use the repo examples if you want a complete app flow first:
+
+```bash
+npm run build:libs
+npm run start:example:bootstrap
+npm run start:example:material
+```
+
+- Bootstrap example: `examples/bootstrap-consumer` (`http://localhost:4204`)
+- Material example: `examples/material-consumer` (`http://localhost:4203`)
