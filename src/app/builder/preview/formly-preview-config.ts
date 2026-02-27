@@ -38,6 +38,31 @@ function patternMessage(field: FormlyFieldConfig): string {
   return 'The value does not match the required format.';
 }
 
+/**
+ * Library-specific validation messages for validator names that only exist in
+ * @ngx-formly-builder (asyncUnique, builderCustom). Exported as BUILDER_VALIDATION_MESSAGES.
+ *
+ * Standard messages (required, email, minLength, …) are intentionally omitted so they
+ * do not conflict with messages already registered by the host application.
+ */
+export const LIB_VALIDATION_MESSAGES = [
+  {
+    name: 'asyncUnique',
+    message: (_: unknown, field: FormlyFieldConfig) =>
+      String(field.props?.['asyncUnique']?.['message'] ?? 'Value must be unique.'),
+  },
+  {
+    name: 'builderCustom',
+    message: (_: unknown, field: FormlyFieldConfig) =>
+      String(field.props?.['customValidation']?.['message'] ?? 'Custom validation failed.'),
+  },
+] as const;
+
+/**
+ * Full set of validation messages used by the builder's internal preview dialog.
+ * Includes standard messages so the preview always shows human-readable errors
+ * regardless of what the host app registers.
+ */
 export const PREVIEW_VALIDATION_MESSAGES = [
   { name: 'required', message: 'This field is required.' },
   { name: 'email', message: 'Please enter a valid email address.' },
@@ -52,14 +77,5 @@ export const PREVIEW_VALIDATION_MESSAGES = [
   { name: 'min', message: (_: unknown, field: FormlyFieldConfig) => `Minimum value is ${field.props?.['min']}.` },
   { name: 'max', message: (_: unknown, field: FormlyFieldConfig) => `Maximum value is ${field.props?.['max']}.` },
   { name: 'pattern', message: (_: unknown, field: FormlyFieldConfig) => patternMessage(field) },
-  {
-    name: 'asyncUnique',
-    message: (_: unknown, field: FormlyFieldConfig) =>
-      String(field.props?.['asyncUnique']?.['message'] ?? 'Value must be unique.'),
-  },
-  {
-    name: 'builderCustom',
-    message: (_: unknown, field: FormlyFieldConfig) =>
-      String(field.props?.['customValidation']?.['message'] ?? 'Custom validation failed.'),
-  },
+  ...LIB_VALIDATION_MESSAGES,
 ] as const;

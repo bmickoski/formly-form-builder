@@ -24,7 +24,7 @@ export function provideFormlyBuilderBootstrap(): ConfigOption {
       { name: 'fb-accordion', component: FbAccordionBsTypeComponent },
       { name: 'fb-repeat', component: FbRepeatBsTypeComponent },
     ],
-    wrappers: [{ name: 'panel', component: FbPanelWrapperBsComponent }],
+    wrappers: [{ name: 'fb-panel', component: FbPanelWrapperBsComponent }],
     validators: [{ name: 'email', validation: Validators.email }],
     validationMessages: [...BUILDER_VALIDATION_MESSAGES] as ConfigOption['validationMessages'],
   };

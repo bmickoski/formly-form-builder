@@ -12,7 +12,7 @@ export {
 
 // Validation building blocks for renderer sub-packages and consumer apps
 export {
-  PREVIEW_VALIDATION_MESSAGES as BUILDER_VALIDATION_MESSAGES,
+  LIB_VALIDATION_MESSAGES as BUILDER_VALIDATION_MESSAGES,
   previewShowError,
   createPreviewOptions,
 } from './app/builder/preview/formly-preview-config';
