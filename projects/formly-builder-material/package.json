@@ -1,6 +1,6 @@
 {
   "name": "@ngx-formly-builder/material",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Angular Material renderer components for @ngx-formly-builder/core.",
   "keywords": [
     "angular",

@@ -1,6 +1,6 @@
 {
   "name": "@ngx-formly-builder/bootstrap",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Bootstrap 5 renderer components for @ngx-formly-builder/core.",
   "keywords": [
     "angular",
