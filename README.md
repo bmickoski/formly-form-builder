@@ -58,7 +58,7 @@ npm run start:example:material
 
 - Live demo (recommended): https://bmickoski.github.io/formly-form-builder/
 - Storybook (isolated embed scenarios): https://bmickoski.github.io/formly-form-builder/docs/storybook/
-- StackBlitz note: full-repo import is heavy and depends on WebContainer npm/cache behavior. A dedicated lightweight StackBlitz template is planned.
+- Dedicated StackBlitz template (Material): https://stackblitz.com/github/bmickoski/formly-form-builder/tree/master/examples/stackblitz-material
 
 ## Library Getting Started (5 Minutes)
 

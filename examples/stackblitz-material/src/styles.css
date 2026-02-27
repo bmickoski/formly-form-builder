@@ -1,0 +1,37 @@
+html,
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f6f8fb;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+p {
+  margin: 0 0 16px;
+  color: #4a5568;
+}
+
+.output {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid #dde3ea;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+pre {
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  font-size: 12px;
+}

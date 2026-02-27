@@ -1,0 +1,33 @@
+{
+  "name": "ngx-formly-builder-stackblitz-material",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "ng serve --host 0.0.0.0 --port 4200",
+    "build": "ng build"
+  },
+  "dependencies": {
+    "@angular/animations": "^21.1.5",
+    "@angular/cdk": "^21.1.5",
+    "@angular/common": "^21.1.5",
+    "@angular/compiler": "^21.1.5",
+    "@angular/core": "^21.1.5",
+    "@angular/forms": "^21.1.5",
+    "@angular/material": "^21.1.5",
+    "@angular/platform-browser": "^21.1.5",
+    "@angular/platform-browser-dynamic": "^21.1.5",
+    "@ngx-formly-builder/core": "^0.2.2",
+    "@ngx-formly-builder/material": "^0.2.2",
+    "@ngx-formly/core": "^7.1.0",
+    "@ngx-formly/material": "^7.1.0",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.6.2",
+    "zone.js": "^0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^21.1.4",
+    "@angular/cli": "^21.1.4",
+    "@angular/compiler-cli": "^21.1.5",
+    "typescript": "~5.9.2"
+  }
+}
