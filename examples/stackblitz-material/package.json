@@ -18,6 +18,7 @@
     "@angular/platform-browser-dynamic": "^21.1.5",
     "@ngx-formly-builder/core": "^0.2.2",
     "@ngx-formly-builder/material": "^0.2.2",
+    "@ngx-formly/bootstrap": "^7.1.0",
     "@ngx-formly/core": "^7.1.0",
     "@ngx-formly/material": "^7.1.0",
     "rxjs": "^7.8.1",
