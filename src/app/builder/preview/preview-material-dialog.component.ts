@@ -39,7 +39,7 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
   providers: [
     provideFormlyCore([
       ...withFormlyMaterial(),
-      { wrappers: [{ name: 'panel', component: FbPanelWrapperComponent }] },
+      { wrappers: [{ name: 'fb-panel', component: FbPanelWrapperComponent }] },
       {
         types: [
           { name: 'repeat', component: FbRepeatTypeComponent },

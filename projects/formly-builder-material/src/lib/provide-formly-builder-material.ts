@@ -24,7 +24,7 @@ export function provideFormlyBuilderMaterial(): ConfigOption {
       { name: 'fb-accordion', component: FbAccordionMatTypeComponent },
       { name: 'fb-repeat', component: FbRepeatMatTypeComponent },
     ],
-    wrappers: [{ name: 'panel', component: FbPanelWrapperMatComponent }],
+    wrappers: [{ name: 'fb-panel', component: FbPanelWrapperMatComponent }],
     validators: [{ name: 'email', validation: Validators.email }],
     validationMessages: [...BUILDER_VALIDATION_MESSAGES] as ConfigOption['validationMessages'],
   };

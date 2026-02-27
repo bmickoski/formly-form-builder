@@ -310,7 +310,7 @@ function containerNodeToFormly(
   if (container.type === 'panel') {
     return [
       {
-        wrappers: ['panel'],
+        wrappers: ['fb-panel'],
         props: {
           label: container.props.title ?? container.props.label ?? 'Panel',
           description: container.props.description,
