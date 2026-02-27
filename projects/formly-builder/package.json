@@ -1,6 +1,6 @@
 {
   "name": "@ngx-formly-builder/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Embeddable Angular Formly visual builder component and core APIs.",
   "schematics": "./schematics/collection.json",
   "keywords": [
