@@ -1,0 +1,4 @@
+{
+  "installDependencies": false,
+  "startCommand": "rm -rf /tmp/npm-cache && npm ci --cache /tmp/npm-cache --prefer-online --no-audit --progress=false && npm run build:libs && npm run start:example:material"
+}
