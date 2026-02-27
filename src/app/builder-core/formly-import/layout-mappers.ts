@@ -18,7 +18,7 @@ export type LayoutImportKind =
 
 export function detectLayoutKind(field: FormlyFieldConfig): LayoutImportKind {
   const wrappers = Array.isArray(field.wrappers) ? field.wrappers : [];
-  if (wrappers.includes('panel')) return 'panel-wrapper';
+  if (wrappers.includes('fb-panel') || wrappers.includes('panel')) return 'panel-wrapper';
   if (field.type === 'fb-tabs') return 'tabs';
   if (field.type === 'fb-stepper') return 'stepper';
   if (field.type === 'fb-accordion') return 'accordion';
