@@ -16,6 +16,10 @@
     "useDefineForClassFields": false,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@ngx-formly-builder/core": ["../../dist/formly-builder"],
+      "@ngx-formly-builder/material": ["../../dist/formly-builder-material"]
+    }
   }
 }
