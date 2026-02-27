@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [0.3.0] - 2026-02-27
+
+### Changed
+
+- Renamed exported Formly wrapper registration from `panel` to `fb-panel` to avoid collisions with host app wrapper names.
+- Narrowed exported `BUILDER_VALIDATION_MESSAGES` to library-specific validator names only (`asyncUnique`, `builderCustom`).
+- Kept standard validation messages (`required`, `email`, `minLength`, `maxLength`, `min`, `max`, `pattern`) internal to builder preview dialogs.
+
+### Migration
+
+- If your host app relied on wrapper name `panel` from this library, switch to `fb-panel`.
+- If your host app relied on built-in message names from `BUILDER_VALIDATION_MESSAGES`, register those standard Formly validation messages in your host app.
+- See `docs/MIGRATION-v0.3.0.md`.
+
 ## [0.1.3] - 2026-02-26
 
 ### Changed

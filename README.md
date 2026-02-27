@@ -312,6 +312,7 @@ export const appConfig: ApplicationConfig = {
 - docs/FEATURES.md: product-focused features, usage patterns, and examples.
 - docs/features/getting-started-5-min.md: install -> embed -> export in minutes.
 - docs/features/embedding-and-consumption.md: embedding, multi-instance scope, and reusable API surface.
+- docs/MIGRATION-v0.3.0.md: migration notes for wrapper and validation-message registration changes.
 - stories/builder-page.stories.ts: isolated Storybook embed example.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
 - CONTRIBUTING.md: coding/testing workflow and rules.
