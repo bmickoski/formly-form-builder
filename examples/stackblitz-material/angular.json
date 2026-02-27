@@ -17,11 +17,7 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": [],
-            "styles": [
-              "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
-              "node_modules/@ngx-formly-builder/material/grid.css",
-              "src/styles.css"
-            ],
+            "styles": ["node_modules/@angular/material/prebuilt-themes/indigo-pink.css", "src/styles.css"],
             "scripts": []
           },
           "configurations": {
