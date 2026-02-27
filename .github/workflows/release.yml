@@ -46,12 +46,19 @@ jobs:
           npm pack ./dist/formly-builder-bootstrap
           npm pack ./dist/formly-builder-material
 
-      - name: Publish npm packages
+      - name: Publish core package
         if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          npm publish ./dist/formly-builder --access public --provenance
-          npm publish ./dist/formly-builder-bootstrap --access public --provenance
-          npm publish ./dist/formly-builder-material --access public --provenance
+        run: npm publish ./dist/formly-builder --access public --provenance
+
+      - name: Publish bootstrap package
+        if: startsWith(github.ref, 'refs/tags/v')
+        continue-on-error: true
+        run: npm publish ./dist/formly-builder-bootstrap --access public --provenance
+
+      - name: Publish material package
+        if: startsWith(github.ref, 'refs/tags/v')
+        continue-on-error: true
+        run: npm publish ./dist/formly-builder-material --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
