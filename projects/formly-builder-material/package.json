@@ -2,6 +2,7 @@
   "name": "@ngx-formly-builder/material",
   "version": "0.2.2",
   "description": "Angular Material renderer components for @ngx-formly-builder/core.",
+  "schematics": "./schematics/collection.json",
   "keywords": [
     "angular",
     "formly",
@@ -23,6 +24,11 @@
     "@angular/material": "^21.0.0",
     "@ngx-formly/core": "^7.0.0",
     "@ngx-formly-builder/core": "^0.2.0"
+  },
+  "dependencies": {
+    "@angular-devkit/schematics": "^21.1.4",
+    "@schematics/angular": "^21.1.4",
+    "tslib": "^2.6.0"
   },
   "repository": {
     "type": "git",

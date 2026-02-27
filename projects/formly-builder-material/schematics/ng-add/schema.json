@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NgxFormlyBuilderMaterialNgAddSchema",
+  "title": "Ngx Formly Builder Material ng-add options",
+  "type": "object",
+  "properties": {
+    "skipInstall": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip installing packages."
+    }
+  },
+  "additionalProperties": false
+}
