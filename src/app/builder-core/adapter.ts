@@ -8,6 +8,7 @@ import {
   FieldNode,
   isFieldNode,
 } from './model';
+import { resolveCustomValidatorsForFields } from './custom-validators';
 
 interface CustomValidationConfig {
   expression?: string;
@@ -382,8 +383,11 @@ export function builderToFormly(doc: BuilderDocument): FormlyFieldConfig[] {
   if (!root || !('children' in root)) return [];
 
   const visited = new Set<string>([doc.rootId]);
-  return root.children.flatMap((childId) => {
+  const fields = root.children.flatMap((childId) => {
     const node = doc.nodes[childId];
     return node ? nodeToFormly(doc, node, visited) : [];
   });
+
+  resolveCustomValidatorsForFields(fields);
+  return fields;
 }

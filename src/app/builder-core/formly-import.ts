@@ -82,7 +82,7 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
     case 'col': {
       const col = createContainerNode('col', uid('c'), parentId);
       const span = getColSpan(field.className ?? undefined);
-      if (span != null) col.props.colSpan = span;
+      col.props.colSpan = span ?? 6;
       attachContainer(doc, parentId, col.id, col);
       importGroup(doc, col.id, getFieldGroup(field));
       return;

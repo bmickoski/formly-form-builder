@@ -1,0 +1,265 @@
+import type { BuilderDocument } from '@ngx-formly-builder/core';
+
+/**
+ * Path 1: Store as BuilderDocument, convert at runtime with builderToFormly().
+ * This is the recommended approach — the form remains editable in the builder.
+ */
+
+// ─── 1. Simple contact form ─────────────────────────────────────────────────
+
+export const CONTACT_FORM_DOC: BuilderDocument = {
+  schemaVersion: 2,
+  rootId: 'root',
+  renderer: 'material',
+  selectedId: null,
+  nodes: {
+    root: {
+      id: 'root',
+      type: 'panel',
+      parentId: null,
+      children: ['contact-panel'],
+      props: { title: 'Form' },
+    },
+    'contact-panel': {
+      id: 'contact-panel',
+      type: 'panel',
+      parentId: 'root',
+      children: ['f-name', 'f-email', 'f-subject', 'f-message'],
+      props: { title: 'Contact Information' },
+    },
+    'f-name': {
+      id: 'f-name',
+      type: 'field',
+      parentId: 'contact-panel',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'name', label: 'Full Name', placeholder: 'Jane Doe' },
+      validators: { required: true, minLength: 2 },
+    },
+    'f-email': {
+      id: 'f-email',
+      type: 'field',
+      parentId: 'contact-panel',
+      children: [],
+      fieldKind: 'email',
+      props: { key: 'email', label: 'Email Address' },
+      validators: { required: true, email: true },
+    },
+    'f-subject': {
+      id: 'f-subject',
+      type: 'field',
+      parentId: 'contact-panel',
+      children: [],
+      fieldKind: 'select',
+      props: {
+        key: 'subject',
+        label: 'Subject',
+        options: [
+          { label: 'General enquiry', value: 'general' },
+          { label: 'Bug report', value: 'bug' },
+          { label: 'Feature request', value: 'feature' },
+        ],
+      },
+      validators: { required: true },
+    },
+    'f-message': {
+      id: 'f-message',
+      type: 'field',
+      parentId: 'contact-panel',
+      children: [],
+      fieldKind: 'textarea',
+      props: {
+        key: 'message',
+        label: 'Message',
+        placeholder: 'Describe your enquiry...',
+        description: 'Maximum 500 characters.',
+      },
+      validators: { required: true, maxLength: 500 },
+    },
+  },
+};
+
+// ─── 2. Multi-tab registration form ─────────────────────────────────────────
+
+export const TABBED_FORM_DOC: BuilderDocument = {
+  schemaVersion: 2,
+  rootId: 'root',
+  renderer: 'material',
+  selectedId: null,
+  nodes: {
+    root: {
+      id: 'root',
+      type: 'panel',
+      parentId: null,
+      children: ['reg-tabs'],
+      props: { title: 'Form' },
+    },
+    'reg-tabs': {
+      id: 'reg-tabs',
+      type: 'tabs',
+      parentId: 'root',
+      children: ['tab-personal', 'tab-account'],
+      props: { title: 'Registration' },
+    },
+    'tab-personal': {
+      id: 'tab-personal',
+      type: 'panel',
+      parentId: 'reg-tabs',
+      children: ['f-first', 'f-last', 'f-dob'],
+      props: { title: 'Personal' },
+    },
+    'tab-account': {
+      id: 'tab-account',
+      type: 'panel',
+      parentId: 'reg-tabs',
+      children: ['f-username', 'f-email', 'f-password'],
+      props: { title: 'Account' },
+    },
+    'f-first': {
+      id: 'f-first',
+      type: 'field',
+      parentId: 'tab-personal',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'firstName', label: 'First Name' },
+      validators: { required: true },
+    },
+    'f-last': {
+      id: 'f-last',
+      type: 'field',
+      parentId: 'tab-personal',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'lastName', label: 'Last Name' },
+      validators: { required: true },
+    },
+    'f-dob': {
+      id: 'f-dob',
+      type: 'field',
+      parentId: 'tab-personal',
+      children: [],
+      fieldKind: 'date',
+      props: { key: 'dateOfBirth', label: 'Date of Birth' },
+      validators: {},
+    },
+    'f-username': {
+      id: 'f-username',
+      type: 'field',
+      parentId: 'tab-account',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'username', label: 'Username', placeholder: 'Choose a username' },
+      validators: { required: true, minLength: 3 },
+    },
+    'f-email': {
+      id: 'f-email',
+      type: 'field',
+      parentId: 'tab-account',
+      children: [],
+      fieldKind: 'email',
+      props: { key: 'email', label: 'Email' },
+      validators: { required: true, email: true },
+    },
+    'f-password': {
+      id: 'f-password',
+      type: 'field',
+      parentId: 'tab-account',
+      children: [],
+      fieldKind: 'password',
+      props: { key: 'password', label: 'Password' },
+      validators: { required: true, minLength: 8 },
+    },
+  },
+};
+
+// ─── 3. 2-column row layout with conditional field ───────────────────────────
+
+export const CONDITIONAL_FORM_DOC: BuilderDocument = {
+  schemaVersion: 2,
+  rootId: 'root',
+  renderer: 'material',
+  selectedId: null,
+  nodes: {
+    root: {
+      id: 'root',
+      type: 'panel',
+      parentId: null,
+      children: ['prefs-panel'],
+      props: { title: 'Form' },
+    },
+    'prefs-panel': {
+      id: 'prefs-panel',
+      type: 'panel',
+      parentId: 'root',
+      children: ['name-row', 'f-newsletter', 'f-frequency'],
+      props: { title: 'Preferences' },
+    },
+    'name-row': {
+      id: 'name-row',
+      type: 'row',
+      parentId: 'prefs-panel',
+      children: ['col-first', 'col-last'],
+      props: {},
+    },
+    'col-first': {
+      id: 'col-first',
+      type: 'col',
+      parentId: 'name-row',
+      children: ['f-first'],
+      props: { colSpan: 6 },
+    },
+    'col-last': {
+      id: 'col-last',
+      type: 'col',
+      parentId: 'name-row',
+      children: ['f-last'],
+      props: { colSpan: 6 },
+    },
+    'f-first': {
+      id: 'f-first',
+      type: 'field',
+      parentId: 'col-first',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'firstName', label: 'First Name' },
+      validators: { required: true },
+    },
+    'f-last': {
+      id: 'f-last',
+      type: 'field',
+      parentId: 'col-last',
+      children: [],
+      fieldKind: 'input',
+      props: { key: 'lastName', label: 'Last Name' },
+      validators: { required: true },
+    },
+    'f-newsletter': {
+      id: 'f-newsletter',
+      type: 'field',
+      parentId: 'prefs-panel',
+      children: [],
+      fieldKind: 'checkbox',
+      props: { key: 'newsletter', label: 'Subscribe to newsletter' },
+      validators: {},
+    },
+    'f-frequency': {
+      id: 'f-frequency',
+      type: 'field',
+      parentId: 'prefs-panel',
+      children: [],
+      fieldKind: 'select',
+      props: {
+        key: 'frequency',
+        label: 'Email frequency',
+        description: 'Only visible when newsletter is checked.',
+        options: [
+          { label: 'Daily', value: 'daily' },
+          { label: 'Weekly', value: 'weekly' },
+          { label: 'Monthly', value: 'monthly' },
+        ],
+        visibleRule: { dependsOnKey: 'newsletter', operator: 'truthy' },
+      },
+      validators: {},
+    },
+  },
+};

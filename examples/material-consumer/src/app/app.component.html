@@ -1,0 +1,51 @@
+<div style="max-width: 800px; margin: 40px auto; padding: 0 16px">
+  <h1 style="font-weight: 300; margin-bottom: 4px">@ngx-formly-builder — Material Examples</h1>
+  <p style="color: #666; margin-top: 0; margin-bottom: 32px">
+    All forms below were built with <code>@ngx-formly-builder/core</code> and rendered with
+    <code>@ngx-formly-builder/material</code>. The only setup required is <code>app.config.ts</code>.
+  </p>
+
+  <mat-tab-group animationDuration="150ms">
+    @for (demo of demos; track demo.title) {
+      <mat-tab [label]="demo.title">
+        <div style="padding: 24px 0">
+          <p style="color: #555; margin: 0 0 4px">{{ demo.subtitle }}</p>
+          @if (demo.badge) {
+            <code style="font-size: 12px; color: #1976d2; background: #e3f2fd; padding: 2px 6px; border-radius: 4px">
+              {{ demo.badge }}
+            </code>
+          }
+
+          <mat-card style="margin-top: 20px">
+            <mat-card-content style="padding-top: 16px">
+              <div class="fb-form">
+                <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
+                  <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
+                  <div style="margin-top: 16px; display: flex; gap: 8px">
+                    <button mat-raised-button color="primary" type="submit" [disabled]="demo.form.invalid">
+                      Submit
+                    </button>
+                    @if (demo.submitted) {
+                      <button mat-stroked-button type="button" (click)="reset(demo)">Reset</button>
+                    }
+                  </div>
+                </form>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          @if (demo.submitted) {
+            <mat-card style="margin-top: 16px; background: #f9fbe7">
+              <mat-card-header>
+                <mat-card-title style="font-size: 14px">Submitted model</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <pre style="font-size: 13px; overflow: auto; margin: 8px 0 0">{{ demo.model | json }}</pre>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+    }
+  </mat-tab-group>
+</div>
