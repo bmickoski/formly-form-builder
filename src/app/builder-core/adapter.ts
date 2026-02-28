@@ -9,6 +9,13 @@ import {
   isFieldNode,
 } from './model';
 import { resolveCustomValidatorsForFields } from './custom-validators';
+import {
+  FORMLY_TYPE_ACCORDION,
+  FORMLY_TYPE_STEPPER,
+  FORMLY_TYPE_TABS,
+  FORMLY_WRAPPER_PANEL,
+  VALIDATOR_EMAIL,
+} from './constants';
 
 interface CustomValidationConfig {
   expression?: string;
@@ -259,7 +266,7 @@ function containerLabel(container: ContainerNode, fallback: string): string {
 
 function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | undefined {
   const validation: string[] = [];
-  if (node.validators.email) validation.push('email');
+  if (node.validators.email) validation.push(VALIDATOR_EMAIL);
   return validation.length > 0 ? { validation } : undefined;
 }
 
@@ -310,7 +317,7 @@ function containerNodeToFormly(
   if (container.type === 'panel') {
     return [
       {
-        wrappers: ['fb-panel'],
+        wrappers: [FORMLY_WRAPPER_PANEL],
         props: {
           label: container.props.title ?? container.props.label ?? 'Panel',
           description: container.props.description,
@@ -327,7 +334,7 @@ function containerNodeToFormly(
   if (container.type === 'tabs') {
     return [
       {
-        type: 'fb-tabs',
+        type: FORMLY_TYPE_TABS,
         props: {
           label: containerLabel(container, 'Tabs'),
           description: container.props.description,
@@ -340,7 +347,7 @@ function containerNodeToFormly(
   if (container.type === 'stepper') {
     return [
       {
-        type: 'fb-stepper',
+        type: FORMLY_TYPE_STEPPER,
         props: {
           label: containerLabel(container, 'Stepper'),
           description: container.props.description,
@@ -353,7 +360,7 @@ function containerNodeToFormly(
   if (container.type === 'accordion') {
     return [
       {
-        type: 'fb-accordion',
+        type: FORMLY_TYPE_ACCORDION,
         props: {
           label: containerLabel(container, 'Accordion'),
           description: container.props.description,
