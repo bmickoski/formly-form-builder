@@ -1,6 +1,8 @@
 ﻿import { AbstractControl } from '@angular/forms';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
+import { evaluateCustomExpressionProgram } from './expression-evaluator';
+
 interface CustomValidationConfig {
   expression?: string;
   message?: string;
@@ -37,12 +39,7 @@ function toRow(field: FormlyFieldConfig): Record<string, unknown> {
 
 function evaluateCustomExpression(expression: string, context: CustomValidationContext): true | string {
   try {
-    const evaluator = new Function(
-      'ctx',
-      `const { form, model, data, row, field, control, value } = ctx; let valid = true; ${expression}; return valid;`,
-    ) as (ctx: CustomValidationContext) => unknown;
-
-    const output = evaluator(context);
+    const output = evaluateCustomExpressionProgram(expression, context);
     if (output === true || output == null) return true;
     if (output === false) return 'Invalid value.';
     if (typeof output === 'string') return output;
