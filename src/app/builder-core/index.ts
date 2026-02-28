@@ -1,4 +1,5 @@
 export * from './adapter';
+export * from './constants';
 export * from './diagnostics';
 export * from './document';
 export * from './formly-import';

@@ -110,7 +110,7 @@ function validateNode(node: AstNode): void {
   return fail(`Unsupported syntax: ${node.type}`);
 }
 
-function resolveIdentifier(name: string, context: ExpressionRuntimeContext, scope: Record<string, unknown>): unknown {
+function resolveIdentifier(name: string, _context: ExpressionRuntimeContext, scope: Record<string, unknown>): unknown {
   if (name in scope) return scope[name];
   if (name in GLOBAL_FUNCTIONS) return GLOBAL_FUNCTIONS[name];
   if (name === 'Math') return Math;

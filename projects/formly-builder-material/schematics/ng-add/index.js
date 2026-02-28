@@ -17,8 +17,44 @@ const {
 } = require('@schematics/angular/utility/dependencies');
 const { strings } = require('@angular-devkit/core');
 
+const packageVersion = require('../../package.json').version;
+
+const MATERIAL_THEME_PATH = 'node_modules/@angular/material/prebuilt-themes/indigo-pink.css';
 const GRID_STYLE_PATH = 'node_modules/@ngx-formly-builder/material/grid.css';
-const APP_CONFIG_PATH = '/src/app/app.config.ts';
+
+function readJson(host, path) {
+  if (!host.exists(path)) {
+    throw new SchematicsException(`Could not find ${path}`);
+  }
+
+  try {
+    return JSON.parse(host.read(path).toString('utf-8'));
+  } catch {
+    throw new SchematicsException(`Could not parse ${path}`);
+  }
+}
+
+function getPrimaryApplicationProject(workspace) {
+  const projects = workspace.projects || {};
+  const projectEntries = Object.entries(projects);
+  if (projectEntries.length === 0) {
+    throw new SchematicsException('No projects found in angular.json');
+  }
+
+  const preferred = projectEntries.find(([, config]) => config.projectType === 'application');
+  return preferred || projectEntries[0];
+}
+
+function getAppConfigPath(projectConfig) {
+  const sourceRoot = projectConfig?.sourceRoot;
+  if (!sourceRoot) return null;
+  return `/${sourceRoot}/app/app.config.ts`;
+}
+
+function ensureArrayItem(items, value) {
+  if (!Array.isArray(items)) return [value];
+  return items.includes(value) ? items : [...items, value];
+}
 
 function addDependencies() {
   return (host, context) => {
@@ -28,8 +64,8 @@ function addDependencies() {
     }
 
     const dependencies = [
-      { type: NodeDependencyType.Default, name: '@ngx-formly-builder/material', version: 'latest' },
-      { type: NodeDependencyType.Default, name: '@ngx-formly-builder/core', version: 'latest' },
+      { type: NodeDependencyType.Default, name: '@ngx-formly-builder/material', version: `^${packageVersion}` },
+      { type: NodeDependencyType.Default, name: '@ngx-formly-builder/core', version: `^${packageVersion}` },
       { type: NodeDependencyType.Default, name: '@ngx-formly/core', version: '^7.0.0' },
       { type: NodeDependencyType.Default, name: '@ngx-formly/material', version: '^7.0.0' },
       { type: NodeDependencyType.Default, name: '@angular/material', version: '^21.0.0' },
@@ -43,50 +79,32 @@ function addDependencies() {
   };
 }
 
-function addGridCssToAngularJson() {
+function addStylesToAngularJson() {
   return (host, context) => {
     const angularJsonPath = '/angular.json';
     if (!host.exists(angularJsonPath)) {
-      context.logger.warn('angular.json not found. Please add material grid.css manually.');
+      context.logger.warn('angular.json not found. Please add Angular Material theme and grid.css manually.');
       return host;
     }
 
-    let workspace;
-    try {
-      workspace = JSON.parse(host.read(angularJsonPath).toString('utf-8'));
-    } catch {
-      throw new SchematicsException('Could not parse angular.json');
-    }
-
-    const projects = workspace.projects || {};
-    const projectEntries = Object.entries(projects);
-    if (projectEntries.length === 0) {
-      context.logger.warn('No projects found in angular.json. Skipping style update.');
-      return host;
-    }
-
-    const appProjectEntry =
-      projectEntries.find(([, config]) => config.projectType === 'application') || projectEntries[0];
-    const [projectName, projectConfig] = appProjectEntry;
+    const workspace = readJson(host, angularJsonPath);
+    const [projectName, projectConfig] = getPrimaryApplicationProject(workspace);
     const buildOptions = projectConfig?.architect?.build?.options;
 
     if (!buildOptions) {
       context.logger.warn(
-        `No build options found for project "${projectName}". Please add ${GRID_STYLE_PATH} manually.`,
+        `No build options found for project "${projectName}". Please add styles manually to angular.json.`,
       );
       return host;
     }
 
-    const styles = Array.isArray(buildOptions.styles) ? buildOptions.styles : [];
-    if (!styles.includes(GRID_STYLE_PATH)) {
-      styles.push(GRID_STYLE_PATH);
-      buildOptions.styles = styles;
-      host.overwrite(angularJsonPath, `${JSON.stringify(workspace, null, 2)}\n`);
-      context.logger.info(`Added ${GRID_STYLE_PATH} to ${projectName} build styles.`);
-    } else {
-      context.logger.info(`${GRID_STYLE_PATH} already exists in ${projectName} build styles.`);
-    }
+    let styles = Array.isArray(buildOptions.styles) ? buildOptions.styles : [];
+    styles = ensureArrayItem(styles, MATERIAL_THEME_PATH);
+    styles = ensureArrayItem(styles, GRID_STYLE_PATH);
+    buildOptions.styles = styles;
 
+    host.overwrite(angularJsonPath, `${JSON.stringify(workspace, null, 2)}\n`);
+    context.logger.info(`Updated ${projectName} build styles with Angular Material theme and grid.css.`);
     return host;
   };
 }
@@ -95,55 +113,67 @@ function ensureImport(source, importText) {
   return source.includes(importText) ? source : `${importText}\n${source}`;
 }
 
-function addMaterialProviderToAppConfig() {
+function ensureProvider(source, providerText) {
+  if (source.includes(providerText)) return source;
+
+  const providersArrayPattern = /providers\s*:\s*\[([\s\S]*?)\]/m;
+  const providersMatch = source.match(providersArrayPattern);
+  if (!providersMatch) {
+    return source;
+  }
+
+  const providersBody = providersMatch[1];
+  const trimmedBody = providersBody.trim();
+  const nextBody = trimmedBody.length > 0 ? `${trimmedBody},\n    ${providerText}\n  ` : `\n    ${providerText}\n  `;
+
+  return source.replace(providersArrayPattern, `providers: [${nextBody}]`);
+}
+
+function addMaterialProvidersToAppConfig() {
   return (host, context) => {
-    if (!host.exists(APP_CONFIG_PATH)) {
-      context.logger.warn(`${APP_CONFIG_PATH} not found. Please wire providers manually.`);
+    const angularJsonPath = '/angular.json';
+    if (!host.exists(angularJsonPath)) {
+      context.logger.warn('angular.json not found. Could not resolve app.config.ts location.');
       return host;
     }
 
-    let content = host.read(APP_CONFIG_PATH).toString('utf-8');
+    const workspace = readJson(host, angularJsonPath);
+    const [projectName, projectConfig] = getPrimaryApplicationProject(workspace);
+    const appConfigPath = getAppConfigPath(projectConfig);
+
+    if (!appConfigPath || !host.exists(appConfigPath)) {
+      context.logger.warn(`Could not find app.config.ts for project "${projectName}". Please wire providers manually.`);
+      return host;
+    }
+
+    let content = host.read(appConfigPath).toString('utf-8');
     if (content.includes('provideFormlyBuilderMaterial(')) {
       context.logger.info('Material builder provider already configured in app.config.ts.');
       return host;
     }
 
-    content = ensureImport(content, "import { provideFormly } from '@ngx-formly/core';");
-    content = ensureImport(content, "import { provideFormlyMaterial } from '@ngx-formly/material';");
+    content = ensureImport(content, "import { importProvidersFrom } from '@angular/core';");
+    content = ensureImport(
+      content,
+      "import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';",
+    );
+    content = ensureImport(content, "import { FormlyModule } from '@ngx-formly/core';");
+    content = ensureImport(content, "import { FormlyMaterialModule } from '@ngx-formly/material';");
     content = ensureImport(content, "import { provideFormlyBuilderMaterial } from '@ngx-formly-builder/material';");
 
-    const providersArrayPattern = /providers\s*:\s*\[([\s\S]*?)\]/m;
-    const providersMatch = content.match(providersArrayPattern);
-    if (!providersMatch) {
-      context.logger.warn('Could not locate providers array in app.config.ts. Please configure manually.');
+    const withAnimations = ensureProvider(content, 'provideAnimationsAsync(),');
+    const withFormly = ensureProvider(
+      withAnimations,
+      'importProvidersFrom(FormlyMaterialModule, FormlyModule.forRoot(provideFormlyBuilderMaterial())),',
+    );
+
+    if (withFormly === content) {
+      context.logger.warn(`Could not locate providers array in ${appConfigPath}. Please configure manually.`);
       return host;
     }
 
-    const providersBody = providersMatch[1];
-    let updatedProvidersBody = providersBody;
-
-    if (providersBody.includes('provideFormly(')) {
-      if (!providersBody.includes('provideFormlyMaterial(')) {
-        updatedProvidersBody = updatedProvidersBody.replace(
-          /provideFormly\s*\(/,
-          'provideFormly(provideFormlyMaterial(), ',
-        );
-      }
-      if (!providersBody.includes('provideFormlyBuilderMaterial(')) {
-        updatedProvidersBody = updatedProvidersBody.replace(
-          /provideFormly\s*\(([\s\S]*?)\)/m,
-          (match, args) => `provideFormly(${args.trim()}, provideFormlyBuilderMaterial())`,
-        );
-      }
-    } else {
-      const prefix = updatedProvidersBody.trim().length > 0 ? `${updatedProvidersBody.trim()},\n    ` : '\n    ';
-      updatedProvidersBody = `${prefix}provideFormly(provideFormlyMaterial(), provideFormlyBuilderMaterial()),\n  `;
-    }
-
-    const updatedContent = content.replace(providersArrayPattern, `providers: [${updatedProvidersBody}]`);
-
-    host.overwrite(APP_CONFIG_PATH, updatedContent);
-    context.logger.info('Updated src/app/app.config.ts with material formly-builder providers.');
+    host.overwrite(appConfigPath, withFormly);
+    context.logger.info(`Updated ${appConfigPath} with Angular Material + formly-builder providers.`);
     return host;
   };
 }
@@ -164,7 +194,8 @@ function printNextSteps() {
   return (_host, context) => {
     context.logger.info('');
     context.logger.info('@ngx-formly-builder/material installed.');
-    context.logger.info('Review src/app/app.config.ts and angular.json styles after install.');
+    context.logger.info('Added Angular Material theme and builder grid.css to angular.json.');
+    context.logger.info('Updated app.config.ts with provideAnimationsAsync() and Formly Material providers.');
     context.logger.info('Run your app and validate Material renderer output.');
     context.logger.info('');
     return _host;
@@ -174,8 +205,8 @@ function printNextSteps() {
 function ngAdd(options = {}) {
   return chain([
     addDependencies(),
-    addGridCssToAngularJson(),
-    addMaterialProviderToAppConfig(),
+    addStylesToAngularJson(),
+    addMaterialProvidersToAppConfig(),
     options.skipInstall ? noop() : installPackageJsonDependencies(),
     addUsageNote(),
     printNextSteps(),

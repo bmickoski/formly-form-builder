@@ -2,6 +2,7 @@ import { AbstractControl } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 
 import { FIELD_VALIDATION_PATTERNS } from '../../builder-core/validation-presets';
+import { VALIDATOR_BUILDER_CUSTOM } from '../../builder-core/constants';
 
 export interface PreviewFormState {
   submitted?: boolean;
@@ -52,7 +53,7 @@ export const LIB_VALIDATION_MESSAGES = [
       String(field.props?.['asyncUnique']?.['message'] ?? 'Value must be unique.'),
   },
   {
-    name: 'builderCustom',
+    name: VALIDATOR_BUILDER_CUSTOM,
     message: (_: unknown, field: FormlyFieldConfig) =>
       String(field.props?.['customValidation']?.['message'] ?? 'Custom validation failed.'),
   },

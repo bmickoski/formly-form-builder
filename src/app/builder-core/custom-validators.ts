@@ -1,21 +1,11 @@
-﻿import { AbstractControl } from '@angular/forms';
+import { AbstractControl } from '@angular/forms';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-
-import { evaluateCustomExpressionProgram } from './expression-evaluator';
+import { VALIDATOR_BUILDER_CUSTOM } from './constants';
+import { evaluateCustomExpressionProgram, ExpressionRuntimeContext } from './expression-evaluator';
 
 interface CustomValidationConfig {
   expression?: string;
   message?: string;
-}
-
-interface CustomValidationContext {
-  control: AbstractControl;
-  field: FormlyFieldConfig;
-  form: unknown;
-  model: Record<string, unknown>;
-  data: Record<string, unknown>;
-  row: Record<string, unknown>;
-  value: unknown;
 }
 
 type FormlyChild = FormlyFieldConfig | ((field: FormlyFieldConfig) => FormlyFieldConfig);
@@ -37,7 +27,19 @@ function toRow(field: FormlyFieldConfig): Record<string, unknown> {
   return hasOwnObject(parentModel) ? parentModel : toModel(field);
 }
 
-function evaluateCustomExpression(expression: string, context: CustomValidationContext): true | string {
+function buildContext(field: FormlyFieldConfig, control: AbstractControl): ExpressionRuntimeContext {
+  return {
+    control,
+    field,
+    form: field.form,
+    model: toModel(field),
+    data: toModel(field),
+    row: toRow(field),
+    value: control.value,
+  };
+}
+
+function evaluateCustomExpression(expression: string, context: ExpressionRuntimeContext): true | string {
   try {
     const output = evaluateCustomExpressionProgram(expression, context);
     if (output === true || output == null) return true;
@@ -68,41 +70,23 @@ function bindFieldValidator(field: FormlyFieldConfig): void {
 
   field.validators = {
     ...(field.validators ?? {}),
-    builderCustom: {
+    [VALIDATOR_BUILDER_CUSTOM]: {
       expression: (control: AbstractControl): boolean => {
-        const context: CustomValidationContext = {
-          control,
-          field,
-          form: field.form,
-          model: toModel(field),
-          data: toModel(field),
-          row: toRow(field),
-          value: control.value,
-        };
-        const result = evaluateCustomExpression(config.expression ?? '', context);
+        const result = evaluateCustomExpression(config.expression ?? '', buildContext(field, control));
         return result === true;
       },
     },
   };
 
-  if (!field.validation?.messages?.['builderCustom']) {
+  if (!field.validation?.messages?.[VALIDATOR_BUILDER_CUSTOM]) {
     const fallbackMessage = config.message ?? 'Custom validation failed.';
     field.validation = {
       ...(field.validation ?? {}),
       messages: {
         ...(field.validation?.messages ?? {}),
-        builderCustom: (_error: unknown, currentField: FormlyFieldConfig): string => {
+        [VALIDATOR_BUILDER_CUSTOM]: (_error: unknown, currentField: FormlyFieldConfig): string => {
           const control = currentField.formControl as AbstractControl;
-          const context: CustomValidationContext = {
-            control,
-            field: currentField,
-            form: currentField.form,
-            model: toModel(currentField),
-            data: toModel(currentField),
-            row: toRow(currentField),
-            value: currentField.formControl?.value,
-          };
-          const result = evaluateCustomExpression(config.expression ?? '', context);
+          const result = evaluateCustomExpression(config.expression ?? '', buildContext(currentField, control));
           return result === true ? fallbackMessage : result;
         },
       },

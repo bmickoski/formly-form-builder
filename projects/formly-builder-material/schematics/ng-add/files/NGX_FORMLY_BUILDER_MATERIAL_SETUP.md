@@ -12,7 +12,9 @@
 
 It also attempted to:
 
+- add `node_modules/@angular/material/prebuilt-themes/indigo-pink.css` to your build styles
 - add `node_modules/@ngx-formly-builder/material/grid.css` to your build styles
-- wire `provideFormly(provideFormlyMaterial(), provideFormlyBuilderMaterial())` in `src/app/app.config.ts`
+- wire `provideAnimationsAsync()` in `app.config.ts`
+- wire `importProvidersFrom(FormlyMaterialModule, FormlyModule.forRoot(provideFormlyBuilderMaterial()))` in `app.config.ts`
 
 If your app uses a custom setup, apply these steps manually.
