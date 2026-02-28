@@ -5,5 +5,5 @@
     "entryFile": "../../src/public-api.ts"
   },
   "assets": ["./schematics/**/*"],
-  "allowedNonPeerDependencies": ["tslib", "@angular-devkit/schematics", "@schematics/angular"]
+  "allowedNonPeerDependencies": ["tslib", "@angular-devkit/schematics", "@schematics/angular", "acorn"]
 }

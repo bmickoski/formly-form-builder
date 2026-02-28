@@ -1,4 +1,5 @@
 import { BuilderDocument, FieldNode, RuleOperator, isFieldNode } from './model';
+import { validateCustomExpressionProgram, validatePredicateExpression } from './expression-evaluator';
 
 export type DiagnosticSeverity = 'error' | 'warning';
 
@@ -178,7 +179,7 @@ function validateRuleExpression(
     nodeId: field.id,
     label: target,
     maxLength: 500,
-    compile: (value) => new Function('model', 'data', 'value', `return (${value});`),
+    compile: validatePredicateExpression,
   });
 }
 
@@ -189,17 +190,7 @@ function validateCustomValidationExpression(field: FieldNode): BuilderDiagnostic
     nodeId: field.id,
     label: 'customExpression',
     maxLength: 2000,
-    compile: (value) =>
-      new Function(
-        'form',
-        'model',
-        'data',
-        'row',
-        'field',
-        'control',
-        'value',
-        `let valid = true; ${value}; return valid;`,
-      ),
+    compile: validateCustomExpressionProgram,
     additionalChecks: () => {
       if (!/\bvalid\s*=/.test(expression)) {
         return {
@@ -219,7 +210,7 @@ function validateExpression(
     nodeId: string;
     label: string;
     maxLength: number;
-    compile: (expression: string) => unknown;
+    compile: (expression: string) => { ok: boolean; error?: string };
     additionalChecks?: () => BuilderDiagnostic | null;
   },
 ): BuilderDiagnostic[] {
@@ -242,14 +233,13 @@ function validateExpression(
     });
   }
 
-  try {
-    options.compile(expression);
-  } catch (error) {
+  const compileResult = options.compile(expression);
+  if (!compileResult.ok) {
     diagnostics.push({
       severity: 'error',
       code: 'expression-invalid-syntax',
       nodeId: options.nodeId,
-      message: `${options.label} has invalid syntax: ${(error as Error).message}`,
+      message: `${options.label} has invalid syntax: ${compileResult.error ?? 'unknown error'}`,
     });
   }
 

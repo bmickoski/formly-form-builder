@@ -58,6 +58,24 @@ describe('buildDiagnostics', () => {
     expect(report.diagnostics.some((item) => item.code === 'custom-expression-no-valid-assignment')).toBeTrue();
   });
 
+  it('accepts supported CSP-safe expression syntax and rejects unsupported syntax', () => {
+    const supported = field('f1', 'costCenter');
+    supported.props.visibleExpression = "model?.status === 'approved' && !!model?.requesterName";
+    supported.validators.customExpression =
+      "valid = /^CC-\\d{4}$/.test(String(value ?? '')) ? true : 'Use format CC-1234';";
+
+    const unsupported = field('f2', 'broken');
+    unsupported.props.enabledExpression = '(() => true)()';
+
+    const report = buildDiagnostics(createDoc([supported, unsupported]));
+    expect(
+      report.diagnostics.some((item) => item.nodeId === 'f1' && item.code === 'expression-invalid-syntax'),
+    ).toBeFalse();
+    expect(
+      report.diagnostics.some((item) => item.nodeId === 'f2' && item.code === 'expression-invalid-syntax'),
+    ).toBeTrue();
+  });
+
   it('reports unknown validator preset ids', () => {
     const f1 = field('f1', 'name');
     f1.validators.presetId = 'missing-preset';
