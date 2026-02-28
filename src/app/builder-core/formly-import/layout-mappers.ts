@@ -1,6 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ContainerNode } from '../model';
 import { fieldPropsOf, getFieldGroup } from './shared';
+import { FORMLY_TYPE_ACCORDION, FORMLY_TYPE_STEPPER, FORMLY_TYPE_TABS, FORMLY_WRAPPER_PANEL } from '../constants';
 
 const ROW_REGEX = /\b(?:fb-row|row)\b/;
 const COL_REGEX = /\b(?:fb-col|col-(?:xs-|sm-|md-|lg-|xl-|xxl-)?\d{1,2}|col-\d{1,2})\b/;
@@ -18,10 +19,10 @@ export type LayoutImportKind =
 
 export function detectLayoutKind(field: FormlyFieldConfig): LayoutImportKind {
   const wrappers = Array.isArray(field.wrappers) ? field.wrappers : [];
-  if (wrappers.includes('fb-panel') || wrappers.includes('panel')) return 'panel-wrapper';
-  if (field.type === 'fb-tabs') return 'tabs';
-  if (field.type === 'fb-stepper') return 'stepper';
-  if (field.type === 'fb-accordion') return 'accordion';
+  if (wrappers.includes(FORMLY_WRAPPER_PANEL) || wrappers.includes('panel')) return 'panel-wrapper';
+  if (field.type === FORMLY_TYPE_TABS) return 'tabs';
+  if (field.type === FORMLY_TYPE_STEPPER) return 'stepper';
+  if (field.type === FORMLY_TYPE_ACCORDION) return 'accordion';
 
   const group = getFieldGroup(field);
   if (group.length === 0) return 'field';
