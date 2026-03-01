@@ -6,7 +6,7 @@ import {
   composeValidatorPresetDefinitions,
   composeValidatorPresets,
 } from './plugins';
-import { composeSchemaAdapters, JSON_SCHEMA_ADAPTER } from './schema-adapter';
+import { composeSchemaAdapters, CORE_SCHEMA_ADAPTERS, JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER } from './schema-adapter';
 import { BuilderDocument } from './model';
 
 describe('builder plugin composition', () => {
@@ -137,18 +137,25 @@ describe('builder schema adapter composition', () => {
         root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
       },
     };
-    const out = composeSchemaAdapters([JSON_SCHEMA_ADAPTER], [
-      {
-        id: 'plugin-a',
-        schemaAdapters: [
-          { id: 'json-schema', label: 'JSON Schema Override', export: () => ({ overridden: true }) },
-          { id: 'openapi', label: 'OpenAPI 3.0', import: () => importedDoc },
-        ],
-      },
-    ]);
+    const out = composeSchemaAdapters(
+      [JSON_SCHEMA_ADAPTER],
+      [
+        {
+          id: 'plugin-a',
+          schemaAdapters: [
+            { id: 'json-schema', label: 'JSON Schema Override', export: () => ({ overridden: true }) },
+            { id: 'openapi', label: 'OpenAPI 3.0', import: () => importedDoc },
+          ],
+        },
+      ],
+    );
 
     expect(out.length).toBe(2);
     expect(out[0]?.label).toBe('JSON Schema Override');
     expect(out[1]?.id).toBe('openapi');
+  });
+
+  it('includes JSON Schema and OpenAPI in the core adapter list', () => {
+    expect(CORE_SCHEMA_ADAPTERS).toEqual([JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER]);
   });
 });

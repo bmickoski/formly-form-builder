@@ -1,6 +1,7 @@
 import type { BuilderDocument } from './model';
 import type { BuilderPlugin } from './plugins';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
+import { builderToOpenApiRequestBody, openApiToBuilder } from './openapi';
 
 export interface BuilderSchemaAdapter<T = unknown> {
   id: string;
@@ -15,6 +16,15 @@ export const JSON_SCHEMA_ADAPTER: BuilderSchemaAdapter<object> = {
   import: (source) => jsonSchemaToBuilder(source),
   export: (doc) => builderToJsonSchema(doc),
 };
+
+export const OPENAPI_ADAPTER: BuilderSchemaAdapter<object> = {
+  id: 'openapi',
+  label: 'OpenAPI 3.0',
+  import: (source) => openApiToBuilder(source),
+  export: (doc) => builderToOpenApiRequestBody(doc),
+};
+
+export const CORE_SCHEMA_ADAPTERS: readonly BuilderSchemaAdapter[] = [JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER];
 
 export function composeSchemaAdapters(
   base: readonly BuilderSchemaAdapter[],

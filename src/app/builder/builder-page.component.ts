@@ -43,7 +43,7 @@ import { isFieldNode, type BuilderDocument } from '../builder-core/model';
 import { BuilderTemplatesService } from './builder-templates.service';
 import { mergePaletteById } from './builder-page.palette';
 import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
-import { BuilderSchemaAdapter, composeSchemaAdapters, JSON_SCHEMA_ADAPTER } from '../builder-core/schema-adapter';
+import { BuilderSchemaAdapter, composeSchemaAdapters, CORE_SCHEMA_ADAPTERS } from '../builder-core/schema-adapter';
 import { openSchemaExportDialog, openSchemaImportDialog, schemaAdaptersForDirection } from './builder-page.schema';
 import { formatDiagnosticsSummary } from './builder-page.utils';
 export interface BuilderAutosaveError {
@@ -81,7 +81,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   private readonly templates = inject(BuilderTemplatesService);
   readonly diagnosticsOpen = signal(false);
   private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
-  private readonly schemaAdapters = signal<readonly BuilderSchemaAdapter[]>([JSON_SCHEMA_ADAPTER]);
+  private readonly schemaAdapters = signal<readonly BuilderSchemaAdapter[]>(CORE_SCHEMA_ADAPTERS);
   private readonly ready = signal(false);
   private hasRestoredAutosave = false;
   private isApplyingInputConfig = false;
@@ -388,7 +388,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       plugins: this.plugins,
       palette: mergePaletteById(basePalette, this.templates.toPaletteItems()),
     });
-    this.schemaAdapters.set(composeSchemaAdapters([JSON_SCHEMA_ADAPTER], this.plugins));
+    this.schemaAdapters.set(composeSchemaAdapters(CORE_SCHEMA_ADAPTERS, this.plugins));
   }
 
   private applyExternalConfig(config: BuilderDocument): void {
