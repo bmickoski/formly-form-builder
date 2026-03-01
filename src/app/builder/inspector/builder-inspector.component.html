@@ -501,6 +501,18 @@
                 />
               </mat-form-field>
 
+              @if (isNumberField()) {
+                <mat-form-field appearance="outline" class="fb-field">
+                  <mat-label>Step</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    [ngModel]="f?.props?.step"
+                    (ngModelChange)="setProp('step', $event === '' ? null : +$event)"
+                  />
+                </mat-form-field>
+              }
+
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Pattern (regex)</mat-label>
                 <input matInput [ngModel]="f?.validators?.pattern" (ngModelChange)="setVal('pattern', $event)" />
