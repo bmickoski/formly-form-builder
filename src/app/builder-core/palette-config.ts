@@ -1,5 +1,5 @@
 import { BuilderNodeType, FieldKind } from './model';
-import { PaletteItem } from './registry';
+import { ChildTemplateEntry, PaletteItem, templateEntryId } from './registry';
 
 const NODE_TYPES = new Set<BuilderNodeType>(['field', 'panel', 'row', 'col', 'tabs', 'stepper', 'accordion']);
 const FIELD_KINDS = new Set<FieldKind>([
@@ -114,7 +114,9 @@ function normalizeDefaults(defaults: Record<string, unknown>): PaletteItem['defa
     ...(isRecord(defaults['validators'])
       ? { validators: { ...(defaults['validators'] as Record<string, unknown>) } }
       : {}),
-    ...(isStringArray(defaults['childrenTemplate']) ? { childrenTemplate: [...defaults['childrenTemplate']] } : {}),
+    ...(isChildTemplateArray(defaults['childrenTemplate'])
+      ? { childrenTemplate: [...(defaults['childrenTemplate'] as ChildTemplateEntry[])] }
+      : {}),
   };
 }
 
@@ -122,7 +124,8 @@ function validateTemplateReferences(palette: PaletteItem[]): string[] {
   const errors: string[] = [];
   const byId = new Map<string, PaletteItem>(palette.map((item) => [item.id, item]));
   for (const item of palette) {
-    for (const childId of item.defaults.childrenTemplate ?? []) {
+    for (const entry of item.defaults.childrenTemplate ?? []) {
+      const childId = templateEntryId(entry);
       const child = byId.get(childId);
       if (!child) {
         errors.push(`Item "${item.id}": childrenTemplate references missing id "${childId}".`);
@@ -165,8 +168,8 @@ function validateDefaultsShape(defaults: unknown, index: number): string[] {
   if (defaults['validators'] !== undefined && !isRecord(defaults['validators'])) {
     errors.push(`Item ${index}: "defaults.validators" must be an object when provided.`);
   }
-  if (defaults['childrenTemplate'] !== undefined && !isStringArray(defaults['childrenTemplate'])) {
-    errors.push(`Item ${index}: "defaults.childrenTemplate" must be a string array when provided.`);
+  if (defaults['childrenTemplate'] !== undefined && !isChildTemplateArray(defaults['childrenTemplate'])) {
+    errors.push(`Item ${index}: "defaults.childrenTemplate" must be a string or object array when provided.`);
   }
   return errors;
 }
@@ -181,6 +184,7 @@ function nonEmptyString(value: unknown): string | null {
   return trimmed ? trimmed : null;
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+function isChildTemplateArray(value: unknown): value is ChildTemplateEntry[] {
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => typeof item === 'string' || (isRecord(item) && typeof item['id'] === 'string'));
 }

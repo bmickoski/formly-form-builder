@@ -10,7 +10,7 @@ import {
   isFieldNode,
 } from './model';
 import { toFieldKey, uid } from './ids';
-import { PALETTE, PaletteItem } from './registry';
+import { PALETTE, PaletteItem, templateEntryId } from './registry';
 
 /**
  * Pure command helpers used by BuilderStore.
@@ -320,6 +320,7 @@ function createNodeFromPalette(
   parentId: string,
   palette: readonly PaletteItem[],
   validatorsForFieldKind?: (fieldKind: FieldKind) => BuilderValidators,
+  propsOverride?: Record<string, unknown>,
 ): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
   const id = uid(item.nodeType === 'field' ? 'f' : 'c');
   const extraNodes: BuilderNode[] = [];
@@ -350,14 +351,16 @@ function createNodeFromPalette(
     type: item.nodeType as ContainerNode['type'],
     parentId,
     children: [],
-    props: { ...(item.defaults.props as any) },
+    props: { ...(item.defaults.props as any), ...(propsOverride ?? {}) },
   };
 
   const template = item.defaults.childrenTemplate ?? [];
-  for (const childType of template) {
-    const childItem = palette.find((paletteItem) => paletteItem.id === childType);
+  for (const entry of template) {
+    const childId = templateEntryId(entry);
+    const childPropsOverride = typeof entry === 'string' ? undefined : entry.props;
+    const childItem = palette.find((paletteItem) => paletteItem.id === childId);
     if (!childItem) continue;
-    const createdChild = createNodeFromPalette(childItem, id, palette, validatorsForFieldKind);
+    const createdChild = createNodeFromPalette(childItem, id, palette, validatorsForFieldKind, childPropsOverride);
     node.children.push(createdChild.id);
     extraNodes.push(createdChild.node, ...createdChild.extraNodes);
   }
