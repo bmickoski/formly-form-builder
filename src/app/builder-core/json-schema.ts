@@ -10,6 +10,12 @@ interface SchemaCollector {
   required: string[];
 }
 
+interface MutableSchemaObject extends JsonSchemaProperty {
+  type: 'object';
+  properties: Record<string, JsonSchemaProperty>;
+  required?: string[];
+}
+
 function fieldKindToType(fieldKind: FieldKind): {
   type: string;
   format?: string;
@@ -78,6 +84,37 @@ function applyValidatorConstraints(node: FieldNode, prop: JsonSchemaProperty): v
   if (node.validators.max != null) prop['maximum'] = node.validators.max;
 }
 
+function createObjectProperty(): MutableSchemaObject {
+  return { type: 'object', properties: {} };
+}
+
+function appendRequired(target: MutableSchemaObject, key: string): void {
+  if (!target.required) target.required = [];
+  if (!target.required.includes(key)) target.required.push(key);
+}
+
+function insertNestedProperty(
+  target: MutableSchemaObject,
+  path: readonly string[],
+  property: JsonSchemaProperty,
+  required: boolean,
+): void {
+  const [segment, ...rest] = path;
+  if (!segment) return;
+
+  if (rest.length === 0) {
+    target.properties[segment] = property;
+    if (required) appendRequired(target, segment);
+    return;
+  }
+
+  const existing = target.properties[segment];
+  const branch =
+    isRecord(existing) && isRecord(existing['properties']) ? (existing as MutableSchemaObject) : createObjectProperty();
+  target.properties[segment] = branch;
+  insertNestedProperty(branch, rest, property, required);
+}
+
 function collectFields(doc: BuilderDocument, node: BuilderNode, visited: Set<string>, out: SchemaCollector): void {
   if (visited.has(node.id)) return;
   visited.add(node.id);
@@ -114,13 +151,23 @@ export function builderToJsonSchema(doc: BuilderDocument): object {
     if (child) collectFields(doc, child, visited, out);
   }
 
+  const schemaRoot = createObjectProperty();
+  for (const [key, property] of Object.entries(out.properties)) {
+    const path = key
+      .split('.')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    if (path.length === 0) continue;
+    insertNestedProperty(schemaRoot, path, property, out.required.includes(key));
+  }
+
   const schema: Record<string, unknown> = {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
-    properties: out.properties,
+    properties: schemaRoot.properties,
   };
 
-  if (out.required.length > 0) schema['required'] = out.required;
+  if (schemaRoot.required?.length) schema['required'] = schemaRoot.required;
 
   return schema;
 }
@@ -160,24 +207,30 @@ function inferFieldKind(property: JsonSchemaProperty): FieldKind {
   return inferStringFieldKind(property);
 }
 
-function propertyToFieldNode(key: string, property: JsonSchemaProperty, requiredKeys: Set<string>): FieldNode {
+function propertyToFieldNode(
+  schemaKey: string,
+  modelKey: string,
+  property: JsonSchemaProperty,
+  requiredKeys: Set<string>,
+  parentId: string,
+): FieldNode {
   const fieldKind = inferFieldKind(property);
   const node: FieldNode = {
     id: uid('f'),
     type: 'field',
-    parentId: 'root',
+    parentId,
     children: [],
     fieldKind,
     props: {
-      key,
-      label: String(property['title'] ?? key),
+      key: modelKey,
+      label: String(property['title'] ?? schemaKey),
       description: typeof property['description'] === 'string' ? property['description'] : undefined,
       defaultValue: property['default'],
     },
     validators: {},
   };
 
-  if (requiredKeys.has(key)) node.validators.required = true;
+  if (requiredKeys.has(schemaKey)) node.validators.required = true;
   if (typeof property['minLength'] === 'number') node.validators.minLength = property['minLength'];
   if (typeof property['maxLength'] === 'number') node.validators.maxLength = property['maxLength'];
   if (typeof property['pattern'] === 'string') node.validators.pattern = property['pattern'];
@@ -199,6 +252,49 @@ function propertyToFieldNode(key: string, property: JsonSchemaProperty, required
   return node;
 }
 
+function createPanelNode(key: string, property: JsonSchemaProperty, parentId: string): ContainerNode {
+  return {
+    id: uid('panel'),
+    type: 'panel',
+    parentId,
+    children: [],
+    props: { title: String(property['title'] ?? key) },
+  };
+}
+
+function isObjectProperty(property: JsonSchemaProperty): boolean {
+  const type = String(property['type'] ?? '').toLowerCase();
+  return type === 'object' || isRecord(property['properties']);
+}
+
+function importSchemaProperties(
+  nodes: BuilderDocument['nodes'],
+  parent: ContainerNode,
+  properties: Record<string, JsonSchemaProperty>,
+  keyPrefix: string,
+  requiredKeys: Set<string>,
+): void {
+  for (const [key, property] of Object.entries(properties)) {
+    if (isObjectProperty(property)) {
+      const panel = createPanelNode(key, property, parent.id);
+      nodes[panel.id] = panel;
+      parent.children.push(panel.id);
+      importSchemaProperties(
+        nodes,
+        panel,
+        isRecord(property['properties']) ? (property['properties'] as Record<string, JsonSchemaProperty>) : {},
+        keyPrefix ? `${keyPrefix}.${key}` : key,
+        new Set(toStringArray(property['required'])),
+      );
+      continue;
+    }
+
+    const field = propertyToFieldNode(key, keyPrefix ? `${keyPrefix}.${key}` : key, property, requiredKeys, parent.id);
+    nodes[field.id] = field;
+    parent.children.push(field.id);
+  }
+}
+
 export function jsonSchemaToBuilder(schema: unknown): BuilderDocument {
   if (!isRecord(schema)) throw new Error('JSON Schema must be an object.');
   if (schema['type'] != null && schema['type'] !== 'object') {
@@ -216,12 +312,7 @@ export function jsonSchemaToBuilder(schema: unknown): BuilderDocument {
   };
 
   const nodes: BuilderDocument['nodes'] = { root };
-  for (const [key, rawProperty] of Object.entries(properties)) {
-    if (!isRecord(rawProperty)) continue;
-    const field = propertyToFieldNode(key, rawProperty, requiredKeys);
-    nodes[field.id] = field;
-    root.children.push(field.id);
-  }
+  importSchemaProperties(nodes, root, properties as Record<string, JsonSchemaProperty>, '', requiredKeys);
 
   return {
     schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
