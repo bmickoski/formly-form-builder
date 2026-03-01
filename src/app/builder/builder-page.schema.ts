@@ -61,16 +61,25 @@ export async function openSchemaImportDialog(
   }
 }
 
-export function openSchemaExportDialog(dialog: MatDialog, adapter: BuilderSchemaAdapter, doc: BuilderDocument): void {
+export function openSchemaExportDialog(
+  dialog: MatDialog,
+  adapter: BuilderSchemaAdapter,
+  doc: BuilderDocument,
+  onError?: (message: string) => void,
+): void {
   if (!adapter.export) return;
-  dialog.open(JsonDialogComponent, {
-    width: '900px',
-    maxWidth: '95vw',
-    data: {
-      mode: 'exportSchema',
-      title: `Export as ${adapter.label}`,
-      fileName: `${adapter.id}-export.json`,
-      json: JSON.stringify(adapter.export(doc), null, 2),
-    },
-  });
+  try {
+    dialog.open(JsonDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      data: {
+        mode: 'exportSchema',
+        title: `Export as ${adapter.label}`,
+        fileName: `${adapter.id}-export.json`,
+        json: JSON.stringify(adapter.export(doc), null, 2),
+      },
+    });
+  } catch (e) {
+    onError?.((e as Error).message);
+  }
 }

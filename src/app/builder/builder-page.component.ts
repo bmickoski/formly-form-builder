@@ -292,14 +292,14 @@ export class BuilderPageComponent implements OnInit, OnChanges {
         this.dialog,
         adapter,
         (doc) => {
-          const result = this.store.importDocument(JSON.stringify(doc));
+          const result = this.store.importDocument(JSON.stringify({ ...doc, renderer: this.store.renderer() }));
           if (!result.ok) this.notifyError(result.error);
         },
         (message) => this.notifyError(message),
       );
       return;
     }
-    if (adapter.export) openSchemaExportDialog(this.dialog, adapter, this.store.doc());
+    openSchemaExportDialog(this.dialog, adapter, this.store.doc(), (message) => this.notifyError(message));
   }
 
   diagnosticsSummary(): string {
