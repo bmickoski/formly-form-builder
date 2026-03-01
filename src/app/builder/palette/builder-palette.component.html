@@ -22,7 +22,12 @@
           [cdkDropListSortingDisabled]="true"
         >
           @for (item of cat.items; track item.id) {
-            <div class="fb-palette-item" cdkDrag [cdkDragData]="{ kind: 'palette', paletteId: item.id }">
+            <div
+              class="fb-palette-item"
+              cdkDrag
+              [cdkDragDisabled]="readonlyMode"
+              [cdkDragData]="{ kind: 'palette', paletteId: item.id }"
+            >
               <div>{{ item.title }}</div>
               <div class="fb-hint">{{ item.category }}</div>
             </div>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,6 +18,7 @@ import { isContainerNode } from '../../builder-core/model';
 export class BuilderPaletteComponent {
   readonly store = inject(BuilderStore);
   readonly filter = signal('');
+  @Input() readonlyMode = false;
   private readonly categoryOrder: Record<string, number> = {
     [DEFAULT_PALETTE_CATEGORIES.common]: 0,
     [DEFAULT_PALETTE_CATEGORIES.advanced]: 1,

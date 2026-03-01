@@ -20,8 +20,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { firstValueFrom } from 'rxjs';
-
 import { BuilderStore } from '../builder-core/store';
 import { BuilderPaletteComponent } from './palette/builder-palette.component';
 import { BuilderCanvasComponent } from './canvas/builder-canvas.component';
@@ -36,7 +34,6 @@ import { parsePaletteConfig } from '../builder-core/palette-config';
 import { PALETTE, PaletteItem } from '../builder-core/registry';
 import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
-import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
 import { isFieldNode, type BuilderDocument } from '../builder-core/model';
@@ -45,7 +42,7 @@ import { mergePaletteById } from './builder-page.palette';
 import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
 import { BuilderSchemaAdapter, composeSchemaAdapters, CORE_SCHEMA_ADAPTERS } from '../builder-core/schema-adapter';
 import { openSchemaExportDialog, openSchemaImportDialog, schemaAdaptersForDirection } from './builder-page.schema';
-import { formatDiagnosticsSummary } from './builder-page.utils';
+import { formatDiagnosticsSummary, openConfirmDialog } from './builder-page.utils';
 export interface BuilderAutosaveError {
   operation: 'save' | 'restore';
   key: string;
@@ -90,10 +87,10 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   @Input() palette: readonly PaletteItem[] | null = null;
   @Input() autosave = false;
   @Input() autosaveKey = 'formly-builder:draft';
+  @Input() readOnly = false;
   @Output() readonly configChange = new EventEmitter<BuilderDocument>();
   @Output() readonly diagnosticsChange = new EventEmitter<BuilderDiagnosticsReport>();
   @Output() readonly autosaveError = new EventEmitter<BuilderAutosaveError>();
-
   constructor() {
     effect(() => {
       const isReady = this.ready();
@@ -108,11 +105,8 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.applyRuntimeExtensions();
-    if (this.config) {
-      this.applyExternalConfig(this.config);
-    } else if (this.autosave) {
-      this.restoreFromAutosave();
-    }
+    if (this.config) this.applyExternalConfig(this.config);
+    else if (this.autosave) this.restoreFromAutosave();
     this.ready.set(true);
   }
 
@@ -165,6 +159,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   openImport(): void {
+    if (this.readOnly) return;
     this.dialog
       .open(JsonDialogComponent, {
         width: '900px',
@@ -180,6 +175,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   openImportFormly(): void {
+    if (this.readOnly) return;
     this.dialog
       .open(JsonDialogComponent, {
         width: '900px',
@@ -201,6 +197,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   openImportPalette(): void {
+    if (this.readOnly) return;
     this.dialog
       .open(JsonDialogComponent, {
         width: '900px',
@@ -221,16 +218,19 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   resetPalette(): void {
+    if (this.readOnly) return;
     this.paletteOverride.set(null);
     this.applyRuntimeExtensions();
   }
 
   canSaveTemplate(): boolean {
+    if (this.readOnly) return false;
     const selected = this.store.selectedNode();
     return !!selected && isFieldNode(selected);
   }
 
   saveSelectedAsTemplate(): void {
+    if (this.readOnly) return;
     const selected = this.store.selectedNode();
     if (!selected || !isFieldNode(selected)) return;
     const title = this.templates.saveFieldTemplate(selected);
@@ -251,6 +251,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   openImportTemplates(): void {
+    if (this.readOnly) return;
     this.dialog
       .open(JsonDialogComponent, {
         width: '900px',
@@ -307,19 +308,23 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   }
 
   canCopyOrDuplicate(): boolean {
+    if (this.readOnly) return false;
     const selected = this.store.selectedNode();
     return !!selected && selected.id !== this.store.rootId();
   }
 
   async clear(): Promise<void> {
-    if (await this.confirmAction('Clear the builder?', 'Clear builder', 'Clear')) {
+    if (this.readOnly) return;
+    if (await openConfirmDialog(this.dialog, 'Clear the builder?', 'Clear builder', 'Clear')) {
       this.store.clear();
     }
   }
 
   async applyPresetById(id: string): Promise<void> {
+    if (this.readOnly) return;
     const preset = this.store.presets.find((p) => p.id === id);
-    const confirmed = await this.confirmAction(
+    const confirmed = await openConfirmDialog(
+      this.dialog,
       `Apply "${preset?.title ?? id}" layout? Current canvas will be replaced.`,
       'Apply starter layout',
       'Apply',
@@ -344,21 +349,9 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     });
   }
 
-  private async confirmAction(message: string, title: string, confirmText: string): Promise<boolean> {
-    const out = await firstValueFrom(
-      this.dialog
-        .open(ConfirmDialogComponent, {
-          width: '420px',
-          maxWidth: '95vw',
-          data: { title, message, confirmText, cancelText: 'Cancel' },
-        })
-        .afterClosed(),
-    );
-    return !!out;
-  }
-
   @HostListener('document:keydown', ['$event'])
   onKeyDown(e: KeyboardEvent): void {
+    if (this.readOnly) return;
     const target = e.target as HTMLElement | null;
     if (target) {
       const tag = target.tagName;

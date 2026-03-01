@@ -106,7 +106,7 @@ export class BuilderInspectorComponent {
   readonly enabledRuleKeyQuery = signal('');
 
   readonly dependencyKeyOptions = computed<DependencyKeyOption[]>(() => {
-    return this.rulesService.buildDependencyKeyOptions(this.store.nodes(), this.fieldNode()?.id);
+    return this.rulesService.buildDependencyKeyOptions(this.store.nodes(), this.node()?.id);
   });
 
   readonly optionsSourceTypes = OPTIONS_SOURCE_TYPES;
@@ -158,6 +158,9 @@ export class BuilderInspectorComponent {
   }
   isRow(): boolean {
     return this.containerNode()?.type === 'row';
+  }
+  supportsVisibleRules(): boolean {
+    return this.isField() || !!this.containerNode();
   }
 
   addColumnToSelectedRow(): void {
@@ -260,31 +263,31 @@ export class BuilderInspectorComponent {
   }
 
   rule(target: RuleTarget): ConditionalRule | null {
-    return this.rulesService.rule(this.fieldNode(), target);
+    return this.rulesService.rule(this.ruleNodeForTarget(target), target);
   }
 
   initRule(target: RuleTarget): void {
-    this.rulesService.initRule(this.store, this.fieldNode(), target);
+    this.rulesService.initRule(this.store, this.ruleNodeForTarget(target), target);
     if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
     else this.enabledRuleKeyQuery.set('');
   }
 
   clearRule(target: RuleTarget): void {
-    this.rulesService.clearRule(this.store, this.fieldNode(), target);
+    this.rulesService.clearRule(this.store, this.ruleNodeForTarget(target), target);
     if (target === 'visibleRule') this.visibleRuleKeyQuery.set('');
     else this.enabledRuleKeyQuery.set('');
   }
 
   updateRule(target: RuleTarget, patch: Partial<ConditionalRule>): void {
-    this.rulesService.updateRule(this.store, this.fieldNode(), target, patch);
+    this.rulesService.updateRule(this.store, this.ruleNodeForTarget(target), target, patch);
   }
 
   ruleExpression(target: RuleExpressionTarget): string {
-    return this.rulesService.ruleExpression(this.fieldNode(), target);
+    return this.rulesService.ruleExpression(this.ruleNodeForExpressionTarget(target), target);
   }
 
   setRuleExpression(target: RuleExpressionTarget, value: string): void {
-    this.rulesService.setRuleExpression(this.store, this.fieldNode(), target, value);
+    this.rulesService.setRuleExpression(this.store, this.ruleNodeForExpressionTarget(target), target, value);
   }
 
   operatorNeedsValue(op?: RuleOperator): boolean {
@@ -371,5 +374,15 @@ export class BuilderInspectorComponent {
       return;
     }
     this.store.updateNodeValidators(n.id, { [key]: value });
+  }
+
+  private ruleNodeForTarget(target: RuleTarget) {
+    if (target === 'enabledRule') return this.fieldNode();
+    return this.node();
+  }
+
+  private ruleNodeForExpressionTarget(target: RuleExpressionTarget) {
+    if (target === 'enabledExpression') return this.fieldNode();
+    return this.node();
   }
 }

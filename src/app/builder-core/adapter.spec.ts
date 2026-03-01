@@ -243,6 +243,52 @@ describe('builder/formly adapters: rules + async validators', () => {
     expect(node.validators.presetId).toBe('length-range');
     expect(node.validators.presetParams).toEqual({ minLength: 3, maxLength: 12 });
   });
+
+  it('exports and imports container visibility rules and expressions', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('panel', { containerId: store.rootId(), index: 0 });
+    const panelId = store.selectedId() as string;
+    store.updateNodeProps(panelId, {
+      visibleRule: { dependsOnKey: 'status', operator: 'eq', value: 'approved' },
+      visibleExpression: "model?.status === 'ready'",
+    });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    const expressions = (first.expressions ?? {}) as Record<string, string>;
+    expect(expressions['hide']).toContain("model?.status === 'ready'");
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('panel');
+    if (node.type !== 'panel') return;
+    expect(node.props.visibleExpression).toBe("model?.status === 'ready'");
+  });
+
+  it('exports and imports container hidden state', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('tabs', { containerId: store.rootId(), index: 0 });
+    const tabsId = store.selectedId() as string;
+    store.updateNodeProps(tabsId, { hidden: true });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.hide).toBeTrue();
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('tabs');
+    if (node.type !== 'tabs') return;
+    expect(node.props.hidden).toBeTrue();
+  });
 });
 
 describe('builder/formly adapters: field library v2 batch 1', () => {
