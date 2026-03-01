@@ -1,5 +1,10 @@
 import { BuilderStore } from './store';
-import { builderToOpenApiDocument, builderToOpenApiRequestBody, openApiToBuilder } from './openapi';
+import {
+  builderToOpenApiDocument,
+  builderToOpenApiRequestBody,
+  listOpenApiImportTargets,
+  openApiToBuilder,
+} from './openapi';
 
 describe('builder/openapi adapter direct import', () => {
   it('imports the first requestBody schema from an OpenAPI 3 document', () => {
@@ -63,6 +68,65 @@ describe('builder/openapi adapter direct import', () => {
     expect(root.type).toBe('panel');
     if (root.type !== 'panel') return;
     expect(root.children.length).toBe(1);
+  });
+});
+
+describe('builder/openapi adapter target selection', () => {
+  it('lists available import targets for OpenAPI path operations', () => {
+    const targets = listOpenApiImportTargets({
+      openapi: '3.0.3',
+      paths: {
+        '/orders': {
+          post: {
+            summary: 'Create order',
+            requestBody: { content: { 'application/json': { schema: { type: 'object' } } } },
+          },
+          patch: {
+            summary: 'Update order',
+            requestBody: { content: { 'application/json': { schema: { type: 'object' } } } },
+          },
+        },
+      },
+    });
+
+    expect(targets.map((target) => target.id)).toEqual(['post:/orders', 'patch:/orders']);
+    expect(targets[0]?.description).toBe('Create order');
+  });
+
+  it('imports the selected OpenAPI path operation target', () => {
+    const doc = openApiToBuilder(
+      {
+        openapi: '3.0.3',
+        paths: {
+          '/orders': {
+            post: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: { title: 'Create order', type: 'object', properties: { customer: { type: 'string' } } },
+                  },
+                },
+              },
+            },
+            patch: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: { title: 'Update order', type: 'object', properties: { status: { type: 'string' } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      'patch:/orders',
+    );
+
+    const root = doc.nodes[doc.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+    expect(root.props.title).toBe('Update order');
   });
 });
 

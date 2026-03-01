@@ -1,5 +1,6 @@
 import type { BuilderDocument } from './model';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
+import type { BuilderSchemaImportTarget } from './schema-adapter';
 
 type OpenApiRecord = Record<string, unknown>;
 
@@ -74,6 +75,39 @@ function findSchemaInOperation(operation: unknown): unknown {
   return findSchemaInRequestBody(operation['requestBody']);
 }
 
+function buildTargetId(path: string, method: (typeof OPENAPI_METHODS)[number]): string {
+  return `${method}:${path}`;
+}
+
+function parseTargetId(targetId: string): { path: string; method: (typeof OPENAPI_METHODS)[number] } | null {
+  const separatorIndex = targetId.indexOf(':');
+  if (separatorIndex === -1) return null;
+
+  const method = targetId.slice(0, separatorIndex) as (typeof OPENAPI_METHODS)[number];
+  const path = targetId.slice(separatorIndex + 1);
+  return OPENAPI_METHODS.includes(method) && path ? { method, path } : null;
+}
+
+function listTargetsInPaths(paths: unknown): BuilderSchemaImportTarget[] {
+  if (!isRecord(paths)) return [];
+
+  const out: BuilderSchemaImportTarget[] = [];
+  for (const [path, pathItem] of Object.entries(paths)) {
+    if (!isRecord(pathItem)) continue;
+    for (const method of OPENAPI_METHODS) {
+      const operation = pathItem[method];
+      if (!isRecord(operation) || findSchemaInOperation(operation) == null) continue;
+      out.push({
+        id: buildTargetId(path, method),
+        label: `${method.toUpperCase()} ${path}`,
+        description: typeof operation['summary'] === 'string' ? operation['summary'] : undefined,
+      });
+    }
+  }
+
+  return out;
+}
+
 function findSchemaInPaths(paths: unknown): unknown {
   if (!isRecord(paths)) return null;
 
@@ -103,10 +137,28 @@ function findSchemaInComponents(source: OpenApiRecord): unknown {
   return null;
 }
 
-export function openApiToBuilder(source: unknown): BuilderDocument {
+export function openApiToBuilder(source: unknown, targetId?: string): BuilderDocument {
   if (!isRecord(source)) throw new Error('OpenAPI import must be an object.');
 
+  const selectedOperationSchema = (() => {
+    if (!targetId) return null;
+    const parsed = parseTargetId(targetId);
+    if (!parsed) throw new Error(`Invalid OpenAPI import target "${targetId}".`);
+    const pathItem = isRecord(source['paths']) ? source['paths'][parsed.path] : null;
+    if (!isRecord(pathItem)) throw new Error(`OpenAPI import target path "${parsed.path}" was not found.`);
+    const operation = pathItem[parsed.method];
+    if (!isRecord(operation))
+      throw new Error(`OpenAPI import target operation "${parsed.method.toUpperCase()} ${parsed.path}" was not found.`);
+    const schema = findSchemaInOperation(operation);
+    if (!schema)
+      throw new Error(
+        `OpenAPI import target "${parsed.method.toUpperCase()} ${parsed.path}" has no requestBody schema.`,
+      );
+    return schema;
+  })();
+
   const schema =
+    selectedOperationSchema ??
     findSchemaInRequestBody(source) ??
     findSchemaInOperation(source) ??
     findSchemaInPaths(source['paths']) ??
@@ -118,6 +170,11 @@ export function openApiToBuilder(source: unknown): BuilderDocument {
   }
 
   return jsonSchemaToBuilder(resolveOpenApiRefs(schema, source));
+}
+
+export function listOpenApiImportTargets(source: unknown): readonly BuilderSchemaImportTarget[] {
+  if (!isRecord(source) || !source['openapi']) return [];
+  return listTargetsInPaths(source['paths']);
 }
 
 export function builderToOpenApiRequestBody(doc: BuilderDocument): object {

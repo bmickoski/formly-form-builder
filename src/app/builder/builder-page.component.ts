@@ -288,7 +288,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     if (!adapter) return;
     if (direction === 'import') {
       if (!adapter.import) return;
-      openSchemaImportDialog(
+      void openSchemaImportDialog(
         this.dialog,
         adapter,
         (doc) => {

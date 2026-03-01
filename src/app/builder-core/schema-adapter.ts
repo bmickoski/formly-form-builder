@@ -1,12 +1,19 @@
 import type { BuilderDocument } from './model';
 import type { BuilderPlugin } from './plugins';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
-import { builderToOpenApiDocument, openApiToBuilder } from './openapi';
+import { builderToOpenApiDocument, listOpenApiImportTargets, openApiToBuilder } from './openapi';
+
+export interface BuilderSchemaImportTarget {
+  id: string;
+  label: string;
+  description?: string;
+}
 
 export interface BuilderSchemaAdapter<T = unknown> {
   id: string;
   label: string;
-  import?(source: T): BuilderDocument;
+  listImportTargets?(source: T): readonly BuilderSchemaImportTarget[];
+  import?(source: T, targetId?: string): BuilderDocument;
   export?(doc: BuilderDocument): T;
 }
 
@@ -20,7 +27,8 @@ export const JSON_SCHEMA_ADAPTER: BuilderSchemaAdapter<object> = {
 export const OPENAPI_ADAPTER: BuilderSchemaAdapter<object> = {
   id: 'openapi',
   label: 'OpenAPI 3.0',
-  import: (source) => openApiToBuilder(source),
+  listImportTargets: (source) => listOpenApiImportTargets(source),
+  import: (source, targetId) => openApiToBuilder(source, targetId),
   export: (doc) => builderToOpenApiDocument(doc),
 };
 

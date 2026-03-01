@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+
+<mat-dialog-content>
+  <div class="fb-option-list" role="listbox" aria-label="Schema import targets">
+    @for (option of data.options; track option.id) {
+      <button
+        type="button"
+        mat-stroked-button
+        class="fb-option"
+        [class.fb-option-active]="selectedId() === option.id"
+        [attr.aria-selected]="selectedId() === option.id"
+        (click)="select(option.id)"
+      >
+        <span class="fb-option-label">{{ option.label }}</span>
+        @if (option.description) {
+          <span class="fb-option-description">{{ option.description }}</span>
+        }
+      </button>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!selectedOption()">Import</button>
+</mat-dialog-actions>
