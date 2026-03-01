@@ -32,7 +32,6 @@ import { PreviewBootstrapDialogComponent } from './preview/preview-bootstrap-dia
 import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
-import { builderToJsonSchema } from '../builder-core/json-schema';
 import { parsePaletteConfig } from '../builder-core/palette-config';
 import { PALETTE, PaletteItem } from '../builder-core/registry';
 import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
@@ -44,7 +43,9 @@ import { isFieldNode, type BuilderDocument } from '../builder-core/model';
 import { BuilderTemplatesService } from './builder-templates.service';
 import { mergePaletteById } from './builder-page.palette';
 import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
-
+import { BuilderSchemaAdapter, composeSchemaAdapters, JSON_SCHEMA_ADAPTER } from '../builder-core/schema-adapter';
+import { openSchemaExportDialog, openSchemaImportDialog, schemaAdaptersForDirection } from './builder-page.schema';
+import { formatDiagnosticsSummary } from './builder-page.utils';
 export interface BuilderAutosaveError {
   operation: 'save' | 'restore';
   key: string;
@@ -80,10 +81,10 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   private readonly templates = inject(BuilderTemplatesService);
   readonly diagnosticsOpen = signal(false);
   private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
+  private readonly schemaAdapters = signal<readonly BuilderSchemaAdapter[]>([JSON_SCHEMA_ADAPTER]);
   private readonly ready = signal(false);
   private hasRestoredAutosave = false;
   private isApplyingInputConfig = false;
-
   @Input() config: BuilderDocument | null = null;
   @Input() plugins: readonly BuilderPlugin[] = [];
   @Input() palette: readonly PaletteItem[] | null = null;
@@ -117,14 +118,8 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['plugins'] || changes['palette']) this.applyRuntimeExtensions();
-
-    if (changes['config'] && !changes['config'].firstChange && this.config) {
-      this.applyExternalConfig(this.config);
-    }
-
-    if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) {
-      this.restoreFromAutosave();
-    }
+    if (changes['config'] && !changes['config'].firstChange && this.config) this.applyExternalConfig(this.config);
+    if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) this.restoreFromAutosave();
   }
 
   openPreview(): void {
@@ -152,11 +147,10 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   openExport(): void {
     if (!this.canExport()) return;
-    const formlyJson = JSON.stringify(builderToFormly(this.store.doc()), null, 2);
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { mode: 'exportFormly', json: formlyJson },
+      data: { mode: 'exportFormly', json: JSON.stringify(builderToFormly(this.store.doc()), null, 2) },
     });
   }
 
@@ -167,16 +161,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       width: '900px',
       maxWidth: '95vw',
       data: { mode: 'exportBuilder', json: JSON.stringify(publicDoc, null, 2), schemaVersion: publicDoc.schemaVersion },
-    });
-  }
-
-  openExportJsonSchema(): void {
-    if (!this.canExport()) return;
-    const schema = JSON.stringify(builderToJsonSchema(this.store.doc()), null, 2);
-    this.dialog.open(JsonDialogComponent, {
-      width: '900px',
-      maxWidth: '95vw',
-      data: { mode: 'exportJsonSchema', json: schema },
     });
   }
 
@@ -294,10 +278,32 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     this.diagnosticsOpen.update((value) => !value);
   }
 
+  schemaAdaptersFor(direction: 'import' | 'export'): readonly BuilderSchemaAdapter[] {
+    return schemaAdaptersForDirection(this.schemaAdapters(), direction);
+  }
+
+  openSchema(direction: 'import' | 'export', adapterId: string): void {
+    if (direction === 'export' && !this.canExport()) return;
+    const adapter = this.schemaAdapters().find((item) => item.id === adapterId);
+    if (!adapter) return;
+    if (direction === 'import') {
+      if (!adapter.import) return;
+      openSchemaImportDialog(
+        this.dialog,
+        adapter,
+        (doc) => {
+          const result = this.store.importDocument(JSON.stringify(doc));
+          if (!result.ok) this.notifyError(result.error);
+        },
+        (message) => this.notifyError(message),
+      );
+      return;
+    }
+    if (adapter.export) openSchemaExportDialog(this.dialog, adapter, this.store.doc());
+  }
+
   diagnosticsSummary(): string {
-    const report = this.store.diagnostics();
-    if (report.errorCount === 0 && report.warningCount === 0) return 'No issues';
-    return `${report.errorCount} errors, ${report.warningCount} warnings`;
+    return formatDiagnosticsSummary(this.store.diagnostics());
   }
 
   canCopyOrDuplicate(): boolean {
@@ -382,6 +388,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       plugins: this.plugins,
       palette: mergePaletteById(basePalette, this.templates.toPaletteItems()),
     });
+    this.schemaAdapters.set(composeSchemaAdapters([JSON_SCHEMA_ADAPTER], this.plugins));
   }
 
   private applyExternalConfig(config: BuilderDocument): void {

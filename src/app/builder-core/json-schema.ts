@@ -1,6 +1,9 @@
+import { uid } from './ids';
 import { BuilderDocument, BuilderNode, ContainerNode, FieldKind, FieldNode, isFieldNode } from './model';
+import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
 
 type JsonSchemaProperty = Record<string, unknown>;
+type JsonSchemaRecord = Record<string, unknown>;
 
 interface SchemaCollector {
   properties: Record<string, JsonSchemaProperty>;
@@ -120,4 +123,111 @@ export function builderToJsonSchema(doc: BuilderDocument): object {
   if (out.required.length > 0) schema['required'] = out.required;
 
   return schema;
+}
+
+function isRecord(value: unknown): value is JsonSchemaRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function inferArrayFieldKind(property: JsonSchemaProperty): FieldKind {
+  const items = isRecord(property['items']) ? property['items'] : null;
+  const itemType = String(items?.['type'] ?? '').toLowerCase();
+  const itemEnum = Array.isArray(items?.['enum']) ? items['enum'] : [];
+  return itemEnum.length > 0 || itemType === 'string' ? 'multiselect' : 'repeater';
+}
+
+function inferStringFieldKind(property: JsonSchemaProperty): FieldKind {
+  const format = String(property['format'] ?? '').toLowerCase();
+  if (Array.isArray(property['enum']) && property['enum'].length > 0) return 'select';
+  if (format === 'date') return 'date';
+  if (format === 'email') return 'email';
+  if (format === 'uri') return 'url';
+  if (format === 'phone') return 'tel';
+  if (format === 'password') return 'password';
+  return 'input';
+}
+
+function inferFieldKind(property: JsonSchemaProperty): FieldKind {
+  const type = String(property['type'] ?? '').toLowerCase();
+
+  if (type === 'boolean') return 'checkbox';
+  if (type === 'number' || type === 'integer') return 'number';
+  if (type === 'array') return inferArrayFieldKind(property);
+  return inferStringFieldKind(property);
+}
+
+function propertyToFieldNode(key: string, property: JsonSchemaProperty, requiredKeys: Set<string>): FieldNode {
+  const fieldKind = inferFieldKind(property);
+  const node: FieldNode = {
+    id: uid('f'),
+    type: 'field',
+    parentId: 'root',
+    children: [],
+    fieldKind,
+    props: {
+      key,
+      label: String(property['title'] ?? key),
+      description: typeof property['description'] === 'string' ? property['description'] : undefined,
+      defaultValue: property['default'],
+    },
+    validators: {},
+  };
+
+  if (requiredKeys.has(key)) node.validators.required = true;
+  if (typeof property['minLength'] === 'number') node.validators.minLength = property['minLength'];
+  if (typeof property['maxLength'] === 'number') node.validators.maxLength = property['maxLength'];
+  if (typeof property['pattern'] === 'string') node.validators.pattern = property['pattern'];
+  if (typeof property['minimum'] === 'number') node.validators.min = property['minimum'];
+  if (typeof property['maximum'] === 'number') node.validators.max = property['maximum'];
+
+  if (fieldKind === 'select') {
+    const enumValues = Array.isArray(property['enum']) ? property['enum'] : [];
+    node.props.options = enumValues.map((value) => ({ label: String(value), value: String(value) }));
+  }
+
+  if (fieldKind === 'multiselect') {
+    const items = isRecord(property['items']) ? property['items'] : {};
+    const enumValues = Array.isArray(items['enum']) ? items['enum'] : [];
+    node.props.multiple = true;
+    node.props.options = enumValues.map((value) => ({ label: String(value), value: String(value) }));
+  }
+
+  return node;
+}
+
+export function jsonSchemaToBuilder(schema: unknown): BuilderDocument {
+  if (!isRecord(schema)) throw new Error('JSON Schema must be an object.');
+  if (schema['type'] != null && schema['type'] !== 'object') {
+    throw new Error('JSON Schema import currently supports top-level object schemas only.');
+  }
+
+  const properties = isRecord(schema['properties']) ? schema['properties'] : {};
+  const requiredKeys = new Set(toStringArray(schema['required']));
+  const root: ContainerNode = {
+    id: 'root',
+    type: 'panel',
+    parentId: null,
+    children: [],
+    props: { title: typeof schema['title'] === 'string' ? schema['title'] : 'Form' },
+  };
+
+  const nodes: BuilderDocument['nodes'] = { root };
+  for (const [key, rawProperty] of Object.entries(properties)) {
+    if (!isRecord(rawProperty)) continue;
+    const field = propertyToFieldNode(key, rawProperty, requiredKeys);
+    nodes[field.id] = field;
+    root.children.push(field.id);
+  }
+
+  return {
+    schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
+    rootId: 'root',
+    nodes,
+    selectedId: null,
+    renderer: 'bootstrap',
+  };
 }

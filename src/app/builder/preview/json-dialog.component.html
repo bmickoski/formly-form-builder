@@ -1,20 +1,23 @@
 <h2 mat-dialog-title>
   {{
-    data.mode === 'exportFormly'
-      ? 'Export Formly JSON'
-      : data.mode === 'exportBuilder'
-        ? 'Export Builder JSON'
-        : data.mode === 'exportJsonSchema'
-          ? 'Export JSON Schema'
-          : data.mode === 'importFormly'
-            ? 'Import Formly JSON'
-            : data.mode === 'importPalette'
-              ? 'Import Palette JSON'
-              : data.mode === 'exportTemplates'
-                ? 'Export Field Templates JSON'
-                : data.mode === 'importTemplates'
-                  ? 'Import Field Templates JSON'
-                  : 'Import Builder JSON'
+    data.title ??
+      (data.mode === 'exportFormly'
+        ? 'Export Formly JSON'
+        : data.mode === 'exportBuilder'
+          ? 'Export Builder JSON'
+          : data.mode === 'exportJsonSchema' || data.mode === 'exportSchema'
+            ? 'Export JSON Schema'
+            : data.mode === 'importFormly'
+              ? 'Import Formly JSON'
+              : data.mode === 'importSchema'
+                ? 'Import JSON Schema'
+                : data.mode === 'importPalette'
+                  ? 'Import Palette JSON'
+                  : data.mode === 'exportTemplates'
+                    ? 'Export Field Templates JSON'
+                    : data.mode === 'importTemplates'
+                      ? 'Import Field Templates JSON'
+                      : 'Import Builder JSON')
   }}
 </h2>
 
@@ -25,29 +28,34 @@
   </mat-form-field>
   <div class="fb-hint">
     {{
-      data.mode === 'exportFormly'
-        ? 'FormlyFieldConfig[] ready to use in an application.'
-        : data.mode === 'exportBuilder'
-          ? 'Builder document JSON (domain tree). Schema v' + (data.schemaVersion ?? '?') + '.'
-          : data.mode === 'exportJsonSchema'
-            ? 'JSON Schema (Draft 7). Suitable for backend validation and ngx-formly JSON Schema support.'
-            : data.mode === 'exportTemplates'
-              ? 'Saved field template palette items.'
-              : data.mode === 'importPalette'
-                ? 'Palette item array JSON. Must include unique ids and valid node definitions.'
-                : data.mode === 'importTemplates'
-                  ? 'Field template palette JSON. Field node templates only.'
-                  : 'Builder document JSON (domain tree).'
+      data.hint ??
+        (data.mode === 'exportFormly'
+          ? 'FormlyFieldConfig[] ready to use in an application.'
+          : data.mode === 'exportBuilder'
+            ? 'Builder document JSON (domain tree). Schema v' + (data.schemaVersion ?? '?') + '.'
+            : data.mode === 'exportJsonSchema' || data.mode === 'exportSchema'
+              ? 'JSON Schema (Draft 7). Suitable for backend validation and ngx-formly JSON Schema support.'
+              : data.mode === 'exportTemplates'
+                ? 'Saved field template palette items.'
+                : data.mode === 'importPalette'
+                  ? 'Palette item array JSON. Must include unique ids and valid node definitions.'
+                  : data.mode === 'importTemplates'
+                    ? 'Field template palette JSON. Field node templates only.'
+                    : data.mode === 'importSchema'
+                      ? 'Paste a JSON Schema object to generate a starter form.'
+                      : 'Builder document JSON (domain tree).')
     }}
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   @if (
-    data.mode === 'exportFormly' ||
-    data.mode === 'exportBuilder' ||
-    data.mode === 'exportJsonSchema' ||
-    data.mode === 'exportTemplates'
+    data.copyEnabled ??
+    (data.mode === 'exportFormly' ||
+      data.mode === 'exportBuilder' ||
+      data.mode === 'exportJsonSchema' ||
+      data.mode === 'exportSchema' ||
+      data.mode === 'exportTemplates')
   ) {
     <button mat-button (click)="copy()">Copy</button>
   }
@@ -55,12 +63,14 @@
   <button mat-button (click)="close()">Close</button>
   <button mat-raised-button color="primary" (click)="done()">
     {{
-      data.mode === 'import' ||
-      data.mode === 'importFormly' ||
-      data.mode === 'importPalette' ||
-      data.mode === 'importTemplates'
-        ? 'Import'
-        : 'Done'
+      data.primaryActionLabel ??
+        (data.mode === 'import' ||
+        data.mode === 'importFormly' ||
+        data.mode === 'importSchema' ||
+        data.mode === 'importPalette' ||
+        data.mode === 'importTemplates'
+          ? 'Import'
+          : 'Done')
     }}
   </button>
 </mat-dialog-actions>

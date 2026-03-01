@@ -6,6 +6,8 @@ import {
   composeValidatorPresetDefinitions,
   composeValidatorPresets,
 } from './plugins';
+import { composeSchemaAdapters, JSON_SCHEMA_ADAPTER } from './schema-adapter';
+import { BuilderDocument } from './model';
 
 describe('builder plugin composition', () => {
   it('composes palette items by appending and overriding by id', () => {
@@ -121,5 +123,32 @@ describe('builder plugin composition', () => {
     expect(out.length).toBe(2);
     expect(out[0]?.types?.[0]?.name).toBe('my-datepicker');
     expect(out[1]?.wrappers?.[0]?.name).toBe('my-card');
+  });
+});
+
+describe('builder schema adapter composition', () => {
+  it('composes schema adapters with override-by-id', () => {
+    const importedDoc: BuilderDocument = {
+      schemaVersion: 2,
+      rootId: 'root',
+      selectedId: null,
+      renderer: 'bootstrap',
+      nodes: {
+        root: { id: 'root', type: 'panel', parentId: null, children: [], props: {} },
+      },
+    };
+    const out = composeSchemaAdapters([JSON_SCHEMA_ADAPTER], [
+      {
+        id: 'plugin-a',
+        schemaAdapters: [
+          { id: 'json-schema', label: 'JSON Schema Override', export: () => ({ overridden: true }) },
+          { id: 'openapi', label: 'OpenAPI 3.0', import: () => importedDoc },
+        ],
+      },
+    ]);
+
+    expect(out.length).toBe(2);
+    expect(out[0]?.label).toBe('JSON Schema Override');
+    expect(out[1]?.id).toBe('openapi');
   });
 });

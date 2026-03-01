@@ -15,10 +15,29 @@
     <mat-menu #fileMenu="matMenu">
       <button mat-menu-item (click)="openExport()"><mat-icon>download</mat-icon> Export Formly JSON</button>
       <button mat-menu-item (click)="openExportBuilder()"><mat-icon>dataset</mat-icon> Export Builder JSON</button>
-      <button mat-menu-item (click)="openExportJsonSchema()"><mat-icon>schema</mat-icon> Export JSON Schema</button>
+      @if (schemaAdaptersFor('export').length > 0) {
+        <button mat-menu-item [matMenuTriggerFor]="exportSchemaMenu">
+          <mat-icon>schema</mat-icon> Export as schema...
+        </button>
+      }
+      <mat-menu #exportSchemaMenu="matMenu">
+        @for (adapter of schemaAdaptersFor('export'); track adapter.id) {
+          <button mat-menu-item (click)="openSchema('export', adapter.id)">{{ adapter.label }}</button>
+        }
+      </mat-menu>
       <mat-divider />
       <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
       <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
+      @if (schemaAdaptersFor('import').length > 0) {
+        <button mat-menu-item [matMenuTriggerFor]="importSchemaMenu">
+          <mat-icon>schema</mat-icon> Import from schema...
+        </button>
+      }
+      <mat-menu #importSchemaMenu="matMenu">
+        @for (adapter of schemaAdaptersFor('import'); track adapter.id) {
+          <button mat-menu-item (click)="openSchema('import', adapter.id)">{{ adapter.label }}</button>
+        }
+      </mat-menu>
       <mat-divider />
       <button mat-menu-item class="fb-menu-item-danger" (click)="clear()">
         <mat-icon>delete</mat-icon> Clear canvas
