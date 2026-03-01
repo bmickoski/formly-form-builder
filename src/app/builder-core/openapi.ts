@@ -10,6 +10,44 @@ function isRecord(value: unknown): value is OpenApiRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function decodeJsonPointerToken(token: string): string {
+  return token.replace(/~1/g, '/').replace(/~0/g, '~');
+}
+
+function resolveLocalRef(root: OpenApiRecord, ref: string): unknown {
+  if (!ref.startsWith('#/')) throw new Error(`Only local OpenAPI $ref values are supported. Received "${ref}".`);
+
+  let current: unknown = root;
+  for (const rawSegment of ref.slice(2).split('/')) {
+    const segment = decodeJsonPointerToken(rawSegment);
+    if (!isRecord(current) || !(segment in current)) {
+      throw new Error(`OpenAPI $ref could not be resolved: "${ref}".`);
+    }
+    current = current[segment];
+  }
+
+  return current;
+}
+
+function resolveOpenApiRefs(value: unknown, root: OpenApiRecord, seen = new Set<string>()): unknown {
+  if (Array.isArray(value)) return value.map((item) => resolveOpenApiRefs(item, root, seen));
+  if (!isRecord(value)) return value;
+
+  const ref = typeof value['$ref'] === 'string' ? value['$ref'] : null;
+  if (ref) {
+    if (seen.has(ref)) throw new Error(`Circular OpenAPI $ref detected: "${ref}".`);
+    const nextSeen = new Set(seen);
+    nextSeen.add(ref);
+    return resolveOpenApiRefs(resolveLocalRef(root, ref), root, nextSeen);
+  }
+
+  const resolved: OpenApiRecord = {};
+  for (const [key, entry] of Object.entries(value)) {
+    resolved[key] = resolveOpenApiRefs(entry, root, seen);
+  }
+  return resolved;
+}
+
 function findSchemaInContent(content: unknown): unknown {
   if (!isRecord(content)) return null;
 
@@ -79,7 +117,7 @@ export function openApiToBuilder(source: unknown): BuilderDocument {
     throw new Error('OpenAPI import requires a requestBody schema or a JSON Schema object.');
   }
 
-  return jsonSchemaToBuilder(schema);
+  return jsonSchemaToBuilder(resolveOpenApiRefs(schema, source));
 }
 
 export function builderToOpenApiRequestBody(doc: BuilderDocument): object {
