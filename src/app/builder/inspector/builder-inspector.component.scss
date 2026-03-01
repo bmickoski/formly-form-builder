@@ -39,6 +39,10 @@
   color: #6b6b7a;
 }
 
+.fb-subsection-title-margin-bottom {
+  margin-bottom: 6px;
+}
+
 .fb-inline-row {
   display: flex;
 }
@@ -143,4 +147,13 @@
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 8px;
+}
+
+.fb-span-preset {
+  min-width: 68px;
+}
+
+.fb-span-preset-active {
+  border-color: #3949ab;
+  background: #eef1ff;
 }

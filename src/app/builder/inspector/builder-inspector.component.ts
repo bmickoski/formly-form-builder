@@ -59,6 +59,7 @@ import { ValidatorPresetDefinition } from '../../builder-core/validation-presets
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuilderInspectorComponent {
+  readonly colSpanPresets = [12, 6, 4, 3];
   readonly store = inject(BuilderStore);
   private readonly rulesService = inject(BuilderInspectorRulesService);
   private readonly validationService = inject(BuilderInspectorValidationService);
@@ -174,6 +175,24 @@ export class BuilderInspectorComponent {
     const n = this.containerNode();
     if (!n || n.type !== 'col') return;
     this.store.splitColumn(n.id, parts);
+  }
+
+  setSelectedColumnSpan(span: number): void {
+    const n = this.containerNode();
+    if (!n || n.type !== 'col') return;
+    this.setProp('colSpan', span);
+  }
+
+  ruleBuilderHint(target: RuleTarget): string {
+    return target === 'visibleRule'
+      ? 'Use simple rules for common cases: checkbox -> Is truthy, select/radio -> Equals, number -> Greater than / Less than.'
+      : 'Use simple rules to gate editing: checkbox -> Is truthy, status field -> Equals, number -> Greater than / Less than.';
+  }
+
+  ruleExpressionExample(target: RuleExpressionTarget): string {
+    return target === 'visibleExpression'
+      ? "model?.showDetails === true && value !== 'hidden'"
+      : "model?.canEdit === true && model?.status !== 'locked'";
   }
 
   options(): OptionItem[] {

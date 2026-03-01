@@ -9,6 +9,7 @@ import {
   removeNodeCommand,
   reorderWithinCommand,
   splitColumnCommand,
+  updateNodePropsCommand,
 } from './store.commands';
 import { BuilderDocument, ContainerNode } from './model';
 import { CURRENT_BUILDER_SCHEMA_VERSION } from './schema';
@@ -105,6 +106,22 @@ describe('store.commands', () => {
       .reduce((sum, col) => sum + (col.props.colSpan ?? 0), 0);
 
     expect(total).toBe(12);
+  });
+
+  it('clamps updated column spans into the 1..12 range', () => {
+    const doc = createDoc();
+    const withRow = addFromPaletteCommand(doc, 'row', { containerId: 'root', index: 0 });
+    const row = withRow.nodes[(withRow.nodes['root'] as ContainerNode).children[0]] as ContainerNode;
+    const firstCol = row.children[0];
+
+    const overMax = updateNodePropsCommand(withRow, firstCol, { colSpan: 99 });
+    expect((overMax.nodes[firstCol] as ContainerNode).props.colSpan).toBe(12);
+
+    const underMin = updateNodePropsCommand(overMax, firstCol, { colSpan: 0 });
+    expect((underMin.nodes[firstCol] as ContainerNode).props.colSpan).toBe(1);
+
+    const invalid = updateNodePropsCommand(underMin, firstCol, { colSpan: Number.NaN });
+    expect((invalid.nodes[firstCol] as ContainerNode).props.colSpan).toBe(6);
   });
 
   it('splits one column into nested row', () => {
