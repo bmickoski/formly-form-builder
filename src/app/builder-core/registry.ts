@@ -9,6 +9,14 @@ export const DEFAULT_PALETTE_CATEGORIES = {
   layout: 'Layout',
 } as const;
 
+/** A single entry in a palette item's childrenTemplate. Either a palette item id string,
+ *  or an object with an id and optional props to merge onto the created child node. */
+export type ChildTemplateEntry = string | { id: string; props?: Record<string, unknown> };
+
+export function templateEntryId(entry: ChildTemplateEntry): string {
+  return typeof entry === 'string' ? entry : entry.id;
+}
+
 export interface PaletteItem {
   id: string;
   category: string;
@@ -22,7 +30,7 @@ export interface PaletteItem {
   defaults: {
     props: FieldProps | ContainerProps;
     validators?: BuilderValidators;
-    childrenTemplate?: string[];
+    childrenTemplate?: ChildTemplateEntry[];
   };
 }
 
@@ -217,21 +225,39 @@ export const PALETTE: PaletteItem[] = [
     category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Tabs',
     nodeType: 'tabs',
-    defaults: { props: { title: 'Tabs' }, childrenTemplate: [] },
+    defaults: {
+      props: { title: 'Tabs' },
+      childrenTemplate: [
+        { id: 'panel', props: { title: 'Tab 1' } },
+        { id: 'panel', props: { title: 'Tab 2' } },
+      ],
+    },
   },
   {
     id: 'stepper',
     category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Stepper',
     nodeType: 'stepper',
-    defaults: { props: { title: 'Stepper' }, childrenTemplate: [] },
+    defaults: {
+      props: { title: 'Stepper' },
+      childrenTemplate: [
+        { id: 'panel', props: { title: 'Step 1' } },
+        { id: 'panel', props: { title: 'Step 2' } },
+      ],
+    },
   },
   {
     id: 'accordion',
     category: DEFAULT_PALETTE_CATEGORIES.layout,
     title: 'Accordion',
     nodeType: 'accordion',
-    defaults: { props: { title: 'Accordion' }, childrenTemplate: [] },
+    defaults: {
+      props: { title: 'Accordion' },
+      childrenTemplate: [
+        { id: 'panel', props: { title: 'Section 1' } },
+        { id: 'panel', props: { title: 'Section 2' } },
+      ],
+    },
   },
 ];
 

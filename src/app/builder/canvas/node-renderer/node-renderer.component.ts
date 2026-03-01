@@ -9,6 +9,12 @@ import { BuilderNode, BuilderNodeType, isContainerNode, isFieldNode } from '../.
 
 type DragData = { kind: 'palette'; paletteId: string } | { kind: 'node'; nodeId: string };
 
+// Track pointer position globally so canEnter predicates can detect which inner
+// container is actually under the cursor (CDK spatial detection picks outermost first).
+let _dragPointerX = 0;
+let _dragPointerY = 0;
+let _pointerListenerInstalled = false;
+
 @Component({
   selector: 'app-node-renderer',
   standalone: true,
@@ -20,6 +26,20 @@ export class NodeRendererComponent {
   readonly store = inject(BuilderStore);
 
   @Input({ required: true }) nodeId!: string;
+
+  constructor() {
+    if (!_pointerListenerInstalled) {
+      _pointerListenerInstalled = true;
+      document.addEventListener(
+        'pointermove',
+        (e) => {
+          _dragPointerX = e.clientX;
+          _dragPointerY = e.clientY;
+        },
+        { passive: true, capture: true },
+      );
+    }
+  }
 
   readonly node = computed<BuilderNode | null>(() => this.store.nodes()[this.nodeId] ?? null);
   readonly isContainer = computed(() => {
@@ -101,11 +121,10 @@ export class NodeRendererComponent {
 
     const draggedType = this.getDraggedNodeType(drag.data);
     if (!draggedType) return false;
-    if (container.type === 'row' && draggedType !== 'col') return false;
 
     if (drag.data.kind === 'node' && this.isSelfOrDescendant(drag.data.nodeId, container.id)) return false;
 
-    return true;
+    return this.containerCanAccept(container.id, container.type, draggedType);
   };
 
   onDrop(event: CdkDragDrop<string[]>): void {
@@ -164,75 +183,65 @@ export class NodeRendererComponent {
     return this.store.nodes()[data.nodeId]?.type ?? null;
   }
 
+  /**
+   * Palette → container: accept only if no INNER container at the pointer position
+   * also accepts the same dragged type. This prevents the outer container (e.g. root)
+   * from stealing a drop that should land in a nested col or panel.
+   */
   private canEnterFromPalette(
     containerId: string,
     containerType: BuilderNode['type'],
     draggedType: BuilderNodeType,
   ): boolean {
-    if (containerId === this.store.rootId() && this.preferSelectedContainerTarget(draggedType)) return false;
-    if (containerType === 'row' && draggedType !== 'col') return false;
-    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
-    return true;
+    if (!this.containerCanAccept(containerId, containerType, draggedType)) return false;
+    return !this.hasInnerContainerAt(containerId, _dragPointerX, _dragPointerY, draggedType);
   }
 
+  /**
+   * Node → container: same spatial yielding logic plus self/descendant guard.
+   */
   private canEnterFromNode(
     containerId: string,
     containerType: BuilderNode['type'],
     draggedNodeId: string,
     draggedType: BuilderNodeType,
   ): boolean {
-    const rootId = this.store.rootId();
-    if (containerId === rootId) {
-      const dragged = this.store.nodes()[draggedNodeId];
-      return !!dragged && dragged.parentId === rootId;
-    }
-    if (containerType === 'row' && draggedType !== 'col') return false;
-    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
     if (this.isSelfOrDescendant(draggedNodeId, containerId)) return false;
-    return true;
+    if (!this.containerCanAccept(containerId, containerType, draggedType)) return false;
+    return !this.hasInnerContainerAt(containerId, _dragPointerX, _dragPointerY, draggedType);
   }
 
-  private hasLayoutChildren(containerId: string): boolean {
-    const container = this.store.nodes()[containerId];
-    if (!container || !isContainerNode(container)) return false;
+  /**
+   * Returns true if any drop zone that is a descendant of `containerId` is
+   * under the given pointer position AND can accept the dragged type.
+   * When true, the caller should yield (return false from canEnter) so CDK
+   * skips the outer container and tries the inner one next.
+   */
+  private hasInnerContainerAt(containerId: string, x: number, y: number, draggedType: BuilderNodeType): boolean {
+    const elements = document.elementsFromPoint(x, y);
     const nodes = this.store.nodes();
-    return container.children.some((childId) => {
-      const child = nodes[childId];
-      return !!child && isContainerNode(child);
-    });
-  }
-
-  private preferSelectedContainerTarget(draggedType: BuilderNodeType): boolean {
-    const selected = this.store.selectedNode();
-    if (!selected || !isContainerNode(selected) || selected.id === this.store.rootId()) return false;
-    if (this.containerCanAccept(selected.id, selected.type, draggedType)) return true;
-    return this.hasCompatibleDescendantTarget(selected.id, draggedType);
-  }
-
-  private hasCompatibleDescendantTarget(containerId: string, draggedType: BuilderNodeType): boolean {
-    const nodes = this.store.nodes();
-    const stack = [containerId];
-    while (stack.length) {
-      const id = stack.pop()!;
-      const node = nodes[id];
-      if (!node || !isContainerNode(node)) continue;
-      for (const childId of node.children) {
-        const child = nodes[childId];
-        if (!child || !isContainerNode(child)) continue;
-        if (this.containerCanAccept(child.id, child.type, draggedType)) return true;
-        stack.push(child.id);
-      }
+    for (const el of elements) {
+      const elId = (el as HTMLElement).id;
+      if (!elId || !elId.startsWith('drop_')) continue;
+      // Extract node ID from either drop_<id> or drop_append_<id>
+      const innerContainerId = this.extractContainerId(elId);
+      if (!innerContainerId || innerContainerId === containerId) continue;
+      const innerNode = nodes[innerContainerId];
+      if (!innerNode || !isContainerNode(innerNode)) continue;
+      // Must be a true descendant of this container
+      if (!this.isSelfOrDescendant(containerId, innerContainerId)) continue;
+      if (this.containerCanAccept(innerContainerId, innerNode.type, draggedType)) return true;
     }
     return false;
   }
 
   private containerCanAccept(
-    containerId: string,
+    _containerId: string,
     containerType: BuilderNode['type'],
     draggedType: BuilderNodeType,
   ): boolean {
     if (containerType === 'row') return draggedType === 'col';
-    if (draggedType === 'field' && this.hasLayoutChildren(containerId)) return false;
+    if (draggedType === 'col') return false; // col only belongs inside a row
     return true;
   }
 
