@@ -2,6 +2,7 @@ import { InjectionToken } from '@angular/core';
 
 import type { BuilderValidators, FieldKind, OptionItem } from './model';
 import type { PaletteItem } from './registry';
+import type { BuilderSchemaAdapter } from './schema-adapter';
 import type { ValidatorPresetDefinition } from './validation-presets';
 
 /**
@@ -20,6 +21,7 @@ export interface FormlyConfigExtension {
 export interface BuilderPlugin {
   id: string;
   paletteItems?: readonly PaletteItem[];
+  schemaAdapters?: readonly BuilderSchemaAdapter[];
   lookupRegistry?: Record<string, OptionItem[]>;
   validatorPresets?: Partial<Record<FieldKind, BuilderValidators>>;
   validatorPresetDefinitions?: readonly ValidatorPresetDefinition[];

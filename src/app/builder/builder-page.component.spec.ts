@@ -1,5 +1,6 @@
 import { SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { BuilderStore } from '../builder-core/store';
 import { type BuilderDocument } from '../builder-core/model';
@@ -105,5 +106,28 @@ describe('BuilderPageComponent contract', () => {
     const latest = diagnosticsSpy.calls.mostRecent().args[0] as { errorCount: number; warningCount: number };
     expect(latest.errorCount).toBeGreaterThanOrEqual(0);
     expect(latest.warningCount).toBeGreaterThanOrEqual(0);
+  });
+
+  it('preserves the current renderer when importing from schema adapters', () => {
+    createComponent();
+    component.ngOnInit();
+    component.store.setRenderer('material');
+    const importedDoc = createSampleDoc('Schema Import');
+    importedDoc.renderer = 'bootstrap';
+    const dialogOpenSpy = spyOn(component['dialog'], 'open').and.returnValue({
+      afterClosed: () => of({ json: '{}' }),
+    } as any);
+    component['schemaAdapters'].set([
+      {
+        id: 'test-schema',
+        label: 'Test Schema',
+        import: () => importedDoc,
+      },
+    ]);
+
+    component.openSchema('import', 'test-schema');
+
+    expect(dialogOpenSpy).toHaveBeenCalled();
+    expect(component.store.renderer()).toBe('material');
   });
 });

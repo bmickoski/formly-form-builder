@@ -20,7 +20,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { firstValueFrom } from 'rxjs';
 import { BuilderStore } from '../builder-core/store';
 import { BuilderPaletteComponent } from './palette/builder-palette.component';
 import { BuilderCanvasComponent } from './canvas/builder-canvas.component';
@@ -31,18 +30,19 @@ import { PreviewBootstrapDialogComponent } from './preview/preview-bootstrap-dia
 import { JsonDialogComponent } from './preview/json-dialog.component';
 import { formlyToBuilder } from '../builder-core/formly-import';
 import { builderToFormly } from '../builder-core/adapter';
-import { builderToJsonSchema } from '../builder-core/json-schema';
 import { parsePaletteConfig } from '../builder-core/palette-config';
 import { PALETTE, PaletteItem } from '../builder-core/registry';
 import { composePalette, type BuilderPlugin } from '../builder-core/plugins';
 import type { FormlyFieldConfig } from '@ngx-formly/core';
-import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { SAMPLE_PALETTE_JSON } from './builder-page.constants';
 import type { BuilderDiagnosticsReport } from '../builder-core/diagnostics';
 import { isFieldNode, type BuilderDocument } from '../builder-core/model';
 import { BuilderTemplatesService } from './builder-templates.service';
 import { mergePaletteById } from './builder-page.palette';
 import { handleClipboardShortcut, handleHistoryShortcut } from './builder-page.shortcuts';
+import { BuilderSchemaAdapter, composeSchemaAdapters, CORE_SCHEMA_ADAPTERS } from '../builder-core/schema-adapter';
+import { openSchemaExportDialog, openSchemaImportDialog, schemaAdaptersForDirection } from './builder-page.schema';
+import { formatDiagnosticsSummary, openConfirmDialog } from './builder-page.utils';
 export interface BuilderAutosaveError {
   operation: 'save' | 'restore';
   key: string;
@@ -78,6 +78,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   private readonly templates = inject(BuilderTemplatesService);
   readonly diagnosticsOpen = signal(false);
   private readonly paletteOverride = signal<readonly PaletteItem[] | null>(null);
+  private readonly schemaAdapters = signal<readonly BuilderSchemaAdapter[]>(CORE_SCHEMA_ADAPTERS);
   private readonly ready = signal(false);
   private hasRestoredAutosave = false;
   private isApplyingInputConfig = false;
@@ -111,14 +112,8 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['plugins'] || changes['palette']) this.applyRuntimeExtensions();
-
-    if (changes['config'] && !changes['config'].firstChange && this.config) {
-      this.applyExternalConfig(this.config);
-    }
-
-    if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) {
-      this.restoreFromAutosave();
-    }
+    if (changes['config'] && !changes['config'].firstChange && this.config) this.applyExternalConfig(this.config);
+    if (changes['autosave'] && this.autosave && !this.hasRestoredAutosave && !this.config) this.restoreFromAutosave();
   }
 
   openPreview(): void {
@@ -146,11 +141,10 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   openExport(): void {
     if (!this.canExport()) return;
-    const formlyJson = JSON.stringify(builderToFormly(this.store.doc()), null, 2);
     this.dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
-      data: { mode: 'exportFormly', json: formlyJson },
+      data: { mode: 'exportFormly', json: JSON.stringify(builderToFormly(this.store.doc()), null, 2) },
     });
   }
 
@@ -161,16 +155,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       width: '900px',
       maxWidth: '95vw',
       data: { mode: 'exportBuilder', json: JSON.stringify(publicDoc, null, 2), schemaVersion: publicDoc.schemaVersion },
-    });
-  }
-
-  openExportJsonSchema(): void {
-    if (!this.canExport()) return;
-    const schema = JSON.stringify(builderToJsonSchema(this.store.doc()), null, 2);
-    this.dialog.open(JsonDialogComponent, {
-      width: '900px',
-      maxWidth: '95vw',
-      data: { mode: 'exportJsonSchema', json: schema },
     });
   }
 
@@ -295,10 +279,32 @@ export class BuilderPageComponent implements OnInit, OnChanges {
     this.diagnosticsOpen.update((value) => !value);
   }
 
+  schemaAdaptersFor(direction: 'import' | 'export'): readonly BuilderSchemaAdapter[] {
+    return schemaAdaptersForDirection(this.schemaAdapters(), direction);
+  }
+
+  openSchema(direction: 'import' | 'export', adapterId: string): void {
+    if (direction === 'export' && !this.canExport()) return;
+    const adapter = this.schemaAdapters().find((item) => item.id === adapterId);
+    if (!adapter) return;
+    if (direction === 'import') {
+      if (!adapter.import) return;
+      void openSchemaImportDialog(
+        this.dialog,
+        adapter,
+        (doc) => {
+          const result = this.store.importDocument(JSON.stringify({ ...doc, renderer: this.store.renderer() }));
+          if (!result.ok) this.notifyError(result.error);
+        },
+        (message) => this.notifyError(message),
+      );
+      return;
+    }
+    openSchemaExportDialog(this.dialog, adapter, this.store.doc(), (message) => this.notifyError(message));
+  }
+
   diagnosticsSummary(): string {
-    const report = this.store.diagnostics();
-    if (report.errorCount === 0 && report.warningCount === 0) return 'No issues';
-    return `${report.errorCount} errors, ${report.warningCount} warnings`;
+    return formatDiagnosticsSummary(this.store.diagnostics());
   }
 
   canCopyOrDuplicate(): boolean {
@@ -309,7 +315,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
 
   async clear(): Promise<void> {
     if (this.readOnly) return;
-    if (await this.confirmAction('Clear the builder?', 'Clear builder', 'Clear')) {
+    if (await openConfirmDialog(this.dialog, 'Clear the builder?', 'Clear builder', 'Clear')) {
       this.store.clear();
     }
   }
@@ -317,7 +323,8 @@ export class BuilderPageComponent implements OnInit, OnChanges {
   async applyPresetById(id: string): Promise<void> {
     if (this.readOnly) return;
     const preset = this.store.presets.find((p) => p.id === id);
-    const confirmed = await this.confirmAction(
+    const confirmed = await openConfirmDialog(
+      this.dialog,
       `Apply "${preset?.title ?? id}" layout? Current canvas will be replaced.`,
       'Apply starter layout',
       'Apply',
@@ -340,19 +347,6 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       horizontalPosition: 'right',
       verticalPosition: 'top',
     });
-  }
-
-  private async confirmAction(message: string, title: string, confirmText: string): Promise<boolean> {
-    const out = await firstValueFrom(
-      this.dialog
-        .open(ConfirmDialogComponent, {
-          width: '420px',
-          maxWidth: '95vw',
-          data: { title, message, confirmText, cancelText: 'Cancel' },
-        })
-        .afterClosed(),
-    );
-    return !!out;
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -387,6 +381,7 @@ export class BuilderPageComponent implements OnInit, OnChanges {
       plugins: this.plugins,
       palette: mergePaletteById(basePalette, this.templates.toPaletteItems()),
     });
+    this.schemaAdapters.set(composeSchemaAdapters(CORE_SCHEMA_ADAPTERS, this.plugins));
   }
 
   private applyExternalConfig(config: BuilderDocument): void {

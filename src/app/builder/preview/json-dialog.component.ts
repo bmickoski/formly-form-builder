@@ -19,13 +19,20 @@ export class JsonDialogComponent {
       | 'exportFormly'
       | 'exportBuilder'
       | 'exportJsonSchema'
+      | 'exportSchema'
       | 'exportTemplates'
       | 'import'
       | 'importFormly'
+      | 'importSchema'
       | 'importPalette'
       | 'importTemplates';
     json: string;
     schemaVersion?: number;
+    title?: string;
+    hint?: string;
+    fileName?: string;
+    primaryActionLabel?: string;
+    copyEnabled?: boolean;
   };
 
   readonly json = signal(this.data.json ?? '');
@@ -53,15 +60,19 @@ export class JsonDialogComponent {
   }
 
   private fileName(): string {
+    if (this.data.fileName) return this.data.fileName;
     switch (this.data.mode) {
       case 'exportFormly':
         return 'formly-export.json';
       case 'exportBuilder':
         return `builder-export.v${this.data.schemaVersion ?? 'x'}.json`;
       case 'exportJsonSchema':
+      case 'exportSchema':
         return 'json-schema-export.json';
       case 'importFormly':
         return 'formly-import.json';
+      case 'importSchema':
+        return 'schema-import.json';
       case 'importPalette':
         return 'palette-import.json';
       case 'exportTemplates':

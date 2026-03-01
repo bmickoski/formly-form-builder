@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.fb-option-list {
+  display: grid;
+  gap: 12px;
+  min-width: min(560px, 85vw);
+}
+
+.fb-option {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 14px 16px;
+  min-height: 0;
+}
+
+.fb-option-active {
+  border-color: var(--mat-sys-primary, #673ab7);
+  background: color-mix(in srgb, var(--mat-sys-primary, #673ab7) 8%, transparent);
+}
+
+.fb-option-label,
+.fb-option-description {
+  display: block;
+}
+
+.fb-option-description {
+  margin-top: 4px;
+  opacity: 0.72;
+  font-size: 0.92rem;
+}

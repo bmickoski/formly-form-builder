@@ -7,9 +7,12 @@ import { BuilderPageComponent, type BuilderAutosaveError } from '../src/app/buil
 import type { BuilderDiagnosticsReport } from '../src/app/builder-core/diagnostics';
 import type { BuilderDocument } from '../src/app/builder-core/model';
 import { BUILDER_PLUGINS, type BuilderPlugin } from '../src/app/builder-core/plugins';
+import { builderToFormly } from '../src/app/builder-core/adapter';
+import { formlyToBuilder } from '../src/app/builder-core/formly-import';
+import type { BuilderSchemaAdapter } from '../src/app/builder-core/schema-adapter';
 
 @Component({
-  selector: 'storybook-crm-tier-type',
+  selector: 'app-storybook-crm-tier-type',
   standalone: true,
   template: `
     <div style="border:1px dashed #0b5ed7;border-radius:8px;padding:8px 10px;font-size:12px;background:#e7f1ff;">
@@ -20,7 +23,7 @@ import { BUILDER_PLUGINS, type BuilderPlugin } from '../src/app/builder-core/plu
 class StorybookCrmTierTypeComponent extends FieldType {}
 
 @Component({
-  selector: 'storybook-builder-banner-host',
+  selector: 'app-storybook-builder-banner-host',
   standalone: true,
   imports: [BuilderPageComponent],
   template: `
@@ -48,7 +51,7 @@ class BuilderBannerHostComponent {
 }
 
 @Component({
-  selector: 'storybook-builder-plugin-token-host',
+  selector: 'app-storybook-builder-plugin-token-host',
   standalone: true,
   imports: [BuilderPageComponent],
   template: `
@@ -239,6 +242,89 @@ export const ReadOnly: Story = {
     config: createSeedDocument('bootstrap'),
     readOnly: true,
     plugins: [],
+    onConfigChange: undefined,
+    onDiagnosticsChange: undefined,
+    onAutosaveError: undefined,
+  },
+};
+
+// ── Custom schema adapter ─────────────────────────────────────────────────────
+
+/**
+ * A fictional "My API Format" adapter that wraps the Formly JSON inside a
+ * versioned envelope. Demonstrates how a plugin author implements
+ * BuilderSchemaAdapter to add their own import/export format to the File menu.
+ */
+const MY_API_SCHEMA_ADAPTER: BuilderSchemaAdapter = {
+  id: 'my-api',
+  label: 'My API Format',
+  export: (doc) => ({
+    version: '1.0',
+    form: { fields: builderToFormly(doc) },
+  }),
+  import: (source: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fields = (source as any)?.form?.fields ?? [];
+    return formlyToBuilder(fields, 'bootstrap');
+  },
+};
+
+const SCHEMA_ADAPTER_PLUGIN: BuilderPlugin = {
+  id: 'storybook-schema-adapter-plugin',
+  schemaAdapters: [MY_API_SCHEMA_ADAPTER],
+};
+
+function createSchemaAdapterSeedDocument(): BuilderDocument {
+  return {
+    schemaVersion: 2,
+    rootId: 'root',
+    selectedId: null,
+    renderer: 'bootstrap',
+    nodes: {
+      root: {
+        id: 'root',
+        type: 'panel',
+        parentId: null,
+        children: ['f-name', 'f-email', 'f-message'],
+        props: { title: 'Contact Form' },
+      },
+      'f-name': {
+        id: 'f-name',
+        type: 'field',
+        parentId: 'root',
+        children: [],
+        fieldKind: 'input',
+        props: { key: 'name', label: 'Full Name' },
+        validators: { required: true },
+      },
+      'f-email': {
+        id: 'f-email',
+        type: 'field',
+        parentId: 'root',
+        children: [],
+        fieldKind: 'email',
+        props: { key: 'email', label: 'Email' },
+        validators: { required: true },
+      },
+      'f-message': {
+        id: 'f-message',
+        type: 'field',
+        parentId: 'root',
+        children: [],
+        fieldKind: 'textarea',
+        props: { key: 'message', label: 'Message' },
+        validators: {},
+      },
+    },
+  };
+}
+
+export const CustomSchemaAdapterPlugin: Story = {
+  args: {
+    banner:
+      'Plugin registers a custom "My API Format" schema adapter. Open File → "Export as schema…" or "Import from schema…" — you will see JSON Schema, OpenAPI and My API Format listed together.',
+    config: createSchemaAdapterSeedDocument(),
+    plugins: [SCHEMA_ADAPTER_PLUGIN],
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,
     onAutosaveError: undefined,

@@ -10,6 +10,7 @@ export * from './model';
 export * from './palette-config';
 export * from './plugins';
 export * from './registry';
+export * from './schema-adapter';
 export * from './schema';
 export * from './store';
 export * from './validation-presets';
