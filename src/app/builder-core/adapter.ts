@@ -266,6 +266,14 @@ function containerLabel(container: ContainerNode, fallback: string): string {
   return container.props.title ?? container.props.label ?? fallback;
 }
 
+function containerVisibilityExpressions(container: ContainerNode): Record<string, string> | undefined {
+  const visibleExpr =
+    normalizedAdvancedExpression(container.props.visibleExpression) ??
+    (container.props.visibleRule ? ruleConditionExpression(container.props.visibleRule) : null);
+  if (!visibleExpr) return undefined;
+  return { hide: `!(${visibleExpr})` };
+}
+
 function formlyValidators(node: FieldNode): FormlyFieldConfig['validators'] | undefined {
   const validation: string[] = [];
   if (node.validators.email) validation.push(VALIDATOR_EMAIL);
@@ -315,6 +323,7 @@ function containerNodeToFormly(
     const child = doc.nodes[childId];
     return child ? nodeToFormly(doc, child, visited) : [];
   });
+  const visibilityExpressions = containerVisibilityExpressions(container);
 
   if (container.type === 'panel') {
     return [
@@ -324,13 +333,22 @@ function containerNodeToFormly(
           label: container.props.title ?? container.props.label ?? 'Panel',
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
+        ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
     ];
   }
 
   if (container.type === 'row') {
-    return [{ fieldGroup: childrenFields, fieldGroupClassName: rowClass(doc.renderer) }];
+    return [
+      {
+        hide: !!container.props.hidden,
+        fieldGroup: childrenFields,
+        fieldGroupClassName: rowClass(doc.renderer),
+        ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
+      },
+    ];
   }
 
   if (container.type === 'tabs') {
@@ -341,7 +359,9 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Tabs'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
+        ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
     ];
   }
@@ -354,7 +374,9 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Stepper'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
+        ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
     ];
   }
@@ -367,13 +389,22 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Accordion'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
+        ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
     ];
   }
 
   const span = Math.max(1, Math.min(12, container.props.colSpan ?? 12));
-  return [{ fieldGroup: childrenFields, className: colClass(doc.renderer, span) }];
+  return [
+    {
+      hide: !!container.props.hidden,
+      fieldGroup: childrenFields,
+      className: colClass(doc.renderer, span),
+      ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
+    },
+  ];
 }
 
 function nodeToFormly(doc: BuilderDocument, node: BuilderNode, visited: Set<string>): FormlyFieldConfig[] {

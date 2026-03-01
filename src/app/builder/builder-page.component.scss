@@ -23,6 +23,18 @@
   }
 }
 
+.fb-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid #c7cbe0;
+  border-radius: 999px;
+  background: #f6f7fb;
+  color: #545b7a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .fb-diagnostics {
   margin: 8px 12px 0;
   padding: 10px 12px;

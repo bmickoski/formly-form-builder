@@ -86,4 +86,24 @@ describe('BuilderInspectorComponent', () => {
     const updated = store.nodes()[field.id] as FieldNode;
     expect(updated.props.step).toBe(0.25);
   });
+
+  it('shows visible rules for layout containers and persists container expressions', () => {
+    store.addFromPalette('panel', { containerId: store.rootId(), index: 0 });
+    const panel = store.selectedNode() as ContainerNode;
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Display rules');
+    expect(text).toContain('Visible when');
+    expect(text).not.toContain('Enabled when');
+
+    component.initRule('visibleRule');
+    component.setRuleExpression('visibleExpression', 'model?.showDetails === true');
+    fixture.detectChanges();
+
+    const updatedPanel = store.nodes()[panel.id] as ContainerNode;
+    expect(updatedPanel.props.visibleRule).toEqual({ dependsOnKey: '', operator: 'truthy' });
+    expect(updatedPanel.props.visibleExpression).toBe('model?.showDetails === true');
+  });
 });

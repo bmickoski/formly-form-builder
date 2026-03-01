@@ -26,6 +26,7 @@ export class NodeRendererComponent {
   readonly store = inject(BuilderStore);
 
   @Input({ required: true }) nodeId!: string;
+  @Input() readonlyMode = false;
 
   constructor() {
     if (!_pointerListenerInstalled) {
@@ -128,6 +129,7 @@ export class NodeRendererComponent {
   };
 
   onDrop(event: CdkDragDrop<string[]>): void {
+    if (this.readonlyMode) return;
     const containerId = this.nodeId;
     const index = event.currentIndex;
     const data = event.item.data as DragData | undefined;
@@ -155,6 +157,7 @@ export class NodeRendererComponent {
   }
 
   onAppendDrop(event: CdkDragDrop<string[]>): void {
+    if (this.readonlyMode) return;
     const containerId = this.nodeId;
     const data = event.item.data as DragData | undefined;
     if (!data) return;

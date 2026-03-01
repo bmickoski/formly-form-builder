@@ -29,6 +29,7 @@ class StorybookCrmTierTypeComponent extends FieldType {}
       <formly-builder
         [config]="config"
         [plugins]="plugins"
+        [readOnly]="readOnly"
         (configChange)="onConfigChange($event)"
         (diagnosticsChange)="onDiagnosticsChange($event)"
         (autosaveError)="onAutosaveError($event)"
@@ -40,6 +41,7 @@ class BuilderBannerHostComponent {
   @Input() banner = '';
   @Input() config: BuilderDocument | null = null;
   @Input() plugins: readonly BuilderPlugin[] = [];
+  @Input() readOnly = false;
   @Input() onConfigChange: (doc: BuilderDocument) => void = () => {};
   @Input() onDiagnosticsChange: (report: BuilderDiagnosticsReport) => void = () => {};
   @Input() onAutosaveError: (event: BuilderAutosaveError) => void = () => {};
@@ -57,6 +59,7 @@ class BuilderBannerHostComponent {
       <formly-builder
         [config]="config"
         [plugins]="plugins"
+        [readOnly]="readOnly"
         (configChange)="onConfigChange($event)"
         (diagnosticsChange)="onDiagnosticsChange($event)"
         (autosaveError)="onAutosaveError($event)"
@@ -67,6 +70,7 @@ class BuilderBannerHostComponent {
 class PluginTokenHostComponent {
   readonly plugins = inject(BUILDER_PLUGINS);
   @Input() config: BuilderDocument | null = null;
+  @Input() readOnly = false;
   @Input() onConfigChange: (doc: BuilderDocument) => void = () => {};
   @Input() onDiagnosticsChange: (report: BuilderDiagnosticsReport) => void = () => {};
   @Input() onAutosaveError: (event: BuilderAutosaveError) => void = () => {};
@@ -229,10 +233,11 @@ export const MaterialRenderer: Story = {
   },
 };
 
-export const ReadOnlyNotSupportedYet: Story = {
+export const ReadOnly: Story = {
   args: {
-    banner: 'Read-only mode is not yet supported as a first-class input. This story documents current limitation.',
+    banner: 'Read-only mode hides editing controls and disables drag/drop and mutating actions.',
     config: createSeedDocument('bootstrap'),
+    readOnly: true,
     plugins: [],
     onConfigChange: undefined,
     onDiagnosticsChange: undefined,

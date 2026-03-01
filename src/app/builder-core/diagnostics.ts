@@ -1,4 +1,4 @@
-import { BuilderDocument, FieldNode, RuleOperator, isFieldNode } from './model';
+import { BuilderDocument, BuilderNode, FieldNode, RuleOperator, isFieldNode } from './model';
 import { validateCustomExpressionProgram, validatePredicateExpression } from './expression-evaluator';
 
 export type DiagnosticSeverity = 'error' | 'warning';
@@ -29,13 +29,14 @@ export function buildDiagnostics(
   options: BuildDiagnosticsOptions = {},
 ): BuilderDiagnosticsReport {
   const diagnostics: BuilderDiagnostic[] = [];
+  const nodes = Object.values(doc.nodes).filter((node): node is BuilderNode => node.id !== doc.rootId);
   const fields = Object.values(doc.nodes).filter((node): node is FieldNode => isFieldNode(node));
   const fieldsByKey = indexFieldsByKey(fields);
 
   diagnostics.push(...missingKeyDiagnostics(fields));
   diagnostics.push(...duplicateKeyDiagnostics(fieldsByKey));
-  diagnostics.push(...ruleDiagnostics(fields, fieldsByKey));
-  diagnostics.push(...expressionDiagnostics(fields));
+  diagnostics.push(...ruleDiagnostics(nodes, fieldsByKey));
+  diagnostics.push(...expressionDiagnostics(nodes));
   diagnostics.push(...validatorPresetDiagnostics(fields, options.knownValidatorPresetIds));
 
   return {
@@ -112,19 +113,26 @@ function duplicateKeyDiagnostics(fieldsByKey: Map<string, FieldNode[]>): Builder
   return diagnostics;
 }
 
-function ruleDiagnostics(fields: FieldNode[], fieldsByKey: Map<string, FieldNode[]>): BuilderDiagnostic[] {
+function ruleDiagnostics(nodes: BuilderNode[], fieldsByKey: Map<string, FieldNode[]>): BuilderDiagnostic[] {
   const diagnostics: BuilderDiagnostic[] = [];
-  for (const field of fields) {
-    const ownKey = normalizedKey(field);
-    for (const target of ['visibleRule', 'enabledRule'] as const) {
-      const rule = field.props[target];
+  for (const node of nodes) {
+    const ownKey = isFieldNode(node) ? normalizedKey(node) : '';
+    const targets = isFieldNode(node) ? (['visibleRule', 'enabledRule'] as const) : (['visibleRule'] as const);
+    const props = node.props as Partial<
+      Record<
+        'visibleRule' | 'enabledRule',
+        { dependsOnKey: string; operator: RuleOperator; value?: string } | undefined
+      >
+    >;
+    for (const target of targets) {
+      const rule = props[target];
       if (!rule) continue;
       const dependsOnKey = (rule.dependsOnKey ?? '').trim();
       if (!dependsOnKey) {
         diagnostics.push({
           severity: 'warning',
           code: 'rule-missing-key',
-          nodeId: field.id,
+          nodeId: node.id,
           message: `${target} is configured without "dependsOnKey".`,
         });
       } else {
@@ -132,7 +140,7 @@ function ruleDiagnostics(fields: FieldNode[], fieldsByKey: Map<string, FieldNode
           diagnostics.push({
             severity: 'error',
             code: 'rule-missing-reference',
-            nodeId: field.id,
+            nodeId: node.id,
             message: `${target} depends on missing key "${dependsOnKey}".`,
           });
         }
@@ -140,7 +148,7 @@ function ruleDiagnostics(fields: FieldNode[], fieldsByKey: Map<string, FieldNode
           diagnostics.push({
             severity: 'warning',
             code: 'rule-self-reference',
-            nodeId: field.id,
+            nodeId: node.id,
             message: `${target} references the same field key "${dependsOnKey}".`,
           });
         }
@@ -150,7 +158,7 @@ function ruleDiagnostics(fields: FieldNode[], fieldsByKey: Map<string, FieldNode
         diagnostics.push({
           severity: 'warning',
           code: 'rule-missing-value',
-          nodeId: field.id,
+          nodeId: node.id,
           message: `${target} uses operator "${rule.operator}" but has an empty value.`,
         });
       }
@@ -159,24 +167,28 @@ function ruleDiagnostics(fields: FieldNode[], fieldsByKey: Map<string, FieldNode
   return diagnostics;
 }
 
-function expressionDiagnostics(fields: FieldNode[]): BuilderDiagnostic[] {
+function expressionDiagnostics(nodes: BuilderNode[]): BuilderDiagnostic[] {
   const diagnostics: BuilderDiagnostic[] = [];
-  for (const field of fields) {
-    diagnostics.push(...validateRuleExpression(field, 'visibleExpression'));
-    diagnostics.push(...validateRuleExpression(field, 'enabledExpression'));
-    diagnostics.push(...validateCustomValidationExpression(field));
+  for (const node of nodes) {
+    diagnostics.push(...validateRuleExpression(node, 'visibleExpression'));
+    if (isFieldNode(node)) {
+      diagnostics.push(...validateRuleExpression(node, 'enabledExpression'));
+      diagnostics.push(...validateCustomValidationExpression(node));
+    }
   }
   return diagnostics;
 }
 
 function validateRuleExpression(
-  field: FieldNode,
+  node: BuilderNode,
   target: 'visibleExpression' | 'enabledExpression',
 ): BuilderDiagnostic[] {
-  const expression = (field.props[target] ?? '').trim();
+  const expression = (
+    (node.props as Partial<Record<'visibleExpression' | 'enabledExpression', string | undefined>>)[target] ?? ''
+  ).trim();
   if (!expression) return [];
   return validateExpression(expression, {
-    nodeId: field.id,
+    nodeId: node.id,
     label: target,
     maxLength: 500,
     compile: validatePredicateExpression,

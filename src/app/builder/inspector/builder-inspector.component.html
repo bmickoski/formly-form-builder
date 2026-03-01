@@ -110,7 +110,7 @@
             >Disabled</mat-slide-toggle
           >
 
-          @if (isField()) {
+          @if (supportsVisibleRules()) {
             <mat-divider class="fb-inspector-divider"></mat-divider>
             <div class="fb-section-title">Display rules</div>
 
@@ -225,7 +225,9 @@
             <div class="fb-hint fb-hint-margin-bottom">
               Example: <code>{{ ruleExpressionExample('visibleExpression') }}</code>
             </div>
+          }
 
+          @if (isField()) {
             <div class="fb-inline-row fb-inline-row-space-between fb-inline-row-align-center fb-enabled-row">
               <div class="fb-subsection-title">Enabled when</div>
               @if (!rule('enabledRule')) {

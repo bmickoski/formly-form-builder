@@ -1,10 +1,11 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ContainerNode } from '../model';
-import { fieldPropsOf, getFieldGroup } from './shared';
+import { ConditionalRule, ContainerNode, RuleOperator } from '../model';
+import { fieldPropsOf, getFieldGroup, isRecord, toStringOrUndefined } from './shared';
 import { FORMLY_TYPE_ACCORDION, FORMLY_TYPE_STEPPER, FORMLY_TYPE_TABS, FORMLY_WRAPPER_PANEL } from '../constants';
 
 const ROW_REGEX = /\b(?:fb-row|row)\b/;
 const COL_REGEX = /\b(?:fb-col|col-(?:xs-|sm-|md-|lg-|xl-|xxl-)?\d{1,2}|col-\d{1,2})\b/;
+const RULE_OPERATORS = new Set<RuleOperator>(['truthy', 'falsy', 'eq', 'ne', 'contains', 'gt', 'lt']);
 
 export type LayoutImportKind =
   | 'panel-wrapper'
@@ -54,6 +55,41 @@ export function getPanelDescription(field: FormlyFieldConfig): string | undefine
   return value == null ? undefined : String(value);
 }
 
+export function getContainerHidden(field: FormlyFieldConfig): boolean {
+  return Boolean(field.hide);
+}
+
 export function createContainerNode(type: ContainerNode['type'], id: string, parentId: string | null): ContainerNode {
   return { id, type, parentId, children: [], props: {} };
+}
+
+export function getContainerVisibleRule(field: FormlyFieldConfig): ConditionalRule | undefined {
+  const rule = toConditionalRule(fieldPropsOf(field)['visibleRule']);
+  return rule ?? undefined;
+}
+
+export function getContainerVisibleExpression(field: FormlyFieldConfig): string | undefined {
+  const props = fieldPropsOf(field);
+  const expressionFromProps = toStringOrUndefined(props['visibleExpression']);
+  if (expressionFromProps?.trim()) return expressionFromProps;
+
+  const expressions = isRecord(field.expressions) ? field.expressions : null;
+  const hide = toStringOrUndefined(expressions?.['hide']);
+  if (!hide?.trim()) return undefined;
+
+  const match = hide.trim().match(/^!\((.+)\)$/);
+  return match?.[1]?.trim() ?? undefined;
+}
+
+function toConditionalRule(value: unknown): ConditionalRule | null {
+  if (!isRecord(value)) return null;
+  const dependsOnKey = toStringOrUndefined(value['dependsOnKey'])?.trim();
+  const operatorRaw = toStringOrUndefined(value['operator']);
+  if (!dependsOnKey || !operatorRaw || !RULE_OPERATORS.has(operatorRaw as RuleOperator)) return null;
+
+  return {
+    dependsOnKey,
+    operator: operatorRaw as RuleOperator,
+    value: toStringOrUndefined(value['value']),
+  };
 }

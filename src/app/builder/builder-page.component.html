@@ -6,6 +6,10 @@
       Preview
     </button>
 
+    @if (readOnly) {
+      <span class="fb-readonly-badge">Read-only</span>
+    }
+
     <div class="fb-toolbar-divider"></div>
 
     <!-- File menu -->
@@ -16,17 +20,19 @@
       <button mat-menu-item (click)="openExport()"><mat-icon>download</mat-icon> Export Formly JSON</button>
       <button mat-menu-item (click)="openExportBuilder()"><mat-icon>dataset</mat-icon> Export Builder JSON</button>
       <button mat-menu-item (click)="openExportJsonSchema()"><mat-icon>schema</mat-icon> Export JSON Schema</button>
-      <mat-divider />
-      <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
-      <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
-      <mat-divider />
-      <button mat-menu-item class="fb-menu-item-danger" (click)="clear()">
-        <mat-icon>delete</mat-icon> Clear canvas
-      </button>
+      @if (!readOnly) {
+        <mat-divider />
+        <button mat-menu-item (click)="openImport()"><mat-icon>upload</mat-icon> Import Builder JSON</button>
+        <button mat-menu-item (click)="openImportFormly()"><mat-icon>transform</mat-icon> Import Formly JSON</button>
+        <mat-divider />
+        <button mat-menu-item class="fb-menu-item-danger" (click)="clear()">
+          <mat-icon>delete</mat-icon> Clear canvas
+        </button>
+      }
     </mat-menu>
 
     <!-- Templates menu -->
-    <button mat-button [matMenuTriggerFor]="templatesMenu">
+    <button mat-button [matMenuTriggerFor]="templatesMenu" [disabled]="readOnly">
       <mat-icon>collections_bookmark</mat-icon> Templates <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #templatesMenu="matMenu">
@@ -39,7 +45,7 @@
     </mat-menu>
 
     <!-- Palette menu -->
-    <button mat-button [matMenuTriggerFor]="paletteMenu">
+    <button mat-button [matMenuTriggerFor]="paletteMenu" [disabled]="readOnly">
       <mat-icon>palette</mat-icon> Palette <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #paletteMenu="matMenu">
@@ -48,7 +54,7 @@
     </mat-menu>
 
     <!-- Layout menu: starter presets + renderer toggle -->
-    <button mat-button [matMenuTriggerFor]="layoutMenu">
+    <button mat-button [matMenuTriggerFor]="layoutMenu" [disabled]="readOnly">
       <mat-icon>auto_awesome</mat-icon> Layout <mat-icon>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #layoutMenu="matMenu">
@@ -76,7 +82,7 @@
       aria-label="Undo"
       matTooltip="Undo (Ctrl+Z)"
       (click)="store.undo()"
-      [disabled]="!store.canUndo()"
+      [disabled]="readOnly || !store.canUndo()"
     >
       <mat-icon>undo</mat-icon>
     </button>
@@ -85,11 +91,17 @@
       aria-label="Redo"
       matTooltip="Redo (Ctrl+Shift+Z)"
       (click)="store.redo()"
-      [disabled]="!store.canRedo()"
+      [disabled]="readOnly || !store.canRedo()"
     >
       <mat-icon>redo</mat-icon>
     </button>
-    <button mat-icon-button aria-label="History" matTooltip="History" [matMenuTriggerFor]="historyMenu">
+    <button
+      mat-icon-button
+      aria-label="History"
+      matTooltip="History"
+      [matMenuTriggerFor]="historyMenu"
+      [disabled]="readOnly"
+    >
       <mat-icon>history</mat-icon>
     </button>
     <mat-menu #historyMenu="matMenu" class="fb-history-menu">
@@ -104,7 +116,7 @@
       aria-label="Copy selected"
       matTooltip="Copy (Ctrl+C)"
       (click)="store.copySelected()"
-      [disabled]="!canCopyOrDuplicate()"
+      [disabled]="readOnly || !canCopyOrDuplicate()"
     >
       <mat-icon>content_copy</mat-icon> Copy
     </button>
@@ -113,7 +125,7 @@
       aria-label="Duplicate selected"
       matTooltip="Duplicate (Ctrl+D)"
       (click)="store.duplicateSelected()"
-      [disabled]="!canCopyOrDuplicate()"
+      [disabled]="readOnly || !canCopyOrDuplicate()"
     >
       <mat-icon>library_add</mat-icon> Duplicate
     </button>
@@ -122,7 +134,7 @@
       aria-label="Paste"
       matTooltip="Paste (Ctrl+V)"
       (click)="store.pasteFromClipboard()"
-      [disabled]="!store.hasClipboard()"
+      [disabled]="readOnly || !store.hasClipboard()"
     >
       <mat-icon>content_paste</mat-icon> Paste
     </button>
@@ -166,16 +178,20 @@
   }
 
   <div class="fb-workspace">
-    <div class="fb-panel">
-      <app-builder-palette />
-    </div>
+    @if (!readOnly) {
+      <div class="fb-panel">
+        <app-builder-palette [readonlyMode]="readOnly" />
+      </div>
+    }
 
     <div class="fb-canvas">
-      <app-builder-canvas />
+      <app-builder-canvas [readonlyMode]="readOnly" />
     </div>
 
-    <div class="fb-panel right">
-      <app-builder-inspector />
-    </div>
+    @if (!readOnly) {
+      <div class="fb-panel right">
+        <app-builder-inspector />
+      </div>
+    }
   </div>
 </div>
