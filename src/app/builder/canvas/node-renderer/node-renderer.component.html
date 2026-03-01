@@ -9,15 +9,16 @@
       [attr.data-node-id]="nodeId"
       [class.selected]="selected()"
       cdkDrag
+      [cdkDragDisabled]="readonlyMode"
       [cdkDragData]="{ kind: 'node', nodeId: nodeId }"
-      (click)="store.select(nodeId)"
+      (click)="!readonlyMode && store.select(nodeId)"
     >
       <div class="fb-node-meta">
         <div class="fb-node-title">{{ titleFor(n) }}</div>
         <div class="fb-node-sub">{{ subtitleFor(n) }}</div>
       </div>
 
-      @if (selected()) {
+      @if (selected() && !readonlyMode) {
         <div class="fb-node-actions" (click)="$event.stopPropagation()">
           <button mat-icon-button aria-label="Duplicate" matTooltip="Duplicate" (click)="store.duplicateSelected()">
             <mat-icon>library_add</mat-icon>
@@ -36,7 +37,7 @@
     </div>
   }
 
-  @if (isContainer() && !isRoot() && n.type !== 'row') {
+  @if (!readonlyMode && isContainer() && !isRoot() && n.type !== 'row') {
     <div
       class="fb-node-drop-target"
       [class.root]="isRoot()"
@@ -70,6 +71,7 @@
         cdkDropList
         [id]="dropListId()"
         [cdkDropListData]="children()"
+        [cdkDropListDisabled]="readonlyMode"
         [cdkDropListConnectedTo]="connectedDropLists()"
         [cdkDropListEnterPredicate]="canEnter"
         (cdkDropListDropped)="onDrop($event)"
@@ -91,7 +93,7 @@
             [style.flex-basis]="childFlexBasis(cid)"
             [style.max-width]="childFlexBasis(cid)"
           >
-            <app-node-renderer [nodeId]="cid" />
+            <app-node-renderer [nodeId]="cid" [readonlyMode]="readonlyMode" />
           </div>
         }
       </div>
