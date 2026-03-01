@@ -56,7 +56,11 @@ export function updateNodePropsCommand(
   if (isFieldNode(node)) {
     nodes[id] = { ...node, props: { ...node.props, ...(patch as Partial<FieldNode['props']>) } };
   } else {
-    nodes[id] = { ...node, props: { ...node.props, ...(patch as Partial<ContainerNode['props']>) } };
+    const nextProps = { ...node.props, ...(patch as Partial<ContainerNode['props']>) };
+    if (node.type === 'col' && nextProps.colSpan !== undefined) {
+      nextProps.colSpan = clampSpan(Number(nextProps.colSpan));
+    }
+    nodes[id] = { ...node, props: nextProps };
   }
   return { ...doc, nodes };
 }
@@ -432,7 +436,8 @@ function equalSpans(count: number): number[] {
 }
 
 function clampSpan(span: number): number {
-  return Math.max(1, Math.min(12, Math.trunc(span) || 6));
+  if (!Number.isFinite(span)) return 6;
+  return Math.max(1, Math.min(12, Math.trunc(span)));
 }
 
 function clampIndex(index: number, length: number): number {

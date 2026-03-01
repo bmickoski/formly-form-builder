@@ -125,6 +125,7 @@
               }
             </div>
             @if (rule('visibleRule')) {
+              <div class="fb-hint fb-hint-margin-bottom">{{ ruleBuilderHint('visibleRule') }}</div>
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Depends on key</mat-label>
                 <input
@@ -203,7 +204,7 @@
               <textarea
                 matInput
                 rows="3"
-                placeholder="model?.showEmail === true"
+                [placeholder]="ruleExpressionExample('visibleExpression')"
                 [ngModel]="ruleExpression('visibleExpression')"
                 (ngModelChange)="setRuleExpression('visibleExpression', $event)"
               ></textarea>
@@ -221,7 +222,9 @@
             <div class="fb-hint fb-hint-margin-bottom">
               Advanced expression overrides the simple "Visible when" rule when provided.
             </div>
-            <div class="fb-hint fb-hint-margin-bottom">Example: <code>model?.showEmail === true</code></div>
+            <div class="fb-hint fb-hint-margin-bottom">
+              Example: <code>{{ ruleExpressionExample('visibleExpression') }}</code>
+            </div>
 
             <div class="fb-inline-row fb-inline-row-space-between fb-inline-row-align-center fb-enabled-row">
               <div class="fb-subsection-title">Enabled when</div>
@@ -232,6 +235,7 @@
               }
             </div>
             @if (rule('enabledRule')) {
+              <div class="fb-hint fb-hint-margin-bottom">{{ ruleBuilderHint('enabledRule') }}</div>
               <mat-form-field appearance="outline" class="fb-field">
                 <mat-label>Depends on key</mat-label>
                 <input
@@ -310,7 +314,7 @@
               <textarea
                 matInput
                 rows="3"
-                placeholder="model?.canEdit === true"
+                [placeholder]="ruleExpressionExample('enabledExpression')"
                 [ngModel]="ruleExpression('enabledExpression')"
                 (ngModelChange)="setRuleExpression('enabledExpression', $event)"
               ></textarea>
@@ -328,7 +332,9 @@
             <div class="fb-hint fb-hint-margin-bottom">
               Advanced expression overrides the simple "Enabled when" rule when provided.
             </div>
-            <div class="fb-hint fb-hint-margin-bottom">Example: <code>model?.canEdit === true</code></div>
+            <div class="fb-hint fb-hint-margin-bottom">
+              Example: <code>{{ ruleExpressionExample('enabledExpression') }}</code>
+            </div>
           }
 
           @if (isCol()) {
@@ -339,10 +345,39 @@
               <input
                 matInput
                 type="number"
+                min="1"
+                max="12"
                 [ngModel]="c?.props?.colSpan"
                 (ngModelChange)="setProp('colSpan', +$event)"
               />
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                tabindex="-1"
+                class="fb-help-icon"
+                [matTooltip]="helpText('colSpan')"
+              >
+                <mat-icon>help_outline</mat-icon>
+              </button>
             </mat-form-field>
+            <div class="fb-subsection-title fb-subsection-title-margin-bottom">Quick widths</div>
+            <div class="fb-inline-row fb-inline-row-gap-sm fb-inline-row-wrap">
+              @for (span of colSpanPresets; track span) {
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="fb-span-preset"
+                  [class.fb-span-preset-active]="c?.props?.colSpan === span"
+                  (click)="setSelectedColumnSpan(span)"
+                >
+                  {{ span }}/12
+                </button>
+              }
+            </div>
+            <div class="fb-hint fb-hint-margin-top">
+              Use presets for common widths, then fine-tune with the numeric input.
+            </div>
 
             <div class="fb-inline-row fb-inline-row-gap-sm fb-inline-row-margin-top-sm">
               <button mat-stroked-button type="button" (click)="splitSelectedColumn(2)">Split x2</button>
