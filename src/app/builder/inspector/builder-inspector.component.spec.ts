@@ -69,4 +69,21 @@ describe('BuilderInspectorComponent', () => {
     expect(updatedField.props.visibleExpression).toBe("model?.showDetails === true && value !== 'hidden'");
     expect(updatedField.props.enabledExpression).toBe("model?.canEdit === true && model?.status !== 'locked'");
   });
+
+  it('shows step control for number fields and persists the value', () => {
+    store.addFromPalette('number', { containerId: store.rootId(), index: 0 });
+    const field = store.selectedNode() as FieldNode;
+    component.onSelectedTabChange(1);
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Step');
+
+    component.setProp('step', 0.25);
+    fixture.detectChanges();
+
+    const updated = store.nodes()[field.id] as FieldNode;
+    expect(updated.props.step).toBe(0.25);
+  });
 });

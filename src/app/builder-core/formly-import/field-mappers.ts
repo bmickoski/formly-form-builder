@@ -99,6 +99,9 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
 
   if (field.defaultValue !== undefined) mapped.defaultValue = field.defaultValue;
 
+  const step = toNumberOrUndefined(props['step']);
+  if (step !== undefined) mapped.step = step;
+
   return mapped;
 }
 

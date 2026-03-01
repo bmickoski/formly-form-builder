@@ -50,6 +50,7 @@ interface FormlyFieldProps {
   type?: string;
   min?: number;
   max?: number;
+  step?: number;
   minLength?: number;
   maxLength?: number;
   pattern?: string;
@@ -133,6 +134,7 @@ function applyTypeProps(node: FieldNode, props: FormlyFieldProps): void {
       break;
     case 'number':
       props.type = 'number';
+      if (node.props.step != null) props.step = node.props.step;
       break;
     case 'email':
       props.type = 'email';

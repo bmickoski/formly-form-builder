@@ -140,6 +140,30 @@ describe('builder/formly adapters: layout + dynamic options', () => {
   });
 });
 
+describe('builder/formly adapters: number field step', () => {
+  it('round-trips number step through Formly props', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('number', { containerId: store.rootId(), index: 0 });
+    const numberId = store.selectedId() as string;
+    store.updateNodeProps(numberId, { step: 0.5, min: 1, max: 10 });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.props?.['type']).toBe('number');
+    expect(first.props?.['step']).toBe(0.5);
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('field');
+    if (node.type !== 'field') return;
+    expect(node.fieldKind).toBe('number');
+    expect(node.props.step).toBe(0.5);
+  });
+});
+
 describe('builder/formly adapters: rules + async validators', () => {
   it('prefers advanced expressions over simple rules', () => {
     const store = new BuilderStore();

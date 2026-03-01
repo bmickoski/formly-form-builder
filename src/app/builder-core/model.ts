@@ -83,6 +83,7 @@ export interface CommonProps {
 export interface FieldProps extends CommonProps {
   key?: string;
   defaultValue?: unknown;
+  step?: number | null;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
   multiple?: boolean;
