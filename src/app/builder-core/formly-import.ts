@@ -9,6 +9,8 @@ import {
   getColSpan,
   getPanelDescription,
   getPanelTitle,
+  getContainerVisibleExpression,
+  getContainerVisibleRule,
 } from './formly-import/layout-mappers';
 import { getFieldGroup } from './formly-import/shared';
 
@@ -45,13 +47,13 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       const panel = createContainerNode('panel', uid('c'), parentId);
       panel.props.title = getPanelTitle(field, 'Panel');
       panel.props.description = getPanelDescription(field);
-      attachContainer(doc, parentId, panel.id, panel);
+      attachContainer(doc, parentId, panel.id, panel, field);
       importGroup(doc, panel.id, getFieldGroup(field));
       return;
     }
     case 'row': {
       const row = createContainerNode('row', uid('c'), parentId);
-      attachContainer(doc, parentId, row.id, row);
+      attachContainer(doc, parentId, row.id, row, field);
       importGroup(doc, row.id, getFieldGroup(field));
       return;
     }
@@ -59,7 +61,7 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       const tabs = createContainerNode('tabs', uid('c'), parentId);
       tabs.props.title = getPanelTitle(field, 'Tabs');
       tabs.props.description = getPanelDescription(field);
-      attachContainer(doc, parentId, tabs.id, tabs);
+      attachContainer(doc, parentId, tabs.id, tabs, field);
       importGroup(doc, tabs.id, getFieldGroup(field));
       return;
     }
@@ -67,7 +69,7 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       const stepper = createContainerNode('stepper', uid('c'), parentId);
       stepper.props.title = getPanelTitle(field, 'Stepper');
       stepper.props.description = getPanelDescription(field);
-      attachContainer(doc, parentId, stepper.id, stepper);
+      attachContainer(doc, parentId, stepper.id, stepper, field);
       importGroup(doc, stepper.id, getFieldGroup(field));
       return;
     }
@@ -75,7 +77,7 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       const accordion = createContainerNode('accordion', uid('c'), parentId);
       accordion.props.title = getPanelTitle(field, 'Accordion');
       accordion.props.description = getPanelDescription(field);
-      attachContainer(doc, parentId, accordion.id, accordion);
+      attachContainer(doc, parentId, accordion.id, accordion, field);
       importGroup(doc, accordion.id, getFieldGroup(field));
       return;
     }
@@ -83,20 +85,20 @@ function importOne(doc: BuilderDocument, parentId: string, field: FormlyFieldCon
       const col = createContainerNode('col', uid('c'), parentId);
       const span = getColSpan(field.className ?? undefined);
       col.props.colSpan = span ?? 6;
-      attachContainer(doc, parentId, col.id, col);
+      attachContainer(doc, parentId, col.id, col, field);
       importGroup(doc, col.id, getFieldGroup(field));
       return;
     }
     case 'anonymous-group': {
       const row = createContainerNode('row', uid('c'), parentId);
-      attachContainer(doc, parentId, row.id, row);
+      attachContainer(doc, parentId, row.id, row, field);
       importGroup(doc, row.id, getFieldGroup(field));
       return;
     }
     case 'panel-group': {
       const panel = createContainerNode('panel', uid('c'), parentId);
       panel.props.title = getPanelTitle(field, 'Group');
-      attachContainer(doc, parentId, panel.id, panel);
+      attachContainer(doc, parentId, panel.id, panel, field);
       importGroup(doc, panel.id, getFieldGroup(field));
       return;
     }
@@ -115,7 +117,17 @@ function importGroup(doc: BuilderDocument, parentId: string, fields: FormlyField
   }
 }
 
-function attachContainer(doc: BuilderDocument, parentId: string, id: string, container: ContainerNode): void {
+function attachContainer(
+  doc: BuilderDocument,
+  parentId: string,
+  id: string,
+  container: ContainerNode,
+  field: FormlyFieldConfig,
+): void {
+  const visibleRule = getContainerVisibleRule(field);
+  const visibleExpression = getContainerVisibleExpression(field);
+  if (visibleRule) container.props.visibleRule = visibleRule;
+  if (visibleExpression) container.props.visibleExpression = visibleExpression;
   doc.nodes[id] = container;
   doc.nodes[parentId].children.push(id);
 }

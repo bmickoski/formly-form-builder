@@ -86,4 +86,41 @@ describe('buildDiagnostics', () => {
 
     expect(report.diagnostics.some((item) => item.code === 'validator-preset-missing')).toBeTrue();
   });
+
+  it('reports missing dependency keys and unsafe expressions on containers', () => {
+    const status = field('f1', 'status');
+    const section: ContainerNode = {
+      id: 'c1',
+      type: 'panel',
+      parentId: 'root',
+      children: [],
+      props: {
+        title: 'Details',
+        visibleRule: { dependsOnKey: 'missing_key', operator: 'truthy' },
+        visibleExpression: 'window.alert(1)',
+      },
+    };
+    const root: ContainerNode = {
+      id: 'root',
+      type: 'panel',
+      parentId: null,
+      children: [status.id, section.id],
+      props: { title: 'Form' },
+    };
+    const doc: BuilderDocument = {
+      schemaVersion: CURRENT_BUILDER_SCHEMA_VERSION,
+      rootId: 'root',
+      nodes: { root, [status.id]: status, [section.id]: section },
+      selectedId: null,
+      renderer: 'bootstrap',
+    };
+
+    const report = buildDiagnostics(doc);
+    expect(
+      report.diagnostics.some((item) => item.nodeId === 'c1' && item.code === 'rule-missing-reference'),
+    ).toBeTrue();
+    expect(
+      report.diagnostics.some((item) => item.nodeId === 'c1' && item.code === 'expression-unsafe-token'),
+    ).toBeTrue();
+  });
 });

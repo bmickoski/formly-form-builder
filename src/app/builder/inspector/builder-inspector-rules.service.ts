@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
 import { BuilderStore } from '../../builder-core/store';
-import { ConditionalRule, FieldNode, isFieldNode } from '../../builder-core/model';
+import { BuilderNode, ConditionalRule, isFieldNode } from '../../builder-core/model';
 import { DependencyKeyOption, RuleExpressionTarget, RuleTarget } from './builder-inspector.constants';
 
 @Injectable({ providedIn: 'root' })
@@ -38,39 +38,42 @@ export class BuilderInspectorRulesService {
     return String(event.option.value ?? '');
   }
 
-  rule(field: FieldNode | null, target: RuleTarget): ConditionalRule | null {
-    return field?.props[target] ?? null;
+  rule(node: BuilderNode | null, target: RuleTarget): ConditionalRule | null {
+    return (node?.props as Partial<Record<RuleTarget, ConditionalRule | undefined>> | undefined)?.[target] ?? null;
   }
 
-  initRule(store: BuilderStore, field: FieldNode | null, target: RuleTarget): void {
-    if (!field) return;
+  initRule(store: BuilderStore, node: BuilderNode | null, target: RuleTarget): void {
+    if (!node) return;
     const next: ConditionalRule = { dependsOnKey: '', operator: 'truthy' };
-    store.updateNodeProps(field.id, { [target]: next });
+    store.updateNodeProps(node.id, { [target]: next });
   }
 
-  clearRule(store: BuilderStore, field: FieldNode | null, target: RuleTarget): void {
-    if (!field) return;
-    store.updateNodeProps(field.id, { [target]: undefined });
+  clearRule(store: BuilderStore, node: BuilderNode | null, target: RuleTarget): void {
+    if (!node) return;
+    store.updateNodeProps(node.id, { [target]: undefined });
   }
 
-  updateRule(store: BuilderStore, field: FieldNode | null, target: RuleTarget, patch: Partial<ConditionalRule>): void {
-    if (!field) return;
-    const current = field.props[target];
+  updateRule(store: BuilderStore, node: BuilderNode | null, target: RuleTarget, patch: Partial<ConditionalRule>): void {
+    if (!node) return;
+    const props = node.props as Partial<Record<RuleTarget, ConditionalRule | undefined>>;
+    const current = props[target];
     const next: ConditionalRule = {
       dependsOnKey: current?.dependsOnKey ?? '',
       operator: current?.operator ?? 'truthy',
       value: current?.value,
       ...patch,
     };
-    store.updateNodePropsGrouped(field.id, { [target]: next }, `${field.id}:${target}`);
+    store.updateNodePropsGrouped(node.id, { [target]: next }, `${node.id}:${target}`);
   }
 
-  ruleExpression(field: FieldNode | null, target: RuleExpressionTarget): string {
-    return (field?.props[target] ?? '').trim();
+  ruleExpression(node: BuilderNode | null, target: RuleExpressionTarget): string {
+    return (
+      (node?.props as Partial<Record<RuleExpressionTarget, string | undefined>> | undefined)?.[target] ?? ''
+    ).trim();
   }
 
-  setRuleExpression(store: BuilderStore, field: FieldNode | null, target: RuleExpressionTarget, value: string): void {
-    if (!field) return;
-    store.updateNodePropsGrouped(field.id, { [target]: value }, `${field.id}:${target}`);
+  setRuleExpression(store: BuilderStore, node: BuilderNode | null, target: RuleExpressionTarget, value: string): void {
+    if (!node) return;
+    store.updateNodePropsGrouped(node.id, { [target]: value }, `${node.id}:${target}`);
   }
 }

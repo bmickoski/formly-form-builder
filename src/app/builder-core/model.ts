@@ -100,6 +100,8 @@ export interface FieldProps extends CommonProps {
 export interface ContainerProps extends CommonProps {
   title?: string;
   colSpan?: number; // 1..12
+  visibleRule?: ConditionalRule;
+  visibleExpression?: string;
 }
 
 export interface BuilderNodeBase {
