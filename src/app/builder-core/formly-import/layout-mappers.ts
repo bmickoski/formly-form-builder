@@ -55,6 +55,10 @@ export function getPanelDescription(field: FormlyFieldConfig): string | undefine
   return value == null ? undefined : String(value);
 }
 
+export function getContainerHidden(field: FormlyFieldConfig): boolean {
+  return Boolean(field.hide);
+}
+
 export function createContainerNode(type: ContainerNode['type'], id: string, parentId: string | null): ContainerNode {
   return { id, type, parentId, children: [], props: {} };
 }

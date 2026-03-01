@@ -333,6 +333,7 @@ function containerNodeToFormly(
           label: container.props.title ?? container.props.label ?? 'Panel',
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
         ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
@@ -342,6 +343,7 @@ function containerNodeToFormly(
   if (container.type === 'row') {
     return [
       {
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
         fieldGroupClassName: rowClass(doc.renderer),
         ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
@@ -357,6 +359,7 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Tabs'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
         ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
@@ -371,6 +374,7 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Stepper'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
         ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
@@ -385,6 +389,7 @@ function containerNodeToFormly(
           label: containerLabel(container, 'Accordion'),
           description: container.props.description,
         },
+        hide: !!container.props.hidden,
         fieldGroup: childrenFields,
         ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),
       },
@@ -394,6 +399,7 @@ function containerNodeToFormly(
   const span = Math.max(1, Math.min(12, container.props.colSpan ?? 12));
   return [
     {
+      hide: !!container.props.hidden,
       fieldGroup: childrenFields,
       className: colClass(doc.renderer, span),
       ...(visibilityExpressions ? { expressions: visibilityExpressions } : {}),

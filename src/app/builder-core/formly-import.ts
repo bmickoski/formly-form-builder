@@ -5,6 +5,7 @@ import { toFieldKey, uid } from './ids';
 import { fieldKindFromType, toFieldProps, toValidators } from './formly-import/field-mappers';
 import {
   createContainerNode,
+  getContainerHidden,
   detectLayoutKind,
   getColSpan,
   getPanelDescription,
@@ -126,8 +127,10 @@ function attachContainer(
 ): void {
   const visibleRule = getContainerVisibleRule(field);
   const visibleExpression = getContainerVisibleExpression(field);
+  const hidden = getContainerHidden(field);
   if (visibleRule) container.props.visibleRule = visibleRule;
   if (visibleExpression) container.props.visibleExpression = visibleExpression;
+  if (hidden) container.props.hidden = true;
   doc.nodes[id] = container;
   doc.nodes[parentId].children.push(id);
 }

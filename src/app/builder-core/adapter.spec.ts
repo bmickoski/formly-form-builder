@@ -268,6 +268,27 @@ describe('builder/formly adapters: rules + async validators', () => {
     if (node.type !== 'panel') return;
     expect(node.props.visibleExpression).toBe("model?.status === 'ready'");
   });
+
+  it('exports and imports container hidden state', () => {
+    const store = new BuilderStore();
+    store.addFromPalette('tabs', { containerId: store.rootId(), index: 0 });
+    const tabsId = store.selectedId() as string;
+    store.updateNodeProps(tabsId, { hidden: true });
+
+    const fields = builderToFormly(store.doc());
+    const first = fields[0] as FormlyFieldConfig;
+    expect(first.hide).toBeTrue();
+
+    const imported = formlyToBuilder(fields, 'material');
+    const root = imported.nodes[imported.rootId];
+    expect(root.type).toBe('panel');
+    if (root.type !== 'panel') return;
+
+    const node = imported.nodes[root.children[0]];
+    expect(node.type).toBe('tabs');
+    if (node.type !== 'tabs') return;
+    expect(node.props.hidden).toBeTrue();
+  });
 });
 
 describe('builder/formly adapters: field library v2 batch 1', () => {
