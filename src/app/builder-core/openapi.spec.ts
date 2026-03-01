@@ -1,5 +1,5 @@
 import { BuilderStore } from './store';
-import { builderToOpenApiRequestBody, openApiToBuilder } from './openapi';
+import { builderToOpenApiDocument, builderToOpenApiRequestBody, openApiToBuilder } from './openapi';
 
 describe('builder/openapi adapter direct import', () => {
   it('imports the first requestBody schema from an OpenAPI 3 document', () => {
@@ -152,5 +152,19 @@ describe('builder/openapi adapter export', () => {
     expect(requestBody.required).toBeTrue();
     expect(requestBody.content['application/json'].schema.type).toBe('object');
     expect(requestBody.content['application/json'].schema.required).toEqual(['email']);
+  });
+
+  it('exports the builder as a minimal OpenAPI document', () => {
+    const store = new BuilderStore();
+    store.updateNodeProps(store.rootId(), { title: 'Customer Intake' });
+    store.addFromPalette('email', { containerId: store.rootId(), index: 0 });
+    const emailId = store.selectedId() as string;
+    store.updateNodeProps(emailId, { key: 'email', label: 'Email' });
+
+    const document = builderToOpenApiDocument(store.doc()) as any;
+    expect(document.openapi).toBe('3.0.3');
+    expect(document.info.title).toBe('Customer Intake');
+    expect(document.paths['/submit'].post.requestBody.content['application/json'].schema.type).toBe('object');
+    expect(document.paths['/submit'].post.responses['200'].description).toBe('Successful response');
   });
 });

@@ -130,3 +130,32 @@ export function builderToOpenApiRequestBody(doc: BuilderDocument): object {
     },
   };
 }
+
+export function builderToOpenApiDocument(doc: BuilderDocument): object {
+  const root = doc.nodes[doc.rootId];
+  const title =
+    root?.type === 'panel' && typeof root.props.title === 'string' && root.props.title.trim()
+      ? root.props.title.trim()
+      : 'Generated Form API';
+
+  return {
+    openapi: '3.0.3',
+    info: {
+      title,
+      version: '1.0.0',
+    },
+    paths: {
+      '/submit': {
+        post: {
+          summary: `Submit ${title}`,
+          requestBody: builderToOpenApiRequestBody(doc),
+          responses: {
+            '200': {
+              description: 'Successful response',
+            },
+          },
+        },
+      },
+    },
+  };
+}
