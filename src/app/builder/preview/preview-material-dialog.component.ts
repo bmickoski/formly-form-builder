@@ -21,6 +21,8 @@ import { FbTabsTypeComponent } from './fb-tabs.type.component';
 import { FbStepperTypeComponent } from './fb-stepper.type.component';
 import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
+import { FbDateRangeMatTypeComponent } from '../../../../projects/formly-builder-material/src/lib/date-range/fb-date-range-mat.type.component';
+import { FbRatingMatTypeComponent } from '../../../../projects/formly-builder-material/src/lib/rating/fb-rating-mat.type.component';
 
 @Component({
   selector: 'app-preview-material-dialog',
@@ -46,6 +48,8 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
           { name: 'fb-tabs', component: FbTabsTypeComponent },
           { name: 'fb-stepper', component: FbStepperTypeComponent },
           { name: 'fb-accordion', component: FbAccordionTypeComponent },
+          { name: 'fb-date-range', component: FbDateRangeMatTypeComponent },
+          { name: 'fb-rating', component: FbRatingMatTypeComponent },
         ],
       },
       { validators: [{ name: 'email', validation: Validators.email }] },
