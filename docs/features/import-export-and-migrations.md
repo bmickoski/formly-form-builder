@@ -9,6 +9,21 @@
 
 - Builder JSON import with parser + sanitizer
 - Formly JSON import with best-effort mapping into builder model
+- Schema adapter import through registered formats such as JSON Schema and OpenAPI
+
+## Schema Adapter Export
+
+Schema adapters can also participate in export when registered through plugins.
+
+Typical use cases:
+
+- export to JSON Schema for contract sharing
+- export to OpenAPI starter documents
+- export to community-owned metadata formats
+
+See:
+
+- `./schema-adapters.md`
 
 ## Migration Behavior
 
