@@ -21,6 +21,8 @@ import { FbTabsTypeComponent } from './fb-tabs.type.component';
 import { FbStepperTypeComponent } from './fb-stepper.type.component';
 import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
+import { FbDateRangeBsTypeComponent } from '../../../../projects/formly-builder-bootstrap/src/lib/date-range/fb-date-range-bs.type.component';
+import { FbRatingBsTypeComponent } from '../../../../projects/formly-builder-bootstrap/src/lib/rating/fb-rating-bs.type.component';
 
 @Component({
   selector: 'app-preview-bootstrap-dialog',
@@ -46,6 +48,8 @@ import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-prev
           { name: 'fb-tabs', component: FbTabsTypeComponent },
           { name: 'fb-stepper', component: FbStepperTypeComponent },
           { name: 'fb-accordion', component: FbAccordionTypeComponent },
+          { name: 'fb-date-range', component: FbDateRangeBsTypeComponent },
+          { name: 'fb-rating', component: FbRatingBsTypeComponent },
         ],
       },
       { validators: [{ name: 'email', validation: Validators.email }] },

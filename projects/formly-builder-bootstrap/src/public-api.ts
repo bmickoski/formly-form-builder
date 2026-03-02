@@ -5,6 +5,8 @@ export { FbTabsBsTypeComponent } from './lib/tabs/fb-tabs-bs.type.component';
 export { FbStepperBsTypeComponent } from './lib/stepper/fb-stepper-bs.type.component';
 export { FbAccordionBsTypeComponent } from './lib/accordion/fb-accordion-bs.type.component';
 export { FbRepeatBsTypeComponent } from './lib/repeat/fb-repeat-bs.type.component';
+export { FbDateRangeBsTypeComponent } from './lib/date-range/fb-date-range-bs.type.component';
+export { FbRatingBsTypeComponent } from './lib/rating/fb-rating-bs.type.component';
 
 // Re-export shared validation utilities from core for consumer convenience
 export {

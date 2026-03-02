@@ -11,6 +11,8 @@ export const FORMLY_TYPE_TABS = 'fb-tabs' as const;
 export const FORMLY_TYPE_STEPPER = 'fb-stepper' as const;
 export const FORMLY_TYPE_ACCORDION = 'fb-accordion' as const;
 export const FORMLY_TYPE_REPEAT = 'repeat' as const;
+export const FORMLY_TYPE_DATE_RANGE = 'fb-date-range' as const;
+export const FORMLY_TYPE_RATING = 'fb-rating' as const;
 
 /** Validator names bound by the builder runtime. */
 export const VALIDATOR_BUILDER_CUSTOM = 'builderCustom' as const;

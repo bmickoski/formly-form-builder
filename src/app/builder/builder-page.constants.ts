@@ -21,9 +21,9 @@ export const SAMPLE_PALETTE_JSON = JSON.stringify(
       category: 'Advanced Fields',
       title: 'Rating (1-5)',
       nodeType: 'field',
-      fieldKind: 'number',
+      fieldKind: 'rating',
       defaults: {
-        props: { label: 'Rating', placeholder: '1 to 5' },
+        props: { label: 'Rating' },
         validators: { min: 1, max: 5 },
       },
     },

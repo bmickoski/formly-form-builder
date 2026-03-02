@@ -82,6 +82,17 @@
             </button>
           </mat-form-field>
 
+          @if (isDateRangeField()) {
+            <mat-form-field appearance="outline" class="fb-field">
+              <mat-label>End placeholder</mat-label>
+              <input
+                matInput
+                [ngModel]="f?.props?.endPlaceholder"
+                (ngModelChange)="setProp('endPlaceholder', $event)"
+              />
+            </mat-form-field>
+          }
+
           <mat-form-field appearance="outline" class="fb-field">
             <mat-label>Description</mat-label>
             <input matInput [ngModel]="n.props?.description" (ngModelChange)="setProp('description', $event)" />

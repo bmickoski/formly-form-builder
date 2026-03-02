@@ -87,6 +87,56 @@ describe('BuilderInspectorComponent', () => {
     expect(updated.props.step).toBe(0.25);
   });
 
+  it('shows step control for range fields and persists the value', () => {
+    store.addFromPalette('range', { containerId: store.rootId(), index: 0 });
+    const field = store.selectedNode() as FieldNode;
+    component.onSelectedTabChange(1);
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Step');
+
+    component.setProp('step', 2);
+    fixture.detectChanges();
+
+    const updated = store.nodes()[field.id] as FieldNode;
+    expect(updated.props.step).toBe(2);
+  });
+
+  it('shows end placeholder control for date-range fields and persists the value', () => {
+    store.addFromPalette('date-range', { containerId: store.rootId(), index: 0 });
+    const field = store.selectedNode() as FieldNode;
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('End placeholder');
+
+    component.setProp('endPlaceholder', 'Return');
+    fixture.detectChanges();
+
+    const updated = store.nodes()[field.id] as FieldNode;
+    expect(updated.props.endPlaceholder).toBe('Return');
+  });
+
+  it('shows step control for rating fields and persists the value', () => {
+    store.addFromPalette('rating', { containerId: store.rootId(), index: 0 });
+    const field = store.selectedNode() as FieldNode;
+    component.onSelectedTabChange(1);
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Step');
+
+    component.setProp('step', 1);
+    fixture.detectChanges();
+
+    const updated = store.nodes()[field.id] as FieldNode;
+    expect(updated.props.step).toBe(1);
+  });
+
   it('shows visible rules for layout containers and persists container expressions', () => {
     store.addFromPalette('panel', { containerId: store.rootId(), index: 0 });
     const panel = store.selectedNode() as ContainerNode;

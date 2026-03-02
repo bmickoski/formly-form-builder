@@ -24,16 +24,24 @@ function fieldKindToType(fieldKind: FieldKind): {
   switch (fieldKind) {
     case 'number':
       return { type: 'number' };
+    case 'range':
+      return { type: 'number' };
+    case 'rating':
+      return { type: 'number' };
     case 'checkbox':
       return { type: 'boolean' };
     case 'date':
       return { type: 'string', format: 'date' };
+    case 'dateRange':
+      return { type: 'object' };
     case 'email':
       return { type: 'string', format: 'email' };
     case 'tel':
       return { type: 'string', format: 'phone' };
     case 'url':
       return { type: 'string', format: 'uri' };
+    case 'file':
+      return { type: 'string', format: 'binary' };
     case 'multiselect':
       return { type: 'array', items: { type: 'string' } };
     case 'repeater':
@@ -48,19 +56,49 @@ function fieldNodeToProperty(node: FieldNode): [string, JsonSchemaProperty] {
     typeof node.props.key === 'string' && node.props.key.trim().length > 0 ? node.props.key.trim() : node.id;
 
   const { type, format, items } = fieldKindToType(node.fieldKind);
-  const prop: JsonSchemaProperty = { type };
+  const prop = createFieldProperty(node.fieldKind, type);
 
   if (node.props.label) prop['title'] = node.props.label;
   if (node.props.description) prop['description'] = node.props.description;
 
   const resolvedFormat = format ?? (node.validators.email ? 'email' : undefined);
   if (resolvedFormat) prop['format'] = resolvedFormat;
+  applyFieldKindMetadata(node, prop);
+  applyDateRangeDescriptions(node, prop);
 
   if (items) prop['items'] = { ...items };
   applyEnumConstraint(node, prop);
   applyValidatorConstraints(node, prop);
 
   return [safeKey, prop];
+}
+
+function createFieldProperty(fieldKind: FieldKind, type: string): JsonSchemaProperty {
+  if (fieldKind !== 'dateRange') return { type };
+  return {
+    type: 'object',
+    properties: {
+      start: { type: 'string', format: 'date', title: 'Start' },
+      end: { type: 'string', format: 'date', title: 'End' },
+    },
+  };
+}
+
+function applyFieldKindMetadata(node: FieldNode, prop: JsonSchemaProperty): void {
+  if (node.fieldKind === 'range') prop['x-formly-builder-fieldKind'] = 'range';
+  if (node.fieldKind === 'rating') prop['x-formly-builder-fieldKind'] = 'rating';
+  if (node.fieldKind === 'dateRange') prop['x-formly-builder-fieldKind'] = 'dateRange';
+}
+
+function applyDateRangeDescriptions(node: FieldNode, prop: JsonSchemaProperty): void {
+  if (node.fieldKind !== 'dateRange') return;
+  const properties = prop['properties'] as Record<string, JsonSchemaProperty>;
+  if (node.props.placeholder) {
+    (properties['start'] as JsonSchemaProperty)['description'] = node.props.placeholder;
+  }
+  if (node.props.endPlaceholder) {
+    (properties['end'] as JsonSchemaProperty)['description'] = node.props.endPlaceholder;
+  }
 }
 
 function applyEnumConstraint(node: FieldNode, prop: JsonSchemaProperty): void {
@@ -82,6 +120,12 @@ function applyValidatorConstraints(node: FieldNode, prop: JsonSchemaProperty): v
   if (node.validators.pattern) prop['pattern'] = node.validators.pattern;
   if (node.validators.min != null) prop['minimum'] = node.validators.min;
   if (node.validators.max != null) prop['maximum'] = node.validators.max;
+  if (
+    node.props.step != null &&
+    (node.fieldKind === 'number' || node.fieldKind === 'range' || node.fieldKind === 'rating')
+  ) {
+    prop['multipleOf'] = node.props.step;
+  }
 }
 
 function createObjectProperty(): MutableSchemaObject {
@@ -195,10 +239,14 @@ function inferStringFieldKind(property: JsonSchemaProperty): FieldKind {
   if (format === 'uri') return 'url';
   if (format === 'phone') return 'tel';
   if (format === 'password') return 'password';
+  if (format === 'binary' || format === 'base64') return 'file';
   return 'input';
 }
 
 function inferFieldKind(property: JsonSchemaProperty): FieldKind {
+  if (property['x-formly-builder-fieldKind'] === 'range') return 'range';
+  if (property['x-formly-builder-fieldKind'] === 'rating') return 'rating';
+  if (property['x-formly-builder-fieldKind'] === 'dateRange') return 'dateRange';
   const type = String(property['type'] ?? '').toLowerCase();
 
   if (type === 'boolean') return 'checkbox';
@@ -231,11 +279,8 @@ function propertyToFieldNode(
   };
 
   if (requiredKeys.has(schemaKey)) node.validators.required = true;
-  if (typeof property['minLength'] === 'number') node.validators.minLength = property['minLength'];
-  if (typeof property['maxLength'] === 'number') node.validators.maxLength = property['maxLength'];
-  if (typeof property['pattern'] === 'string') node.validators.pattern = property['pattern'];
-  if (typeof property['minimum'] === 'number') node.validators.min = property['minimum'];
-  if (typeof property['maximum'] === 'number') node.validators.max = property['maximum'];
+  applyScalarPropertyConstraints(node, property);
+  applyCompositePropertyMetadata(node, property, fieldKind);
 
   if (fieldKind === 'select') {
     const enumValues = Array.isArray(property['enum']) ? property['enum'] : [];
@@ -250,6 +295,30 @@ function propertyToFieldNode(
   }
 
   return node;
+}
+
+function applyScalarPropertyConstraints(node: FieldNode, property: JsonSchemaProperty): void {
+  if (typeof property['minLength'] === 'number') node.validators.minLength = property['minLength'];
+  if (typeof property['maxLength'] === 'number') node.validators.maxLength = property['maxLength'];
+  if (typeof property['pattern'] === 'string') node.validators.pattern = property['pattern'];
+  if (typeof property['minimum'] === 'number') node.validators.min = property['minimum'];
+  if (typeof property['maximum'] === 'number') node.validators.max = property['maximum'];
+}
+
+function applyCompositePropertyMetadata(node: FieldNode, property: JsonSchemaProperty, fieldKind: FieldKind): void {
+  if (
+    (fieldKind === 'number' || fieldKind === 'range' || fieldKind === 'rating') &&
+    typeof property['multipleOf'] === 'number'
+  ) {
+    node.props.step = property['multipleOf'];
+  }
+  if (fieldKind !== 'dateRange') return;
+
+  const properties = isRecord(property['properties']) ? property['properties'] : {};
+  const start = isRecord(properties['start']) ? properties['start'] : {};
+  const end = isRecord(properties['end']) ? properties['end'] : {};
+  if (typeof start['description'] === 'string') node.props.placeholder = start['description'];
+  if (typeof end['description'] === 'string') node.props.endPlaceholder = end['description'];
 }
 
 function createPanelNode(key: string, property: JsonSchemaProperty, parentId: string): ContainerNode {
@@ -275,6 +344,18 @@ function importSchemaProperties(
   requiredKeys: Set<string>,
 ): void {
   for (const [key, property] of Object.entries(properties)) {
+    if (property['x-formly-builder-fieldKind'] === 'dateRange') {
+      const field = propertyToFieldNode(
+        key,
+        keyPrefix ? `${keyPrefix}.${key}` : key,
+        property,
+        requiredKeys,
+        parent.id,
+      );
+      nodes[field.id] = field;
+      parent.children.push(field.id);
+      continue;
+    }
     if (isObjectProperty(property)) {
       const panel = createPanelNode(key, property, parent.id);
       nodes[panel.id] = panel;

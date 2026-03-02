@@ -79,7 +79,7 @@ export const DEFAULT_VALIDATOR_PRESET_DEFINITIONS: readonly ValidatorPresetDefin
     id: 'numeric-range',
     label: 'Numeric range',
     description: 'Applies min/max numeric validators.',
-    fieldKinds: ['number', 'input'],
+    fieldKinds: ['number', 'range', 'rating', 'input'],
     params: [
       { key: 'min', label: 'Min', type: 'number', defaultValue: 0 },
       { key: 'max', label: 'Max', type: 'number', defaultValue: 100 },

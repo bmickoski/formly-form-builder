@@ -7,6 +7,8 @@ import { FbTabsBsTypeComponent } from './tabs/fb-tabs-bs.type.component';
 import { FbStepperBsTypeComponent } from './stepper/fb-stepper-bs.type.component';
 import { FbAccordionBsTypeComponent } from './accordion/fb-accordion-bs.type.component';
 import { FbRepeatBsTypeComponent } from './repeat/fb-repeat-bs.type.component';
+import { FbDateRangeBsTypeComponent } from './date-range/fb-date-range-bs.type.component';
+import { FbRatingBsTypeComponent } from './rating/fb-rating-bs.type.component';
 
 /**
  * Returns a Formly ConfigOption that registers all layout types and wrappers
@@ -23,6 +25,8 @@ export function provideFormlyBuilderBootstrap(): ConfigOption {
       { name: 'fb-stepper', component: FbStepperBsTypeComponent },
       { name: 'fb-accordion', component: FbAccordionBsTypeComponent },
       { name: 'fb-repeat', component: FbRepeatBsTypeComponent },
+      { name: 'fb-date-range', component: FbDateRangeBsTypeComponent },
+      { name: 'fb-rating', component: FbRatingBsTypeComponent },
     ],
     wrappers: [{ name: 'fb-panel', component: FbPanelWrapperBsComponent }],
     validators: [{ name: 'email', validation: Validators.email }],

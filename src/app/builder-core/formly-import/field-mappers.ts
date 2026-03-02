@@ -1,4 +1,6 @@
-﻿import { FormlyFieldConfig } from '@ngx-formly/core';
+import { FormlyFieldConfig } from '@ngx-formly/core';
+
+import { FORMLY_TYPE_DATE_RANGE, FORMLY_TYPE_RATING } from '../constants';
 import {
   AsyncUniqueValidator,
   ConditionalRule,
@@ -19,11 +21,14 @@ const DIRECT_FIELD_KIND_MAP: Record<string, FieldKind> = {
   textarea: 'textarea',
   checkbox: 'checkbox',
   radio: 'radio',
+  [FORMLY_TYPE_DATE_RANGE]: 'dateRange',
+  [FORMLY_TYPE_RATING]: 'rating',
 };
 
 const INPUT_FIELD_KIND_MAP: Record<string, FieldKind> = {
   date: 'date',
   number: 'number',
+  range: 'range',
   email: 'email',
   password: 'password',
   tel: 'tel',
@@ -68,6 +73,9 @@ export function toFieldProps(field: FormlyFieldConfig): FieldProps {
     disabled: Boolean(props['disabled']),
     hidden: Boolean(field.hide),
   };
+
+  const endPlaceholder = toStringOrUndefined(props['endPlaceholder']);
+  if (endPlaceholder !== undefined) mapped.endPlaceholder = endPlaceholder;
 
   const options = toOptionItems(props['options']);
   if (options.length > 0) mapped.options = options;
