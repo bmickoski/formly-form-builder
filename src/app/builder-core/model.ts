@@ -9,7 +9,10 @@ export type FieldKind =
   | 'radio'
   | 'select'
   | 'date'
+  | 'dateRange'
   | 'number'
+  | 'range'
+  | 'rating'
   | 'email'
   | 'password'
   | 'tel'
@@ -84,6 +87,7 @@ export interface FieldProps extends CommonProps {
   key?: string;
   defaultValue?: unknown;
   step?: number | null;
+  endPlaceholder?: string;
   options?: OptionItem[];
   optionsSource?: OptionsSource;
   multiple?: boolean;

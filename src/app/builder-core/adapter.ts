@@ -11,6 +11,8 @@ import {
 import { resolveCustomValidatorsForFields } from './custom-validators';
 import {
   FORMLY_TYPE_ACCORDION,
+  FORMLY_TYPE_DATE_RANGE,
+  FORMLY_TYPE_RATING,
   FORMLY_TYPE_STEPPER,
   FORMLY_TYPE_TABS,
   FORMLY_WRAPPER_PANEL,
@@ -57,7 +59,19 @@ interface FormlyFieldProps {
   email?: boolean;
   multiple?: boolean;
   addText?: string;
+  endPlaceholder?: string;
 }
+
+const FIELD_INPUT_TYPES: Partial<Record<FieldNode['fieldKind'], string>> = {
+  date: 'date',
+  number: 'number',
+  range: 'range',
+  email: 'email',
+  password: 'password',
+  tel: 'tel',
+  url: 'url',
+  file: 'file',
+};
 
 function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
   switch (fieldKind) {
@@ -72,6 +86,10 @@ function toFormlyType(fieldKind: FieldNode['fieldKind']): string {
       return 'select';
     case 'repeater':
       return 'repeat';
+    case 'dateRange':
+      return FORMLY_TYPE_DATE_RANGE;
+    case 'rating':
+      return FORMLY_TYPE_RATING;
     default:
       return 'input';
   }
@@ -85,6 +103,7 @@ function fieldProps(node: FieldNode): FormlyFieldProps {
     disabled: !!node.props.disabled,
     required: !!node.validators.required,
   };
+  if (node.fieldKind === 'dateRange' && node.props.endPlaceholder) props.endPlaceholder = node.props.endPlaceholder;
 
   applyChoiceProps(node, props);
   applyRuleProps(node, props);
@@ -128,34 +147,19 @@ function applyRuleProps(node: FieldNode, props: FormlyFieldProps): void {
 }
 
 function applyTypeProps(node: FieldNode, props: FormlyFieldProps): void {
-  switch (node.fieldKind) {
-    case 'date':
-      props.type = 'date';
-      break;
-    case 'number':
-      props.type = 'number';
-      if (node.props.step != null) props.step = node.props.step;
-      break;
-    case 'email':
-      props.type = 'email';
-      break;
-    case 'password':
-      props.type = 'password';
-      break;
-    case 'tel':
-      props.type = 'tel';
-      break;
-    case 'url':
-      props.type = 'url';
-      break;
-    case 'file':
-      props.type = 'file';
-      break;
-    case 'input':
-      if (node.validators.email) props.type = 'email';
-      break;
-    default:
-      break;
+  if (node.fieldKind === 'dateRange') return;
+  if (node.fieldKind === 'input') {
+    if (node.validators.email) props.type = 'email';
+    return;
+  }
+
+  const inputType = FIELD_INPUT_TYPES[node.fieldKind];
+  if (inputType) props.type = inputType;
+  if (
+    node.props.step != null &&
+    (node.fieldKind === 'number' || node.fieldKind === 'range' || node.fieldKind === 'rating')
+  ) {
+    props.step = node.props.step;
   }
 }
 

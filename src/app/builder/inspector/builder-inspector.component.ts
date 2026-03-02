@@ -78,7 +78,11 @@ export class BuilderInspectorComponent {
     const f = this.fieldNode();
     return !!f && (f.fieldKind === 'select' || f.fieldKind === 'radio' || f.fieldKind === 'multiselect');
   });
-  readonly isNumberField = computed(() => this.fieldNode()?.fieldKind === 'number');
+  readonly isDateRangeField = computed(() => this.fieldNode()?.fieldKind === 'dateRange');
+  readonly isNumberField = computed(() => {
+    const kind = this.fieldNode()?.fieldKind;
+    return kind === 'number' || kind === 'range' || kind === 'rating';
+  });
 
   readonly supportsEmailValidator = computed(() => {
     const f = this.fieldNode();

@@ -7,6 +7,8 @@ import { FbTabsMatTypeComponent } from './tabs/fb-tabs-mat.type.component';
 import { FbStepperMatTypeComponent } from './stepper/fb-stepper-mat.type.component';
 import { FbAccordionMatTypeComponent } from './accordion/fb-accordion-mat.type.component';
 import { FbRepeatMatTypeComponent } from './repeat/fb-repeat-mat.type.component';
+import { FbDateRangeMatTypeComponent } from './date-range/fb-date-range-mat.type.component';
+import { FbRatingMatTypeComponent } from './rating/fb-rating-mat.type.component';
 
 /**
  * Returns a Formly ConfigOption that registers all layout types and wrappers
@@ -23,6 +25,8 @@ export function provideFormlyBuilderMaterial(): ConfigOption {
       { name: 'fb-stepper', component: FbStepperMatTypeComponent },
       { name: 'fb-accordion', component: FbAccordionMatTypeComponent },
       { name: 'fb-repeat', component: FbRepeatMatTypeComponent },
+      { name: 'fb-date-range', component: FbDateRangeMatTypeComponent },
+      { name: 'fb-rating', component: FbRatingMatTypeComponent },
     ],
     wrappers: [{ name: 'fb-panel', component: FbPanelWrapperMatComponent }],
     validators: [{ name: 'email', validation: Validators.email }],

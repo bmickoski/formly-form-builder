@@ -2,6 +2,7 @@ import { inject, InjectionToken } from '@angular/core';
 import { BuilderNodeType, BuilderValidators, ContainerProps, FieldKind, FieldProps } from './model';
 import { BUILDER_PLUGINS, composePalette } from './plugins';
 import { defaultValidatorsForFieldKind } from './validation-presets';
+import { FORMLY_TYPE_DATE_RANGE, FORMLY_TYPE_RATING } from './constants';
 
 export const DEFAULT_PALETTE_CATEGORIES = {
   common: 'Common Fields',
@@ -191,12 +192,43 @@ export const PALETTE: PaletteItem[] = [
     defaults: { props: { label: 'Date' }, validators: {} },
   },
   {
+    id: 'date-range',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
+    title: 'Date Range',
+    nodeType: 'field',
+    fieldKind: 'dateRange',
+    formlyType: FORMLY_TYPE_DATE_RANGE,
+    inspectorHint: 'Renders start and end date inputs as one composite field.',
+    defaults: {
+      props: { label: 'Date range', placeholder: 'Start date', endPlaceholder: 'End date' },
+      validators: {},
+    },
+  },
+  {
     id: 'number',
     category: DEFAULT_PALETTE_CATEGORIES.common,
     title: 'Number',
     nodeType: 'field',
     fieldKind: 'number',
     defaults: { props: { label: 'Number' }, validators: {} },
+  },
+  {
+    id: 'range',
+    category: DEFAULT_PALETTE_CATEGORIES.common,
+    title: 'Slider',
+    nodeType: 'field',
+    fieldKind: 'range',
+    defaults: { props: { label: 'Slider', step: 1 }, validators: { min: 0, max: 100 } },
+  },
+  {
+    id: 'rating',
+    category: DEFAULT_PALETTE_CATEGORIES.advanced,
+    title: 'Rating',
+    nodeType: 'field',
+    fieldKind: 'rating',
+    formlyType: FORMLY_TYPE_RATING,
+    inspectorHint: 'Renders an interactive star rating control.',
+    defaults: { props: { label: 'Rating' }, validators: { min: 1, max: 5 } },
   },
 
   {
