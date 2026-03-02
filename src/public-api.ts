@@ -9,6 +9,7 @@ export {
   BuilderPageComponent,
   BuilderPageComponent as FormlyBuilderComponent,
 } from './app/builder/builder-page.component';
+export { FormlyViewComponent } from './app/view/formly-view.component';
 
 // Validation building blocks for renderer sub-packages and consumer apps
 export {
