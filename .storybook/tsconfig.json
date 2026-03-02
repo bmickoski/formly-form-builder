@@ -2,7 +2,12 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": ["node", "react"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@ngx-formly-builder/core": ["src/public-api.ts"],
+      "@ngx-formly-builder/bootstrap": ["projects/formly-builder-bootstrap/src/public-api.ts"],
+      "@ngx-formly-builder/material": ["projects/formly-builder-material/src/public-api.ts"]
+    }
   },
   "include": ["../.storybook/**/*.ts", "../stories/**/*.ts", "../src/**/*.ts"],
   "exclude": ["../src/**/*.spec.ts", "../docs/**", "../dist/**", "../node_modules/**"]
