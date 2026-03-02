@@ -55,9 +55,20 @@
       }
     </div>
 
-    <div class="fb-preview-model">
-      <div class="fb-hint">Model</div>
-      <pre class="fb-preview-model-json">{{ model | json }}</pre>
+    <div class="fb-preview-data">
+      <div class="fb-preview-model">
+        <div class="fb-hint">Live model</div>
+        <pre class="fb-preview-model-json">{{ model | json }}</pre>
+      </div>
+
+      <div class="fb-preview-submission">
+        <div class="fb-hint">Last submitted payload</div>
+        @if (submittedPayload(); as payload) {
+          <pre class="fb-preview-model-json">{{ payload | json }}</pre>
+        } @else {
+          <div class="fb-preview-empty-state">Submit the form to capture the payload JSON here.</div>
+        }
+      </div>
     </div>
   </form>
 </mat-dialog-content>

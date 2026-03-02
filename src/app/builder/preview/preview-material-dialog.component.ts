@@ -21,6 +21,7 @@ import { FbTabsTypeComponent } from './fb-tabs.type.component';
 import { FbStepperTypeComponent } from './fb-stepper.type.component';
 import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
+import { createSubmittedPayload, markPreviewSubmitted, resetPreviewSubmission } from './preview-dialog.utils';
 import { FbDateRangeMatTypeComponent } from '../../../../projects/formly-builder-material/src/lib/date-range/fb-date-range-mat.type.component';
 import { FbRatingMatTypeComponent } from '../../../../projects/formly-builder-material/src/lib/rating/fb-rating-mat.type.component';
 
@@ -77,6 +78,7 @@ export class PreviewMaterialDialogComponent {
   readonly options: FormlyFormOptions = createPreviewOptions();
   fields = builderToFormly(this.data?.doc ?? this.store.doc());
   readonly viewport = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
+  readonly submittedPayload = signal<unknown | null>(null);
 
   constructor() {
     this.applyFormlyExtensions();
@@ -92,19 +94,14 @@ export class PreviewMaterialDialogComponent {
   }
 
   submit(): void {
-    const formState = this.options.formState as { submitted?: boolean };
-    formState.submitted = true;
-    this.form.markAllAsTouched();
-    this.form.updateValueAndValidity();
-    if (this.form.invalid) return;
-    alert(JSON.stringify(this.model, null, 2));
+    if (!markPreviewSubmitted(this.form, this.options)) return;
+    this.submittedPayload.set(createSubmittedPayload(this.model));
   }
 
   reset(): void {
-    this.form.reset();
+    resetPreviewSubmission(this.form, this.options);
     this.model = {};
-    const formState = this.options.formState as { submitted?: boolean };
-    formState.submitted = false;
+    this.submittedPayload.set(null);
   }
 
   setViewport(viewport: 'desktop' | 'tablet' | 'mobile'): void {

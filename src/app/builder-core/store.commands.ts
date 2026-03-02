@@ -11,6 +11,7 @@ import {
 } from './model';
 import { toFieldKey, uid } from './ids';
 import { PALETTE, PaletteItem, templateEntryId } from './registry';
+import { cloneBuilderNode, collectFieldKeys, defaultFieldKey, toUniqueFieldKey } from './store.field-keys';
 
 /**
  * Pure command helpers used by BuilderStore.
@@ -93,7 +94,8 @@ export function addFromPaletteCommand(
   if (!target || !isContainerNode(target)) return doc;
   if (target.type === 'row' && item.nodeType !== 'col') return doc;
 
-  const created = createNodeFromPalette(item, loc.containerId, palette, validatorsForFieldKind);
+  const usedKeys = collectFieldKeys(doc);
+  const created = createNodeFromPalette(item, loc.containerId, palette, validatorsForFieldKind, undefined, usedKeys);
   const children = [...target.children];
   const index = clampIndex(loc.index, children.length);
   children.splice(index, 0, created.id);
@@ -325,12 +327,14 @@ function createNodeFromPalette(
   palette: readonly PaletteItem[],
   validatorsForFieldKind?: (fieldKind: FieldKind) => BuilderValidators,
   propsOverride?: Record<string, unknown>,
+  usedKeys?: Set<string>,
 ): { id: string; node: BuilderNode; extraNodes: BuilderNode[] } {
   const id = uid(item.nodeType === 'field' ? 'f' : 'c');
   const extraNodes: BuilderNode[] = [];
 
   if (item.nodeType === 'field') {
     const fieldKind = item.fieldKind as FieldNode['fieldKind'];
+    const key = defaultFieldKey(fieldKind, usedKeys);
     const node: FieldNode = {
       id,
       type: 'field',
@@ -339,7 +343,7 @@ function createNodeFromPalette(
       fieldKind,
       props: {
         ...(item.defaults.props as any),
-        key: toFieldKey(id),
+        key,
         ...(item.formlyType ? { customType: item.formlyType } : {}),
       },
       validators: {
@@ -364,7 +368,14 @@ function createNodeFromPalette(
     const childPropsOverride = typeof entry === 'string' ? undefined : entry.props;
     const childItem = palette.find((paletteItem) => paletteItem.id === childId);
     if (!childItem) continue;
-    const createdChild = createNodeFromPalette(childItem, id, palette, validatorsForFieldKind, childPropsOverride);
+    const createdChild = createNodeFromPalette(
+      childItem,
+      id,
+      palette,
+      validatorsForFieldKind,
+      childPropsOverride,
+      usedKeys,
+    );
     node.children.push(createdChild.id);
     extraNodes.push(createdChild.node, ...createdChild.extraNodes);
   }
@@ -372,45 +383,7 @@ function createNodeFromPalette(
 }
 
 function cloneNode(node: BuilderNode): BuilderNode {
-  if (node.type === 'field') {
-    return {
-      ...node,
-      props: { ...node.props },
-      validators: { ...node.validators },
-      children: [],
-    };
-  }
-  return {
-    ...node,
-    props: { ...node.props },
-    children: [...node.children],
-  };
-}
-
-function collectFieldKeys(doc: BuilderDocument): Set<string> {
-  const out = new Set<string>();
-  for (const node of Object.values(doc.nodes)) {
-    if (node.type !== 'field') continue;
-    const key = (node.props.key ?? '').trim();
-    if (key) out.add(key);
-  }
-  return out;
-}
-
-function toUniqueFieldKey(base: string, usedKeys: Set<string>): string {
-  if (!usedKeys.has(base)) {
-    usedKeys.add(base);
-    return base;
-  }
-
-  let index = 1;
-  let candidate = `${base}_copy`;
-  while (usedKeys.has(candidate)) {
-    index += 1;
-    candidate = `${base}_copy${index}`;
-  }
-  usedKeys.add(candidate);
-  return candidate;
+  return cloneBuilderNode(node);
 }
 
 function isDescendant(nodes: Record<string, BuilderNode>, rootId: string, searchId: string): boolean {
