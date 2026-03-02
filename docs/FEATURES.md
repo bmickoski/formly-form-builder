@@ -7,13 +7,15 @@ Use Compodoc API pages for low-level type and source reference.
 
 - [Logic and Validation](./features/logic-and-validation.md)
 - [Palette and Plugins](./features/palette-and-plugins.md)
+- [Schema Adapters](./features/schema-adapters.md)
 - [Import, Export, and Migrations](./features/import-export-and-migrations.md)
 
 ## Recommended Reading Order
 
 1. Palette and Plugins
-2. Logic and Validation
-3. Import, Export, and Migrations
+2. Schema Adapters
+3. Logic and Validation
+4. Import, Export, and Migrations
 
 ## Quick Links
 

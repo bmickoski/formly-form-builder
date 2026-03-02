@@ -129,6 +129,8 @@ npm run storybook:build
 - `Export Builder JSON`: internal builder document (round-trip format).
 - `Import Builder JSON`: restores builder document.
 - `Import Formly JSON`: maps Formly config into builder model.
+- `Import from schema...`: uses registered schema adapters such as JSON Schema and OpenAPI.
+- `Export as schema...`: uses registered schema adapters that support export.
 - `Export Templates JSON`: exports saved field templates.
 - `Import Templates JSON`: imports saved field templates (field node templates only).
 
@@ -141,6 +143,7 @@ npm run storybook:build
 - You can provide your own palette via Angular DI token `BUILDER_PALETTE`.
 - Plugin API foundation is available via `BUILDER_PLUGINS`:
   - `paletteItems` extensions/overrides
+  - `schemaAdapters` extensions/overrides
   - `lookupRegistry` extensions/overrides
   - `validatorPresets` extensions (for custom field defaults)
   - `validatorPresetDefinitions` extensions/overrides (for inspector-selectable named presets)
@@ -215,6 +218,7 @@ export const appConfig: ApplicationConfig = {
 
 - `validatorPresets` are applied when adding fields from palette.
 - `validatorPresetDefinitions` appear in Inspector > Validation and round-trip in Formly export/import under `props.validatorPreset`.
+- `schemaAdapters` appear in the `File` menu and are merged by adapter `id`.
 - Runtime demo actions in top bar:
   - `Load Palette JSON`
   - `Reset Palette`
@@ -312,6 +316,7 @@ export const appConfig: ApplicationConfig = {
 - docs/FEATURES.md: product-focused features, usage patterns, and examples.
 - docs/features/getting-started-5-min.md: install -> embed -> export in minutes.
 - docs/features/embedding-and-consumption.md: embedding, multi-instance scope, and reusable API surface.
+- docs/features/schema-adapters.md: custom schema adapter patterns and community examples.
 - docs/MIGRATION-v0.3.0.md: migration notes for wrapper and validation-message registration changes.
 - stories/builder-page.stories.ts: isolated Storybook embed example.
 - ARCHITECTURE.md: model, store, DnD, adapters, validation/migration.
@@ -336,6 +341,45 @@ export const appConfig: ApplicationConfig = {
   - Expression must assign `valid` to `true`, `false`, or an error-message string.
   - Example: `valid = value === 'Joe' ? true : 'Name must be Joe';`
 - Async uniqueness can be combined with custom validation.
+
+## Schema Adapters
+
+- Built-in adapters:
+  - `JSON Schema`
+  - `OpenAPI 3.0`
+- Community adapters are the intended path for:
+  - Prisma-derived metadata
+  - Zod schemas
+  - TypeScript DTO/interface metadata
+  - CMS-specific formats such as Strapi content types
+
+Minimal example:
+
+```ts
+import type { BuilderPlugin, BuilderSchemaAdapter } from '@ngx-formly-builder/core';
+
+const MY_API_ADAPTER: BuilderSchemaAdapter = {
+  id: 'my-api',
+  label: 'My API Format',
+  import: (source) => myApiToBuilder(source),
+  export: (doc) => builderToMyApi(doc),
+};
+
+const MY_PLUGIN: BuilderPlugin = {
+  id: 'my-api-plugin',
+  schemaAdapters: [MY_API_ADAPTER],
+};
+```
+
+Recommended rollout:
+
+1. start with import
+2. generate a valid `BuilderDocument`
+3. add export only after the backend schema mapping is stable
+
+Full guide:
+
+- docs/features/schema-adapters.md
 
 ## Reusable API Surface
 

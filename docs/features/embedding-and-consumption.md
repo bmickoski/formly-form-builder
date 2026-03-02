@@ -27,6 +27,18 @@
 2. Register plugins at app config level.
 3. Mount one or more `BuilderPageComponent` instances as needed.
 
+## Schema Adapter Integration
+
+If your product needs backend-specific import/export:
+
+- add `schemaAdapters` through `BUILDER_PLUGINS`
+- keep backend mapping logic outside the builder shell
+- expose only the formats your host product actually supports
+
+See:
+
+- `docs/features/schema-adapters.md`
+
 ## ng add
 
 - `ng add @ngx-formly-builder/core` installs the package plus recommended Formly/Material dependencies.
