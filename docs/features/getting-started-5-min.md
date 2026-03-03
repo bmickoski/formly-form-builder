@@ -80,6 +80,24 @@ npm run start:example:material
 
 If you only need runtime rendering for an existing builder document:
 
+```ts
+import { Component } from '@angular/core';
+import { FormlyViewComponent, type BuilderDocument } from '@ngx-formly-builder/core';
+
+@Component({
+  selector: 'app-form-view-host',
+  standalone: true,
+  imports: [FormlyViewComponent],
+  template: ` <formly-view [config]="config" [model]="submittedData" [readOnly]="true" /> `,
+})
+export class FormViewHostComponent {
+  config: BuilderDocument | null = null;
+  submittedData: Record<string, unknown> = {};
+}
+```
+
+Template only:
+
 ```html
 <formly-view [config]="config" [model]="submittedData" [readOnly]="true" />
 ```
