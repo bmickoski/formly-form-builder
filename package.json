@@ -63,7 +63,7 @@
     "@storybook/angular": "^10.2.13",
     "storybook": "^10.2.13",
     "@types/jasmine": "^5.1.4",
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.3.3",
     "@types/react": "^19.2.2",
     "angular-eslint": "^21.0.0",
     "eslint": "^9.22.0",
