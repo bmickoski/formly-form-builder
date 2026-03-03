@@ -6,7 +6,15 @@ import {
   composeValidatorPresetDefinitions,
   composeValidatorPresets,
 } from './plugins';
-import { composeSchemaAdapters, CORE_SCHEMA_ADAPTERS, JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER } from './schema-adapter';
+import {
+  ANGULAR_FORM_BUILDER_ADAPTER,
+  composeSchemaAdapters,
+  CORE_SCHEMA_ADAPTERS,
+  JSON_SCHEMA_ADAPTER,
+  OPENAPI_ADAPTER,
+  TYPESCRIPT_INTERFACE_ADAPTER,
+  ZOD_SCHEMA_ADAPTER,
+} from './schema-adapter';
 import { BuilderDocument } from './model';
 
 describe('builder plugin composition', () => {
@@ -155,7 +163,13 @@ describe('builder schema adapter composition', () => {
     expect(out[1]?.id).toBe('openapi');
   });
 
-  it('includes JSON Schema and OpenAPI in the core adapter list', () => {
-    expect(CORE_SCHEMA_ADAPTERS).toEqual([JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER]);
+  it('includes built-in schema adapters in the core adapter list', () => {
+    expect(CORE_SCHEMA_ADAPTERS).toEqual([
+      JSON_SCHEMA_ADAPTER,
+      OPENAPI_ADAPTER,
+      TYPESCRIPT_INTERFACE_ADAPTER,
+      ZOD_SCHEMA_ADAPTER,
+      ANGULAR_FORM_BUILDER_ADAPTER,
+    ]);
   });
 });
