@@ -135,13 +135,16 @@ export class AppComponent implements OnInit {
 function createWorkflowDemo(renderer: BuilderDocument['renderer']): WorkflowDemo {
   const seed = cloneDocument(CONTACT_FORM_DOC);
   seed.renderer = renderer;
-  seed.nodes[seed.rootId] = {
-    ...seed.nodes[seed.rootId],
-    props: {
-      ...seed.nodes[seed.rootId].props,
-      title: 'Customer Intake Workflow',
-    },
-  };
+  const root = seed.nodes[seed.rootId];
+  if (root?.type === 'panel') {
+    seed.nodes[seed.rootId] = {
+      ...root,
+      props: {
+        ...root.props,
+        title: 'Customer Intake Workflow',
+      },
+    };
+  }
 
   return {
     kind: 'workflow',
