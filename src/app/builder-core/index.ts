@@ -13,4 +13,5 @@ export * from './registry';
 export * from './schema-adapter';
 export * from './schema';
 export * from './store';
+export * from './typescript-schema';
 export * from './validation-presets';

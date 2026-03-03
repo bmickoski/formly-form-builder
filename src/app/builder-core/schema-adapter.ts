@@ -2,6 +2,7 @@ import type { BuilderDocument } from './model';
 import type { BuilderPlugin } from './plugins';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
 import { builderToOpenApiDocument, listOpenApiImportTargets, openApiToBuilder } from './openapi';
+import { builderToTypeScriptInterface } from './typescript-schema';
 
 export interface BuilderSchemaImportTarget {
   id: string;
@@ -12,6 +13,8 @@ export interface BuilderSchemaImportTarget {
 export interface BuilderSchemaAdapter<T = unknown> {
   id: string;
   label: string;
+  exportFormat?: 'json' | 'text';
+  exportFileExtension?: string;
   listImportTargets?(source: T): readonly BuilderSchemaImportTarget[];
   import?(source: T, targetId?: string): BuilderDocument;
   export?(doc: BuilderDocument): T;
@@ -32,7 +35,19 @@ export const OPENAPI_ADAPTER: BuilderSchemaAdapter<object> = {
   export: (doc) => builderToOpenApiDocument(doc),
 };
 
-export const CORE_SCHEMA_ADAPTERS: readonly BuilderSchemaAdapter[] = [JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER];
+export const TYPESCRIPT_INTERFACE_ADAPTER: BuilderSchemaAdapter<string> = {
+  id: 'typescript-interface',
+  label: 'TypeScript Interface',
+  exportFormat: 'text',
+  exportFileExtension: 'ts',
+  export: (doc) => builderToTypeScriptInterface(doc),
+};
+
+export const CORE_SCHEMA_ADAPTERS: readonly BuilderSchemaAdapter[] = [
+  JSON_SCHEMA_ADAPTER,
+  OPENAPI_ADAPTER,
+  TYPESCRIPT_INTERFACE_ADAPTER,
+];
 
 export function composeSchemaAdapters(
   base: readonly BuilderSchemaAdapter[],

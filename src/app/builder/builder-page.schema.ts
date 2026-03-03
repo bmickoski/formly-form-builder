@@ -69,14 +69,17 @@ export function openSchemaExportDialog(
 ): void {
   if (!adapter.export) return;
   try {
+    const exportValue = adapter.export(doc);
+    const isTextExport = adapter.exportFormat === 'text';
+    const fileExtension = adapter.exportFileExtension ?? (isTextExport ? 'txt' : 'json');
     dialog.open(JsonDialogComponent, {
       width: '900px',
       maxWidth: '95vw',
       data: {
         mode: 'exportSchema',
         title: `Export as ${adapter.label}`,
-        fileName: `${adapter.id}-export.json`,
-        json: JSON.stringify(adapter.export(doc), null, 2),
+        fileName: `${adapter.id}-export.${fileExtension}`,
+        json: isTextExport ? String(exportValue) : JSON.stringify(exportValue, null, 2),
       },
     });
   } catch (e) {
