@@ -3,6 +3,7 @@ import type { BuilderPlugin } from './plugins';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
 import { builderToOpenApiDocument, listOpenApiImportTargets, openApiToBuilder } from './openapi';
 import { builderToTypeScriptInterface } from './typescript-schema';
+import { builderToZodSchema } from './zod-schema';
 
 export interface BuilderSchemaImportTarget {
   id: string;
@@ -43,10 +44,19 @@ export const TYPESCRIPT_INTERFACE_ADAPTER: BuilderSchemaAdapter<string> = {
   export: (doc) => builderToTypeScriptInterface(doc),
 };
 
+export const ZOD_SCHEMA_ADAPTER: BuilderSchemaAdapter<string> = {
+  id: 'zod-schema',
+  label: 'Zod Schema',
+  exportFormat: 'text',
+  exportFileExtension: 'ts',
+  export: (doc) => builderToZodSchema(doc),
+};
+
 export const CORE_SCHEMA_ADAPTERS: readonly BuilderSchemaAdapter[] = [
   JSON_SCHEMA_ADAPTER,
   OPENAPI_ADAPTER,
   TYPESCRIPT_INTERFACE_ADAPTER,
+  ZOD_SCHEMA_ADAPTER,
 ];
 
 export function composeSchemaAdapters(

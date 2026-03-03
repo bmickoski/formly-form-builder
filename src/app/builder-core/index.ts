@@ -15,3 +15,4 @@ export * from './schema';
 export * from './store';
 export * from './typescript-schema';
 export * from './validation-presets';
+export * from './zod-schema';

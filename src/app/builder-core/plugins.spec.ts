@@ -12,6 +12,7 @@ import {
   JSON_SCHEMA_ADAPTER,
   OPENAPI_ADAPTER,
   TYPESCRIPT_INTERFACE_ADAPTER,
+  ZOD_SCHEMA_ADAPTER,
 } from './schema-adapter';
 import { BuilderDocument } from './model';
 
@@ -162,6 +163,11 @@ describe('builder schema adapter composition', () => {
   });
 
   it('includes built-in schema adapters in the core adapter list', () => {
-    expect(CORE_SCHEMA_ADAPTERS).toEqual([JSON_SCHEMA_ADAPTER, OPENAPI_ADAPTER, TYPESCRIPT_INTERFACE_ADAPTER]);
+    expect(CORE_SCHEMA_ADAPTERS).toEqual([
+      JSON_SCHEMA_ADAPTER,
+      OPENAPI_ADAPTER,
+      TYPESCRIPT_INTERFACE_ADAPTER,
+      ZOD_SCHEMA_ADAPTER,
+    ]);
   });
 });
