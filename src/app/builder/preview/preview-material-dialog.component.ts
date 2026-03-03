@@ -22,7 +22,8 @@ import { FbStepperTypeComponent } from './fb-stepper.type.component';
 import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
 import { createSubmittedPayload, markPreviewSubmitted, resetPreviewSubmission } from './preview-dialog.utils';
-import { FbDateRangeMatTypeComponent, FbRatingMatTypeComponent } from '@ngx-formly-builder/material';
+import { FbDateRangeMatTypeComponent } from './fb-date-range-mat.type.component';
+import { FbRatingMatTypeComponent } from './fb-rating-mat.type.component';
 
 @Component({
   selector: 'app-preview-material-dialog',

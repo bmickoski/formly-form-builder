@@ -4,7 +4,10 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-    "outDir": "../../dist/out-tsc/lib-bootstrap"
+    "outDir": "../../dist/out-tsc/lib-bootstrap",
+    "paths": {
+      "@ngx-formly-builder/core": ["dist/formly-builder"]
+    }
   },
   "angularCompilerOptions": {
     "compilationMode": "partial"
