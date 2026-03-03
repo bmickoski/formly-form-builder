@@ -1,4 +1,5 @@
 export * from './adapter';
+export * from './angular-form-builder';
 export * from './constants';
 export * from './diagnostics';
 export * from './document';

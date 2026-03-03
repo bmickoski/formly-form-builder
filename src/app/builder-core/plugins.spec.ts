@@ -7,6 +7,7 @@ import {
   composeValidatorPresets,
 } from './plugins';
 import {
+  ANGULAR_FORM_BUILDER_ADAPTER,
   composeSchemaAdapters,
   CORE_SCHEMA_ADAPTERS,
   JSON_SCHEMA_ADAPTER,
@@ -168,6 +169,7 @@ describe('builder schema adapter composition', () => {
       OPENAPI_ADAPTER,
       TYPESCRIPT_INTERFACE_ADAPTER,
       ZOD_SCHEMA_ADAPTER,
+      ANGULAR_FORM_BUILDER_ADAPTER,
     ]);
   });
 });

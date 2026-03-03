@@ -2,6 +2,7 @@ import type { BuilderDocument } from './model';
 import type { BuilderPlugin } from './plugins';
 import { builderToJsonSchema, jsonSchemaToBuilder } from './json-schema';
 import { builderToOpenApiDocument, listOpenApiImportTargets, openApiToBuilder } from './openapi';
+import { builderToAngularFormBuilder } from './angular-form-builder';
 import { builderToTypeScriptInterface } from './typescript-schema';
 import { builderToZodSchema } from './zod-schema';
 
@@ -52,11 +53,20 @@ export const ZOD_SCHEMA_ADAPTER: BuilderSchemaAdapter<string> = {
   export: (doc) => builderToZodSchema(doc),
 };
 
+export const ANGULAR_FORM_BUILDER_ADAPTER: BuilderSchemaAdapter<string> = {
+  id: 'angular-form-builder',
+  label: 'Angular FormBuilder',
+  exportFormat: 'text',
+  exportFileExtension: 'ts',
+  export: (doc) => builderToAngularFormBuilder(doc),
+};
+
 export const CORE_SCHEMA_ADAPTERS: readonly BuilderSchemaAdapter[] = [
   JSON_SCHEMA_ADAPTER,
   OPENAPI_ADAPTER,
   TYPESCRIPT_INTERFACE_ADAPTER,
   ZOD_SCHEMA_ADAPTER,
+  ANGULAR_FORM_BUILDER_ADAPTER,
 ];
 
 export function composeSchemaAdapters(
