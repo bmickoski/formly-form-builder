@@ -1,7 +1,7 @@
-<div style="max-width: 800px; margin: 40px auto; padding: 0 16px">
-  <h1 style="font-weight: 300; margin-bottom: 4px">@ngx-formly-builder — Material Examples</h1>
+<div style="max-width: 900px; margin: 40px auto; padding: 0 16px">
+  <h1 style="font-weight: 300; margin-bottom: 4px">@ngx-formly-builder - Material Examples</h1>
   <p style="color: #666; margin-top: 0; margin-bottom: 32px">
-    All forms below were built with <code>@ngx-formly-builder/core</code> and rendered with
+    Forms below are built with <code>@ngx-formly-builder/core</code> and rendered with
     <code>@ngx-formly-builder/material</code>. The only setup required is <code>app.config.ts</code>.
   </p>
 
@@ -16,33 +16,101 @@
             </code>
           }
 
-          <mat-card style="margin-top: 20px">
-            <mat-card-content style="padding-top: 16px">
-              <div class="fb-form">
-                <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
-                  <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
-                  <div style="margin-top: 16px; display: flex; gap: 8px">
-                    <button mat-raised-button color="primary" type="submit" [disabled]="demo.form.invalid">
-                      Submit
-                    </button>
-                    @if (demo.submitted) {
-                      <button mat-stroked-button type="button" (click)="reset(demo)">Reset</button>
-                    }
-                  </div>
-                </form>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          @if (demo.submitted) {
-            <mat-card style="margin-top: 16px; background: #f9fbe7">
-              <mat-card-header>
-                <mat-card-title style="font-size: 14px">Submitted model</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <pre style="font-size: 13px; overflow: auto; margin: 8px 0 0">{{ demo.model | json }}</pre>
+          @if (demo.kind === 'runtime') {
+            <mat-card style="margin-top: 20px">
+              <mat-card-content style="padding-top: 16px">
+                <div class="fb-form">
+                  <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
+                    <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
+                    <div style="margin-top: 16px; display: flex; gap: 8px">
+                      <button mat-raised-button color="primary" type="submit" [disabled]="demo.form.invalid">
+                        Submit
+                      </button>
+                      @if (demo.submitted) {
+                        <button mat-stroked-button type="button" (click)="reset(demo)">Reset</button>
+                      }
+                    </div>
+                  </form>
+                </div>
               </mat-card-content>
             </mat-card>
+
+            @if (demo.submitted) {
+              <mat-card style="margin-top: 16px; background: #f9fbe7">
+                <mat-card-header>
+                  <mat-card-title style="font-size: 14px">Submitted model</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <pre style="font-size: 13px; overflow: auto; margin: 8px 0 0">{{ demo.model | json }}</pre>
+                </mat-card-content>
+              </mat-card>
+            }
+          } @else {
+            <mat-card style="margin-top: 20px">
+              <mat-card-header>
+                <mat-card-title>Admin screen</mat-card-title>
+                <mat-card-subtitle>Edit the BuilderDocument and save the latest version.</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content style="padding-top: 16px">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 12px">
+                  <button mat-raised-button color="primary" type="button" (click)="saveWorkflow(demo)">
+                    Save document
+                  </button>
+                </div>
+                <div style="min-height: 720px; border: 1px solid #eceff5; border-radius: 12px; overflow: hidden">
+                  <formly-builder [config]="demo.builderConfig" (configChange)="updateBuilderConfig(demo, $event)" />
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card style="margin-top: 16px">
+              <mat-card-header>
+                <mat-card-title>Customer-facing screen</mat-card-title>
+                <mat-card-subtitle>
+                  This section reads only the saved BuilderDocument, simulating a separate end-user app.
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content style="padding-top: 16px">
+                <formly-view
+                  [config]="demo.savedConfig"
+                  [model]="demo.viewerModel"
+                  (modelChange)="updateViewerModel(demo, $event)"
+                />
+                <div style="margin-top: 16px; display: flex; gap: 8px">
+                  <button mat-raised-button color="accent" type="button" (click)="captureViewerPayload(demo)">
+                    Capture payload
+                  </button>
+                  <button mat-stroked-button type="button" (click)="resetViewer(demo)">Reset</button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <div
+              style="
+                display: grid;
+                gap: 16px;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                margin-top: 16px;
+              "
+            >
+              <mat-card style="background: #fafafa">
+                <mat-card-header>
+                  <mat-card-title style="font-size: 14px">Live viewer model</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <pre style="font-size: 13px; overflow: auto; margin: 8px 0 0">{{ demo.viewerModel | json }}</pre>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card style="background: #f1f8e9">
+                <mat-card-header>
+                  <mat-card-title style="font-size: 14px">Captured payload</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <pre style="font-size: 13px; overflow: auto; margin: 8px 0 0">{{ demo.submittedPayload | json }}</pre>
+                </mat-card-content>
+              </mat-card>
+            </div>
           }
         </div>
       </mat-tab>
