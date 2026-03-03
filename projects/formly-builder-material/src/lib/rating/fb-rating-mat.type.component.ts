@@ -5,7 +5,6 @@ import { FieldType } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-rating-mat-type',
-  standalone: true,
   imports: [MatButtonModule, MatIconModule],
   template: `
     <div class="fb-rating-mat-row">

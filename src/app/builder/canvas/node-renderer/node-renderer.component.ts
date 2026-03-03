@@ -17,7 +17,6 @@ let _pointerListenerInstalled = false;
 
 @Component({
   selector: 'app-node-renderer',
-  standalone: true,
   imports: [DragDropModule, MatIconModule, MatButtonModule, MatTooltipModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
   templateUrl: './node-renderer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

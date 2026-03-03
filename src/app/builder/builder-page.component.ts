@@ -51,7 +51,6 @@ export interface BuilderAutosaveError {
 
 @Component({
   selector: 'app-builder-page, formly-builder',
-  standalone: true,
   imports: [
     MatButtonModule,
     MatIconModule,

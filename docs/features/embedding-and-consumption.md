@@ -76,6 +76,18 @@ See:
 - Output:
   - `modelChange`
 
+## End-to-End Example
+
+- The Bootstrap and Material consumer apps now include a runnable `Builder -> Viewer Flow` example.
+- It demonstrates the practical host-app pattern:
+  - an admin screen embeds `formly-builder`
+  - the latest `BuilderDocument` is saved
+  - a separate viewer surface renders the saved config through `formly-view`
+  - the live payload is captured inline
+- Example sources:
+  - `examples/bootstrap-consumer`
+  - `examples/material-consumer`
+
 ## Public Document Contract
 
 - Public exports from `<formly-builder>` now sanitize `selectedId` to `null`.

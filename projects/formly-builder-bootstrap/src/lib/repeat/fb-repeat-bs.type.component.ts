@@ -3,7 +3,6 @@ import { FieldArrayType, FormlyModule } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-repeat-bs-type',
-  standalone: true,
   imports: [FormlyModule],
   template: `
     <div class="mb-3">

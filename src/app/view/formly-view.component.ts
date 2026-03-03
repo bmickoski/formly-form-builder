@@ -30,7 +30,6 @@ import { createPreviewOptions } from '../builder/preview/formly-preview-config';
  */
 @Component({
   selector: 'app-formly-view, formly-view',
-  standalone: true,
   imports: [ReactiveFormsModule, FormlyModule],
   template: `
     <form class="fb-formly-view" [formGroup]="form">

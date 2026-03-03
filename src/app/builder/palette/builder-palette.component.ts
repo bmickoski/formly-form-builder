@@ -9,7 +9,6 @@ import { isContainerNode } from '../../builder-core/model';
 
 @Component({
   selector: 'app-builder-palette',
-  standalone: true,
   imports: [DragDropModule, MatExpansionModule, MatFormFieldModule, MatInputModule, CdkDrag],
   templateUrl: './builder-palette.component.html',
   styleUrl: './builder-palette.component.scss',

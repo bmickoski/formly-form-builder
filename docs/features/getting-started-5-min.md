@@ -25,7 +25,6 @@ import type { FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
   selector: 'app-builder-host',
-  standalone: true,
   imports: [FormlyBuilderComponent],
   template: `
     <formly-builder
@@ -86,7 +85,6 @@ import { FormlyViewComponent, type BuilderDocument } from '@ngx-formly-builder/c
 
 @Component({
   selector: 'app-form-view-host',
-  standalone: true,
   imports: [FormlyViewComponent],
   template: ` <formly-view [config]="config" [model]="submittedData" [readOnly]="true" /> `,
 })

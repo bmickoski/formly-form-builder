@@ -3,7 +3,6 @@ import { FieldType } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-rating-bs-type',
-  standalone: true,
   template: `
     <div class="d-flex align-items-center gap-1 flex-wrap">
       @for (rating of ratings(); track rating) {

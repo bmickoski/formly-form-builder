@@ -3,9 +3,9 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@ngx-formly-builder/core": ["dist/formly-builder"],
-      "@ngx-formly-builder/material": ["dist/formly-builder-material"],
-      "@ngx-formly-builder/bootstrap": ["dist/formly-builder-bootstrap"]
+      "@ngx-formly-builder/core": ["src/public-api.ts"],
+      "@ngx-formly-builder/material": ["projects/formly-builder-material/src/public-api.ts"],
+      "@ngx-formly-builder/bootstrap": ["projects/formly-builder-bootstrap/src/public-api.ts"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,

@@ -13,7 +13,6 @@ import type { BuilderSchemaAdapter } from '../src/app/builder-core/schema-adapte
 
 @Component({
   selector: 'app-storybook-crm-tier-type',
-  standalone: true,
   template: `
     <div style="border:1px dashed #0b5ed7;border-radius:8px;padding:8px 10px;font-size:12px;background:#e7f1ff;">
       Custom type renderer: {{ props?.['label'] || 'CRM Tier' }}
@@ -24,7 +23,6 @@ class StorybookCrmTierTypeComponent extends FieldType {}
 
 @Component({
   selector: 'app-storybook-builder-banner-host',
-  standalone: true,
   imports: [BuilderPageComponent],
   template: `
     <div style="padding:10px 12px;font-size:12px;border-bottom:1px solid #d9dce8;background:#f8f9fc;">{{ banner }}</div>
@@ -52,7 +50,6 @@ class BuilderBannerHostComponent {
 
 @Component({
   selector: 'app-storybook-builder-plugin-token-host',
-  standalone: true,
   imports: [BuilderPageComponent],
   template: `
     <div style="padding:10px 12px;font-size:12px;border-bottom:1px solid #cfe2ff;background:#e7f1ff;">

@@ -5,7 +5,6 @@ import { NodeRendererComponent } from './node-renderer/node-renderer.component';
 
 @Component({
   selector: 'app-builder-canvas',
-  standalone: true,
   imports: [DragDropModule, NodeRendererComponent],
   templateUrl: './builder-canvas.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

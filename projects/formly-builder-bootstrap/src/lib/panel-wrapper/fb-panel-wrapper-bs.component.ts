@@ -3,7 +3,6 @@ import { FieldWrapper } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-panel-wrapper-bs',
-  standalone: true,
   template: `
     <div class="card mb-3">
       <div class="card-body">

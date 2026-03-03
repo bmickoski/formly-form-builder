@@ -1,4 +1,4 @@
-<div class="container py-4" style="max-width: 900px">
+<div class="example-shell py-4">
   <h1 class="display-6 mb-1">@ngx-formly-builder - Bootstrap Examples</h1>
   <p class="text-muted mb-4">
     Forms below are built with <code>@ngx-formly-builder/core</code> and rendered with
@@ -21,25 +21,81 @@
       <code class="d-inline-block mb-3">{{ demo.badge }}</code>
     }
 
-    <div class="card">
-      <div class="card-body">
-        <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
-          <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
-          <div class="d-flex gap-2 mt-3">
-            <button class="btn btn-primary btn-sm" type="submit" [disabled]="demo.form.invalid">Submit</button>
-            @if (demo.submitted) {
-              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="reset(demo)">Reset</button>
-            }
-          </div>
-        </form>
-      </div>
-    </div>
-
-    @if (demo.submitted) {
-      <div class="card mt-3 border-success-subtle">
-        <div class="card-header bg-success-subtle">Submitted model</div>
+    @if (demo.kind === 'runtime') {
+      <div class="card">
         <div class="card-body">
-          <pre class="mb-0" style="font-size: 13px; overflow: auto">{{ demo.model | json }}</pre>
+          <form [formGroup]="demo.form" (ngSubmit)="submit(demo)">
+            <formly-form [form]="demo.form" [fields]="demo.fields" [model]="demo.model" />
+            <div class="d-flex gap-2 mt-3">
+              <button class="btn btn-primary btn-sm" type="submit" [disabled]="demo.form.invalid">Submit</button>
+              @if (demo.submitted) {
+                <button class="btn btn-outline-secondary btn-sm" type="button" (click)="reset(demo)">Reset</button>
+              }
+            </div>
+          </form>
+        </div>
+      </div>
+
+      @if (demo.submitted) {
+        <div class="card mt-3 border-success-subtle">
+          <div class="card-header bg-success-subtle">Submitted model</div>
+          <div class="card-body">
+            <pre class="mb-0" style="font-size: 13px; overflow: auto">{{ demo.model | json }}</pre>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <strong>Admin screen</strong>
+            <div class="text-muted small">Edit the form below, then save the latest BuilderDocument.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="button" (click)="saveWorkflow(demo)">Save document</button>
+        </div>
+        <div class="card-body p-0 workflow-builder-shell">
+          <formly-builder [config]="demo.initialBuilderConfig" (configChange)="updateBuilderConfig(demo, $event)" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <strong>Customer-facing screen</strong>
+          <div class="text-muted small">
+            This section only reads the saved BuilderDocument, simulating what a separate app would load from a backend.
+          </div>
+        </div>
+        <div class="card-body">
+          <formly-view
+            [config]="demo.savedConfig"
+            [model]="demo.viewerModel"
+            (modelChange)="updateViewerModel(demo, $event)"
+          />
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-success btn-sm" type="button" (click)="captureViewerPayload(demo)">
+              Capture payload
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" (click)="resetViewer(demo)">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">Live viewer model</div>
+            <div class="card-body">
+              <pre class="mb-0" style="font-size: 13px; overflow: auto">{{ demo.viewerModel | json }}</pre>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card h-100 border-success-subtle">
+            <div class="card-header bg-success-subtle">Captured payload</div>
+            <div class="card-body">
+              <pre class="mb-0" style="font-size: 13px; overflow: auto">{{ demo.submittedPayload | json }}</pre>
+            </div>
+          </div>
         </div>
       </div>
     }

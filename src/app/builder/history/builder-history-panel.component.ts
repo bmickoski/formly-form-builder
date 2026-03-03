@@ -6,7 +6,6 @@ import { BuilderStore } from '../../builder-core/store';
 
 @Component({
   selector: 'app-builder-history-panel',
-  standalone: true,
   imports: [MatIconModule, MatButtonModule, MatTooltipModule],
   templateUrl: './builder-history-panel.component.html',
   styleUrl: './builder-history-panel.component.scss',

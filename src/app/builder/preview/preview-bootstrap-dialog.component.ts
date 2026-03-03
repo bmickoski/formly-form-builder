@@ -22,12 +22,10 @@ import { FbStepperTypeComponent } from './fb-stepper.type.component';
 import { FbAccordionTypeComponent } from './fb-accordion.type.component';
 import { createPreviewOptions, PREVIEW_VALIDATION_MESSAGES } from './formly-preview-config';
 import { createSubmittedPayload, markPreviewSubmitted, resetPreviewSubmission } from './preview-dialog.utils';
-import { FbDateRangeBsTypeComponent } from '../../../../projects/formly-builder-bootstrap/src/lib/date-range/fb-date-range-bs.type.component';
-import { FbRatingBsTypeComponent } from '../../../../projects/formly-builder-bootstrap/src/lib/rating/fb-rating-bs.type.component';
+import { FbDateRangeBsTypeComponent, FbRatingBsTypeComponent } from '@ngx-formly-builder/bootstrap';
 
 @Component({
   selector: 'app-preview-bootstrap-dialog',
-  standalone: true,
   imports: [
     MatDialogModule,
     MatButtonModule,

@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'fb-repeat-mat-type',
-  standalone: true,
   imports: [FormlyModule, MatButtonModule, MatIconModule],
   template: `
     <div class="mb-3">

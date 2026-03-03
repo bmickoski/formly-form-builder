@@ -7,7 +7,6 @@ type DateRangeValue = { start?: string | null; end?: string | null } | null;
 
 @Component({
   selector: 'fb-date-range-mat-type',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule],
   template: `
     <div class="fb-date-range-mat-grid">
