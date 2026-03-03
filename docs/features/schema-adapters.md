@@ -6,12 +6,13 @@ Built-in adapters already cover:
 
 - JSON Schema
 - OpenAPI 3.0
+- TypeScript Interface
+- Zod Schema
+- Angular FormBuilder
 
 Community adapters are the intended extension path for:
 
 - Prisma-derived metadata
-- Zod schemas
-- TypeScript interface metadata
 - CMS-specific formats such as Strapi content types
 - internal product-specific API contracts
 
@@ -68,9 +69,11 @@ Typical mappings:
 - arrays -> `multiselect` or `repeater`, depending on intent
 - required/validation metadata -> builder validators
 
-## Example: Zod
+## Example: Custom Zod Import
 
-Zod itself is runtime validation, not a form schema format. The practical route is:
+The builder now ships a built-in Zod export adapter. A custom adapter still makes sense if you also want Zod-driven import.
+
+Zod itself is runtime validation, not a form schema format. The practical import route is:
 
 1. convert Zod -> JSON Schema or your own metadata
 2. map that output into `BuilderDocument`
@@ -133,6 +136,8 @@ Recommended pattern:
 That avoids trying to guess too much form UX from database schema alone.
 
 ## Example: TypeScript Interface Metadata
+
+The builder now ships a built-in TypeScript interface export adapter. Custom TypeScript adapters are still useful when you want import or project-specific metadata.
 
 Raw TypeScript interfaces disappear at runtime, so an adapter needs metadata generated from them. Common approaches:
 

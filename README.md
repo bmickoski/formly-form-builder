@@ -17,6 +17,7 @@ Production-oriented visual builder with a strict domain model and renderer-aware
 - Right panel: inspector for props, validators, layout controls, and advanced logic expressions.
 - Preview: real Formly render (Material or Bootstrap) with desktop/tablet/mobile viewport toggle.
 - Layout palette includes `Panel`, `Row`, `Column`, `Tabs`, `Stepper`, and `Accordion`.
+- Field palette includes common composites such as `File`, `Slider`, `Date range`, and `Rating`.
 - Field templates can be saved from selected field and reused via the palette (`My Templates` category).
 - Default preview renderer: Bootstrap.
 - Root route uses lazy `loadComponent` for the builder page.
@@ -74,6 +75,12 @@ Or use schematic setup:
 ng add @ngx-formly-builder/core
 ```
 
+`ng add` is implemented, but it is intentionally lightweight:
+
+- adds the package plus recommended Formly/Material dependencies
+- drops `NGX_FORMLY_BUILDER_SETUP.md` into the host project
+- does not fully wire renderer providers or host app configuration automatically
+
 2. Embed:
 
 ```html
@@ -96,6 +103,24 @@ onConfigChange(doc: BuilderDocument): void {
 ```
 
 See full guide: `docs/features/getting-started-5-min.md`.
+
+### Read-only mode
+
+Use read-only mode for review, approval, or embedded admin flows:
+
+```html
+<formly-builder [config]="builderDoc" [readOnly]="true" />
+```
+
+In read-only mode, the builder keeps the canvas/preview visible but hides the editing chrome and blocks mutations.
+
+### Lightweight viewer
+
+If you only need runtime rendering without the builder shell, use `formly-view`:
+
+```html
+<formly-view [config]="builderDoc" [model]="submittedData" [readOnly]="true" />
+```
 
 ## Scripts
 
@@ -133,6 +158,14 @@ npm run storybook:build
 - `Export as schema...`: uses registered schema adapters that support export.
 - `Export Templates JSON`: exports saved field templates.
 - `Import Templates JSON`: imports saved field templates (field node templates only).
+
+## Built-in field types
+
+- Textual: `Input`, `Textarea`, `Email`, `Password`, `Phone`, `URL`
+- Boolean/choice: `Checkbox`, `Radio`, `Select`, `Multi-select`
+- Numeric/date: `Number`, `Slider`, `Date`, `Date range`, `Rating`
+- Data-heavy: `File`, `Repeater`
+- Layout: `Panel`, `Row`, `Column`, `Tabs`, `Stepper`, `Accordion`
 
 ## Palette customization
 
@@ -347,11 +380,13 @@ export const appConfig: ApplicationConfig = {
 - Built-in adapters:
   - `JSON Schema`
   - `OpenAPI 3.0`
+  - `TypeScript Interface`
+  - `Zod Schema`
+  - `Angular FormBuilder`
 - Community adapters are the intended path for:
   - Prisma-derived metadata
-  - Zod schemas
-  - TypeScript DTO/interface metadata
   - CMS-specific formats such as Strapi content types
+  - internal API contracts and product-specific backend schemas
 
 Minimal example:
 
@@ -386,11 +421,17 @@ Full guide:
 - `src/public-api.ts` exports a stable integration surface for host apps and future packaging.
 - `src/app/builder-core/index.ts` is the core barrel behind that surface.
 - Embeddable component selector: `formly-builder`.
+- Lightweight viewer selector: `formly-view`.
 - Library package build output: `dist/formly-builder` (via `npm run build:lib`).
 - Example imports for host integration:
 
 ```ts
-import { FormlyBuilderComponent, type BuilderDocument, type BuilderPlugin } from '@ngx-formly-builder/core';
+import {
+  FormlyBuilderComponent,
+  FormlyViewComponent,
+  type BuilderDocument,
+  type BuilderPlugin,
+} from '@ngx-formly-builder/core';
 ```
 
 - Embedding example:

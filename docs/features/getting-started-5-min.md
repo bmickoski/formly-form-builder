@@ -14,6 +14,8 @@ Alternative:
 ng add @ngx-formly-builder/core
 ```
 
+`ng add` installs the core package plus recommended Formly/Material dependencies and drops a setup note into the host app. It does not fully configure renderer providers for you.
+
 ## 2. Render `<formly-builder>`
 
 ```ts
@@ -50,6 +52,12 @@ export class BuilderHostComponent {
 }
 ```
 
+Read-only review mode is also supported:
+
+```html
+<formly-builder [config]="config" [readOnly]="true" />
+```
+
 ## 3. Persist output
 
 - Use `(configChange)` payload for backend/API persistence.
@@ -67,3 +75,11 @@ npm run start:example:material
 
 - Bootstrap example: `examples/bootstrap-consumer` (`http://localhost:4204`)
 - Material example: `examples/material-consumer` (`http://localhost:4203`)
+
+## 5. Render without builder chrome
+
+If you only need runtime rendering for an existing builder document:
+
+```html
+<formly-view [config]="config" [model]="submittedData" [readOnly]="true" />
+```
