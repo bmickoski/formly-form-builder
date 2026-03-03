@@ -54,7 +54,7 @@
           <button class="btn btn-primary btn-sm" type="button" (click)="saveWorkflow(demo)">Save document</button>
         </div>
         <div class="card-body p-0" style="min-height: 720px">
-          <formly-builder [config]="demo.builderConfig" (configChange)="updateBuilderConfig(demo, $event)" />
+          <formly-builder [config]="demo.initialBuilderConfig" (configChange)="updateBuilderConfig(demo, $event)" />
         </div>
       </div>
 

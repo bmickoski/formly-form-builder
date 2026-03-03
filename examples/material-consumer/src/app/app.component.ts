@@ -26,7 +26,8 @@ interface WorkflowDemo {
   title: string;
   subtitle: string;
   badge?: string;
-  builderConfig: BuilderDocument;
+  initialBuilderConfig: BuilderDocument;
+  draftConfig: BuilderDocument;
   savedConfig: BuilderDocument;
   viewerModel: Record<string, unknown>;
   submittedPayload: Record<string, unknown> | null;
@@ -109,7 +110,7 @@ export class AppComponent implements OnInit {
   }
 
   saveWorkflow(demo: WorkflowDemo): void {
-    demo.savedConfig = cloneDocument(demo.builderConfig);
+    demo.savedConfig = cloneDocument(demo.draftConfig);
     demo.viewerModel = {};
     demo.submittedPayload = null;
   }
@@ -124,7 +125,7 @@ export class AppComponent implements OnInit {
   }
 
   updateBuilderConfig(demo: WorkflowDemo, doc: BuilderDocument): void {
-    demo.builderConfig = doc;
+    demo.draftConfig = cloneDocument(doc);
   }
 
   updateViewerModel(demo: WorkflowDemo, model: Record<string, unknown>): void {
@@ -152,7 +153,8 @@ function createWorkflowDemo(renderer: BuilderDocument['renderer']): WorkflowDemo
     subtitle:
       'Admin edits a BuilderDocument, saves it, and the customer-facing screen immediately renders the saved config with <formly-view>.',
     badge: 'Adoption path - builder save - viewer render',
-    builderConfig: cloneDocument(seed),
+    initialBuilderConfig: cloneDocument(seed),
+    draftConfig: cloneDocument(seed),
     savedConfig: cloneDocument(seed),
     viewerModel: {},
     submittedPayload: null,

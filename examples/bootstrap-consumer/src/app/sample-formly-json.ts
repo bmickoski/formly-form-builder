@@ -5,7 +5,7 @@ import type { FormlyFieldConfig } from '@ngx-formly/core';
  */
 export const FEEDBACK_FORMLY_JSON: FormlyFieldConfig[] = [
   {
-    wrappers: ['panel'],
+    wrappers: ['fb-panel'],
     props: { label: 'Quick Feedback' },
     fieldGroup: [
       {
