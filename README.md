@@ -51,6 +51,10 @@ npm run start:example:material
 
 - Bootstrap consumer: `http://localhost:4204`
 - Material consumer: `http://localhost:4203`
+- Both consumer apps now include a `Builder -> Viewer Flow` example:
+  - admin edits and saves a `BuilderDocument`
+  - the saved document is then rendered through `formly-view`
+  - the resulting payload is captured inline to demonstrate the full adoption path
 - Example sources:
   - `examples/bootstrap-consumer`
   - `examples/material-consumer`
