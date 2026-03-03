@@ -3,14 +3,13 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
 import { provideFormlyCore } from '@ngx-formly/core';
 import { FormlyBootstrapModule, withFormlyBootstrap } from '@ngx-formly/bootstrap';
+import { provideFormlyBuilderBootstrap } from '@ngx-formly-builder/bootstrap';
 
 import { BuilderDocument } from '../src/app/builder-core/model';
 import { FormlyViewComponent } from '../src/app/view/formly-view.component';
-import { provideFormlyBuilderBootstrap } from '../projects/formly-builder-bootstrap/src/lib/provide-formly-builder-bootstrap';
 
 @Component({
   selector: 'app-storybook-formly-view-host',
-  standalone: true,
   imports: [FormlyViewComponent, FormlyBootstrapModule],
   template: `
     <div style="padding: 24px; max-width: 880px;">

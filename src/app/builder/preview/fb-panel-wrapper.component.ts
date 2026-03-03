@@ -3,7 +3,6 @@ import { FieldWrapper } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-panel-wrapper',
-  standalone: true,
   template: `
     <div class="fb-panel-wrapper">
       <div class="fb-panel-wrapper-title">{{ props?.label }}</div>

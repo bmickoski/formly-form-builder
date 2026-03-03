@@ -128,7 +128,6 @@ const CONTACT_DOC: BuilderDocument = {
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [ReactiveFormsModule, FormlyModule, FormlyMaterialModule, JsonPipe],
   template: `
     <div class="shell">

@@ -4,7 +4,6 @@ import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'fb-panel-wrapper-mat',
-  standalone: true,
   imports: [MatCardModule],
   template: `
     <mat-card class="mb-3">

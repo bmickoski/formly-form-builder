@@ -4,7 +4,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 @Component({
   selector: 'fb-tabs-mat-type',
-  standalone: true,
   imports: [FormlyModule, MatTabsModule],
   template: `
     @if (props?.label) {

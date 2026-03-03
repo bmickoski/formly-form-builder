@@ -40,7 +40,6 @@ import { BuilderInspectorDataService } from './builder-inspector-data.service';
 import { ValidatorPresetDefinition } from '../../builder-core/validation-presets';
 @Component({
   selector: 'app-builder-inspector',
-  standalone: true,
   imports: [
     FormsModule,
     MatAutocompleteModule,

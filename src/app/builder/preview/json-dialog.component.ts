@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-json-dialog',
-  standalone: true,
   imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule],
   templateUrl: './json-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

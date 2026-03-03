@@ -3,7 +3,6 @@ import { FieldType, FormlyModule, FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
   selector: 'fb-accordion-bs-type',
-  standalone: true,
   imports: [FormlyModule],
   template: `
     @if (props?.label) {

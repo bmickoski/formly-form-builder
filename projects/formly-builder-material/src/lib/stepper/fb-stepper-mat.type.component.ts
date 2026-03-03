@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'fb-stepper-mat-type',
-  standalone: true,
   imports: [FormlyModule, MatStepperModule, MatButtonModule],
   template: `
     @if (props?.label) {

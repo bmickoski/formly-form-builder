@@ -4,7 +4,6 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
 @Component({
   selector: 'fb-accordion-mat-type',
-  standalone: true,
   imports: [FormlyModule, MatExpansionModule],
   template: `
     @if (props?.label) {

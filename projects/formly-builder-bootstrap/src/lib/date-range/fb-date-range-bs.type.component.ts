@@ -5,7 +5,6 @@ type DateRangeValue = { start?: string | null; end?: string | null } | null;
 
 @Component({
   selector: 'fb-date-range-bs-type',
-  standalone: true,
   imports: [FormlyModule],
   template: `
     <div class="row g-2">

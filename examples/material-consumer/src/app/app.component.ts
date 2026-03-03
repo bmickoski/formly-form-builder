@@ -37,7 +37,6 @@ type Demo = RuntimeDemo | WorkflowDemo;
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     FormlyModule,
@@ -49,6 +48,7 @@ type Demo = RuntimeDemo | WorkflowDemo;
     JsonPipe,
   ],
   templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
   demos: Demo[] = [];

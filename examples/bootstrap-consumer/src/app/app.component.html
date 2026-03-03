@@ -1,4 +1,4 @@
-<div class="container py-4" style="max-width: 900px">
+<div class="example-shell py-4">
   <h1 class="display-6 mb-1">@ngx-formly-builder - Bootstrap Examples</h1>
   <p class="text-muted mb-4">
     Forms below are built with <code>@ngx-formly-builder/core</code> and rendered with
@@ -53,7 +53,7 @@
           </div>
           <button class="btn btn-primary btn-sm" type="button" (click)="saveWorkflow(demo)">Save document</button>
         </div>
-        <div class="card-body p-0" style="min-height: 720px">
+        <div class="card-body p-0 workflow-builder-shell">
           <formly-builder [config]="demo.initialBuilderConfig" (configChange)="updateBuilderConfig(demo, $event)" />
         </div>
       </div>

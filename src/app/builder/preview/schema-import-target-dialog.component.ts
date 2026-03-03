@@ -12,7 +12,6 @@ interface SchemaImportTargetDialogData {
 
 @Component({
   selector: 'app-schema-import-target-dialog',
-  standalone: true,
   imports: [MatDialogModule, MatButtonModule],
   templateUrl: './schema-import-target-dialog.component.html',
   styleUrl: './schema-import-target-dialog.component.scss',
