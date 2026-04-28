@@ -39,13 +39,14 @@ function buildContext(field: FormlyFieldConfig, control: AbstractControl): Expre
   };
 }
 
-function evaluateCustomExpression(expression: string, context: ExpressionRuntimeContext): true | string {
+// Returns true (valid), null (invalid — use configured message), or string (invalid — use as message)
+function evaluateCustomExpression(expression: string, context: ExpressionRuntimeContext): true | string | null {
   try {
     const output = evaluateCustomExpressionProgram(expression, context);
     if (output === true || output == null) return true;
-    if (output === false) return 'Invalid value.';
+    if (output === false) return null;
     if (typeof output === 'string') return output;
-    return output ? true : 'Invalid value.';
+    return output ? true : null;
   } catch {
     return 'Validation expression failed.';
   }
@@ -87,7 +88,9 @@ function bindFieldValidator(field: FormlyFieldConfig): void {
         [VALIDATOR_BUILDER_CUSTOM]: (_error: unknown, currentField: FormlyFieldConfig): string => {
           const control = currentField.formControl as AbstractControl;
           const result = evaluateCustomExpression(config.expression ?? '', buildContext(currentField, control));
-          return result === true ? fallbackMessage : result;
+          // null = expression returned false → use configured Error message
+          // string = expression returned custom message → use it directly
+          return typeof result === 'string' ? result : fallbackMessage;
         },
       },
     };

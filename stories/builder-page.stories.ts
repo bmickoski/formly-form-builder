@@ -319,7 +319,7 @@ function createSchemaAdapterSeedDocument(): BuilderDocument {
 export const CustomSchemaAdapterPlugin: Story = {
   args: {
     banner:
-      'Plugin registers a custom "My API Format" schema adapter. Open File → "Export as schema…" or "Import from schema…" — you will see JSON Schema, OpenAPI and My API Format listed together.',
+      'Plugin registers a custom "My API Format" schema adapter. Open File → "Export as schema…" or "Import from schema…" - you will see JSON Schema, OpenAPI and My API Format listed together.',
     config: createSchemaAdapterSeedDocument(),
     plugins: [SCHEMA_ADAPTER_PLUGIN],
     onConfigChange: undefined,

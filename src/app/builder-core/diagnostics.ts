@@ -90,7 +90,7 @@ function missingKeyDiagnostics(fields: FieldNode[]): BuilderDiagnostic[] {
         severity: 'warning',
         code: 'missing-key',
         nodeId: field.id,
-        message: `Field has no key. A generated key will be used on export — set an explicit key to control the form model property name.`,
+        message: `Field has no key. A generated key will be used on export - set an explicit key to control the form model property name.`,
       });
     }
   }
